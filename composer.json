@@ -1,0 +1,33 @@
+{
+    "name": "daandelange/simplestats",
+    "description": "Very minimal visitor analytics for your kirby3 website.",
+    "type": "kirby-plugin",
+    "version": "2.3.2",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Daan de Lange",
+            "email": ""
+        }
+    ],
+    "keywords": [
+        "kirby3",
+        "pagecounter",
+        "kirby3-plugin",
+        "simplestats",
+        "analytics"
+    ],
+    "require": {
+        "getkirby/composer-installer": "^1.1",
+        "whichbrowser/parser": "^2.0",
+        "snowplow/referer-parser": "^0.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "daandelange\\SimpleStats\\": "src/models/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
