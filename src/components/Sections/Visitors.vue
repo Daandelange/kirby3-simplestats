@@ -52,19 +52,15 @@ export default {
   },
 
   methods: {
-    load(reload) {
-      if (!reload) this.isLoading = true
+    load() {
 
       this.$api
         .get("simplestats/listvisitors")
         .then(response => {
           this.isLoading = false
-          //this.options = response.options
           this.columns = response.data.columns
-          //this.rows    = this.items(response.data.rows)
           this.rows    = response.data.rows
-          //this.showSearch=true
-          //console.warn(this.rows);
+
           //console.log(response.data.rows);
           // replace default translations if needed
 //           let translations = response.translations
@@ -76,6 +72,11 @@ export default {
         .catch(error => {
           this.isLoading = false
           this.error = error.message
+          this.$store.dispatch("notification/open", {
+            type: "error",
+            message: error.message,
+            timeout: 5000
+          });
         })
     },
   }

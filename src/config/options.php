@@ -39,7 +39,10 @@ return [
     ],
 
     // Enable/Disable the admin panel and API
-    'panel.enable'  => true, // Only disables the API (for now...) makes the panel unusable.
+    'panel' => [
+        'enable'            => true, // Only disables the API (for now...) makes the panel unusable.
+        'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics
+    ]
 
     // Track referrers ?
     //'trackReferers' => true, // Enable/Disable referer tracking.

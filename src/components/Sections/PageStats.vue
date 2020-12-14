@@ -157,6 +157,12 @@ export default {
         .catch(error => {
           this.isLoading = false
           this.error = error.message
+
+          this.$store.dispatch("notification/open", {
+            type: "error",
+            message: error.message,
+            timeout: 5000
+          });
         })
     },
   }
