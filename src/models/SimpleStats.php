@@ -14,7 +14,7 @@ use Kirby\Toolkit\Obj;
 use Snowplow\RefererParser\Parser as RefererParser;
 use Snowplow\RefererParser\Medium;
 
-use WhichBrowser\Parser as BrowserParser;//BrowserParser;
+use WhichBrowser\Parser as BrowserParser;
 use WhichBrowser\Constants\DeviceType;
 use WhichBrowser\Constants\BrowserType;
 
@@ -196,7 +196,6 @@ class SimpleStats extends SimpleStatsDb {
     public static function detectSystemFromUA( $ua = '' ): array {
         // Kirby method : $kirby->visitor()->ip()->userAgent()
     	if(empty($ua)) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
-    	//$ua = 'Mozilla/5.0 (X11; GNU/Linux) AppleWebKit/537.36 (KHTML, like Gecko) Chromium/73.0.3683.101 Chrome/73.0.3683.101 Safari/537.36 Tesla QtCarBrowser';
 
         $data = [
             'engine' 	=> 'undefined',
@@ -331,21 +330,12 @@ class SimpleStats extends SimpleStatsDb {
 
         if( isset($_SERVER['HTTP_REFERER']) ){
             $refHeader = $_SERVER['HTTP_REFERER'];
-            //$refHeader = 'http://alpha.noemiprudhomme.fr/lang/index.php?love';
-            //$refHeader = 'http://pouet.net/';
-            //$refHeader = 'https://www.google.com/search?q=test';
-            //$refHeader = 'https://www.facebook.com/';
         	$parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
         	$referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
         	//echo "Got referer! == ".$_SERVER['HTTP_REFERER']."\n";
         	//echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
         	if( $referer->isValid() ){
         		if ($referer->isKnown()) {
-        			//echo "Got KNOWN referer!\n";
-        			//echo $referer->getMedium(); // "Search"
-        			//echo ' - ';
-        			//echo $referer->getSource(); // "Google"
-        			//echo $referer->getSearchTerm();   // "gateway oracle cards denise linn"
         			$returnData['medium']=$referer->getMedium();
                     $returnData['source']=$referer->getSource();
 
@@ -364,7 +354,6 @@ class SimpleStats extends SimpleStatsDb {
         			if( $referer->getMedium() == Medium::INTERNAL ){
         				// IGNORE internals
         				//echo "Got INTERNAL referer !";
-        				//return false;
         				return null;
         			}
         			// Referer is valid but unknown (other)
@@ -373,8 +362,7 @@ class SimpleStats extends SimpleStatsDb {
         				//echo $referer->getMedium(); // "Search"
             			//echo ' - ';
             			//echo $referer->getSource(); // "Google"
-            			//var_dump($referer);
-                        $returnData['medium']='website';$referer->getMedium();//'unknown'; // unknown
+                        $returnData['medium']='website';$referer->getMedium(); // unknown
                         $returnData['source']=''; // other ?
                         if( $urlParts = parse_url($refHeader) ){
                             //var_dump($urlParts);
@@ -408,16 +396,4 @@ class SimpleStats extends SimpleStatsDb {
         // default return value (no referrer)
         return null;
     }
-
-    /*
-private static $singleton;
-
-    public static function singleton(array $options = []){
-        if (!self::$singleton) {
-            self::$singleton = new self($options);
-        }
-
-        return self::$singleton;
-    }
-*/
 }
