@@ -6,23 +6,24 @@ namespace daandelange\SimpleStats;
 
 return [
     'route:after' => function (/* $route, */ $path, $method, $result, $final) {
-        if( $final === true && empty($result) === false && $method==='GET') { // Only log visits when the page object was found
-            //var_dump($result);
-            $page = $path;
-            if( is_a($result, 'Page') ) {
-                //var_dump( $result->uri() );
-                $page = $result->uri();
-            }
-            else {
-                // Panel and other requests are not Page objects. (HttpResponse)
-                // Idea: track downloaded files ?
+        // Call general track object
+        if ( option('daandelange.simplestats.tracking.onLoad') === true ){
+            if( $final === true && empty($result) === false && $method==='GET') { // Only log visits when the page object was found
                 //var_dump($result);
-                // Ignore
-                return $result;
-            }
+                $page = $path;
+                if( is_a($result, 'Page') ) {
+                    //var_dump( $result->uri() );
+                    $page = $result->uri();
+                }
+                else {
+                    // Panel and other requests are not Page objects. (HttpResponse)
+                    // Idea: track downloaded files ?
+                    //var_dump($result);
+                    // Ignore
+                    return $result;
+                }
 
-            // Call general track object
-            if ( option('daandelange.simplestats.tracking.onLoad') === true ){
+
 
                 try {
                     SimpleStats::track($page);

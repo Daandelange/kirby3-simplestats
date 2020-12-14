@@ -2,7 +2,7 @@
 
 namespace daandelange\SimpleStats;
 
-return [
+return option('daandelange.simplestats.panel.enable', false)?[]:[
 
     // Routes for the stats api in the panel
     'routes' => [

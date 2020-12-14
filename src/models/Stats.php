@@ -505,7 +505,7 @@ class Stats extends SimpleStatsDb {
         $newSystems = [];
 
         // Get visitors older then 1 day
-        $yesterday = time() - option('daandelange.simplestats.tracking.uniqueSeconds');
+        $yesterday = time() - option('daandelange.simplestats.tracking.uniqueSeconds', 24*60*60);
         $visitors = $db->query("SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,1000;");
 
         if($visitors){
