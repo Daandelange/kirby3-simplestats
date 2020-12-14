@@ -3,11 +3,21 @@
 Track pageviews, referrers and devices on your Kirby 3 website.
 This plugin provides simple solution for **self-hosted**, **minimal** and **non-intrusive** visitor analytics.
 
-It embeds a php tracking solution that creates and populates a single database file when your Kirby pages are served.
+- It tracks referrers to keep track of who links to your website.
+- It tracks the device type, the browser engine and the OS family for keeping track of how your website is visited. (without version numbers)
+- It tracks page visits, when they are served by Kirby, counting 1 hit per unique user every 24H.
+
+All data is stored in a `.sqlite` database.
 A panel allows connected users to visualise the computed stats.
 
-- A crypted user-unique fingerprint is stored in order to track unique page views. `md5(IP+Browser+Salt)`
-- After 24H, it's processed and dissociated from any user identifying data.
+### How it works
+- A crypted user-unique fingerprint is stored in order to track unique page views.
+The formula is `md5( trunc(IP) + trunc(UserAgent) + Salt )`, which still, according to GDPR, seems to be considered as personal data.
+It's stored together with a list of visited pages, a device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.
+- After 24H, it's processed and any user identifying data is deleted.
+  - The visited pages' hit count are incremented
+  - Device, Engine and OS Family are separately incremented.
+- Referrers are processed immediately and not bound to any user-related identifier.
 - All data is summed up on a monthly basis. *There is no weekly or daily precision.*
 
 
@@ -20,11 +30,11 @@ Discussions and contributions are welcome, as long as the stats stay minimal.
 
 ## Installation
 
-### Option 1 : Download
+#### Option 1 : Download
 
 Download and copy this repository to `/site/plugins/simplestats`.
 
-### Option 2 : Git submodule
+#### Option 2 : Git submodule
 
 ```
 git submodule add https://github.com/daandelange/kirby3-simplestats.git site/plugins/simplestats
@@ -33,18 +43,22 @@ Eventually add `--depth 1` to discard the repo commit history. (saves disk space
 
 ****
 
-## Configuration
+### Configuration
 
 *Soon...*
 
-For now, check the comments in `options.php`, not recommended to change the default behaviour yet.
+For now, check the comments in `options.php`, while it's not recommended to change the default behaviour yet.
 
-### Legal configuration
+#### Language setup
+Multilanguage websites are supported, but there's only 1 counter for all languages.
+Also, the panel view has not been translated.
+
+#### Legal configuration
 Depending on your local laws, you might need to sit down and define how personal visitor data is handled.
 You might want to inspect the source code to know what's going on in details.
 As the license states, there's no guarantee whatsoever.
 
-## Options
+### Options
 
 *Soon...*
 
