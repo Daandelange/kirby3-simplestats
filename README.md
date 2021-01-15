@@ -3,14 +3,18 @@
 Track pageviews, referrers and devices on your Kirby 3 website.
 This plugin provides simple solution for **self-hosted**, **minimal** and **non-intrusive** visitor analytics.
 
-- It tracks referrers to keep track of who links to your website.
+![Simplestats Screenshot](k3-simplestats.png)
+
+- It tracks referrer URLs to keep track of who links to your website, categorised as either `search`, `social` or `website`.
 - It tracks the device type, the browser engine and the OS family for keeping track of how your website is visited. (without version numbers)
-- It tracks page visits, when they are served by Kirby, counting 1 hit per unique user every 24H.
+- It tracks page visits, counting 1 hit per page per unique user, every 24H. Soon, it will also track hits per language in multi-language setups.
+- It offers an optional panel view to visualise the statistics.
 
 All data is stored in a `.sqlite` database.
 A panel allows connected users to visualise the computed stats.
 
 ### How it works
+- Tracking happens when the page is served by Kirby.
 - A crypted user-unique fingerprint is stored in order to track unique page views.
 The formula is `md5( trunc(IP) + trunc(UserAgent) + Salt )`, which still, according to GDPR, seems to be considered as personal data.
 It's stored together with a list of visited pages, a device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.
@@ -18,11 +22,12 @@ It's stored together with a list of visited pages, a device category (bot/mobile
   - The visited pages' hit count are incremented
   - Device, Engine and OS Family are separately incremented.
 - Referrers are processed immediately and not bound to any user-related identifier.
-- All data is summed up on a monthly basis. *There is no weekly or daily precision.*
+- All data is summed up on a monthly basis. *There is no weekly or daily precision. (yet?)*
 
 
 ### Current state
 This is very alpha, and has not been tested. It is an initial codebase to be improved.
+The database structure might evolve over time.
 Discussions and contributions are welcome, as long as the stats stay minimal.
 
 ****
@@ -59,8 +64,19 @@ You might want to inspect the source code to know what's going on in details.
 As the license states, there's no guarantee whatsoever.
 
 ### Options
+Like any Kirby plugin, options can be set in your `site/config/config.php`.
+Available options are listed and explained in `src/config/options.php`.
+Example :
+````PHP
+// site/config/config.php
+return [
+  // [...] your options ...
 
-*Soon...*
+  // Simplestats
+  'daandelange.simplestats.panel.enable' => false, // Disable the panel view completely
+  'daandelange.simplestats.tracking.enableReferers' => false, // Disable referer tracking
+];
+````
 
 ****
 
@@ -84,7 +100,7 @@ Development was started from [a standard Kirby PluginKit](https://github.com/get
 
 - Npm requirements    : `npm install -g parcel-bundler`
 - Setup               : `cd /path/to/website/site/plugins/simplestats && npm install`
-- While developping   : `npm run dev`
+- While developing    : `npm run dev`
 - Publish changes     : `npm run build`
 - Update dependencies : `npm update`
 

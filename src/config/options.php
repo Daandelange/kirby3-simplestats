@@ -32,8 +32,10 @@ return [
         // Set to false to track from an image, which can naturally prevent calls from most robots, and speed up page loads. (recommended: set to false)
             // Track hits on page serve or using an image ?
             // Delete by crontask or afterLoad ?
+
+        // Tracking blacklist
         'ignore' => [
-            'roles' => [],//kirby()->roles(), // By default, ignore all users
+            'roles' => kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users.
             'pages' => [], // Array of plain text page uris.
         ],
     ],
@@ -44,17 +46,9 @@ return [
         'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics
     ]
 
-    // Track referrers ?
-    //'trackReferers' => true, // Enable/Disable referer tracking.
-    // Track visitors hw config ? (device information)
-    //'trackDevices'  => true,
-    // Track hits ? (page counter)
-    //'trackVisits'   => true,
-
     // Todo: Add refferer tracking via pingback ? Webmentions ?
 
     // (Settings ideas from k2-stats)
-    // stats.roles.ignore - Ignored users, not being tracked
     // stats.days - Keep daily stats for how many days ?
     // stats.date.format
 
