@@ -4,7 +4,7 @@ namespace daandelange\SimpleStats;
 
 use Kirby\Exception\PermissionException;
 
-return option('daandelange.simplestats.panel.enable', false)?[]:[
+return [
 
     // Routes for the stats api in the panel
     'routes' => [
@@ -12,7 +12,7 @@ return option('daandelange.simplestats.panel.enable', false)?[]:[
             'pattern' => 'simplestats/listvisitors',
             'method'  => 'GET',
             'action'  => function () {
-                if( $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
                     return Stats::listvisitors();
                 }
                 else {
@@ -24,7 +24,7 @@ return option('daandelange.simplestats.panel.enable', false)?[]:[
             'pattern' => 'simplestats/devicestats',
             'method'  => 'GET',
             'action'  => function () {
-                if( $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
                     return Stats::deviceStats();
                 }
                 else {
@@ -36,7 +36,7 @@ return option('daandelange.simplestats.panel.enable', false)?[]:[
             'pattern' => 'simplestats/refererstats',
             'method'  => 'GET',
             'action'  => function () {
-                if( $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
                     return Stats::refererStats();
                 }
                 else {
@@ -48,7 +48,7 @@ return option('daandelange.simplestats.panel.enable', false)?[]:[
             'pattern' => 'simplestats/pagestats',
             'method'  => 'GET',
             'action'  => function () {
-                if( $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
                     return Stats::pageStats();
                 }
                 else {
