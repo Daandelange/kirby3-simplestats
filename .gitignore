@@ -44,6 +44,7 @@
 
 # browserpasrer
 !/vendor/whichbrowser/parser/src/Data/*
+!/vendor/whichbrowser/parser/data/*
 
 # referer-parser Fixes
 /vendor/snowplow/referer-parser/*/*
