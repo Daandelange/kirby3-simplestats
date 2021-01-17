@@ -37,10 +37,15 @@
 /vendor/**/data/*
 /vendor/**/bin/*
 
+# License file fixes
 !/vendor/*/*/MIT-LICENSE.txt
 !/vendor/**/LICENSE.md
 !/vendor/**/LICENSE.txt
 
+# browserpasrer
+!/vendor/whichbrowser/parser/src/Data/*
+
+# referer-parser Fixes
 /vendor/snowplow/referer-parser/*/*
 !/vendor/snowplow/referer-parser/php/src/Snowplow/RefererParser/*
 !/vendor/snowplow/referer-parser/php/*
