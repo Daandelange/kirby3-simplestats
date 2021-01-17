@@ -20,9 +20,9 @@
 /vendor/**/*.xml
 /vendor/**/*.dist
 /vendor/**/readme.php
-/vendor/**/LICENSE
+!/vendor/**/LICENSE
 /vendor/**/COPYING
-/vendor/**/VERSION
+!vendor/**/VERSION
 /vendor/**/docs/*
 /vendor/**/example/*
 /vendor/**/examples/*
@@ -30,6 +30,26 @@
 /vendor/**/tests/*
 /vendor/**/php4/*
 /vendor/getkirby/composer-installer
+
+# Manually added composer vendors
+/vendor/**/*.py
+/vendor/**/Vagrantfile
+/vendor/**/data/*
+/vendor/**/bin/*
+
+!/vendor/*/*/MIT-LICENSE.txt
+!/vendor/**/LICENSE.md
+!/vendor/**/LICENSE.txt
+
+/vendor/snowplow/referer-parser/*/*
+!/vendor/snowplow/referer-parser/php/src/Snowplow/RefererParser/*
+!/vendor/snowplow/referer-parser/php/*
+!/vendor/snowplow/referer-parser/php/*/*.php
+/vendor/snowplow/referer-parser/php/*.dist
+/vendor/snowplow/referer-parser/php/*.xml
+/vendor/snowplow/referer-parser/php/*.md
+
+
 
 # User data
 .sqlite
