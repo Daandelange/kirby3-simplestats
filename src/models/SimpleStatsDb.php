@@ -35,7 +35,7 @@ class SimpleStatsDb
             $db = new \SQLite3($target);
 
             $db->exec("CREATE TABLE IF NOT EXISTS `pagevisitors` (userunique TEXT primary key unique, timeregistered INTEGER, osfamily TEXT, devicetype TEXT, browserengine TEXT, visitedpages TEXT)");
-            $db->exec("CREATE TABLE IF NOT EXISTS `referers` (id INTEGER primary key unique, referer TEXT, domain TEXT, monthyear INTEGER, hits INTEGER)");
+            $db->exec("CREATE TABLE IF NOT EXISTS `referers` (id INTEGER primary key unique, referer TEXT, domain TEXT, medium TEXT, monthyear INTEGER, hits INTEGER)");
             $db->exec("CREATE TABLE IF NOT EXISTS `pagevisits` (id INTEGER primary key unique, uid TEXT, monthyear INTEGER, hits INTEGER)");
             $db->exec("CREATE TABLE IF NOT EXISTS `devices` (`id` INTEGER primary key unique, `device` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
             $db->exec("CREATE TABLE IF NOT EXISTS `engines` (`id` INTEGER primary key unique, `engine` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
