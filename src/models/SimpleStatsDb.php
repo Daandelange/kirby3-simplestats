@@ -26,6 +26,12 @@ class SimpleStatsDb
 
         // Initially create the db, if it doesn't exist yet.
         if (!F::exists($target)) {
+
+            // Ensure the folder exists
+            $dir = dirname($file);
+            if (is_dir($dir) === false) {
+                Dir::make($dir);
+            }
             $db = new \SQLite3($target);
 
             $db->exec("CREATE TABLE IF NOT EXISTS `pagevisitors` (userunique TEXT primary key unique, timeregistered INTEGER, osfamily TEXT, devicetype TEXT, browserengine TEXT, visitedpages TEXT)");
