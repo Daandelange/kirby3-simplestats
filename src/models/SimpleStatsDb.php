@@ -28,7 +28,7 @@ class SimpleStatsDb
         if (!F::exists($target)) {
 
             // Ensure the folder exists
-            $dir = dirname($file);
+            $dir = dirname($target);
             if (is_dir($dir) === false) {
                 Dir::make($dir);
             }
