@@ -3,11 +3,14 @@
 namespace daandelange\SimpleStats;
 
 //use Kirby\Http\Router;
+use ErrorException;
 
 return [
+    ( option('daandelange.simplestats.tracking.onLoad', true) !== true )?[]:
     'route:after' => function (/* $route, */ $path, $method, $result, $final) {
+
         // Call general track object
-        if ( option('daandelange.simplestats.tracking.onLoad') === true ){
+
             if( $final === true && empty($result) === false && $method==='GET') { // Only log visits when the page object was found
                 //var_dump($result);
                 $page = $path;
@@ -23,15 +26,14 @@ return [
                     return $result;
                 }
 
-
-
                 try {
                     SimpleStats::track($page);
                 } catch (\Throwable $e) {
-                    //var_dump($e);
+
                     // If logging enable, initialize model and add record
                     if (option('daandelange.simplestats.log.tracking') === true) {
-                        Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage());
+                        if( $e instanceof ErrorException ) Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
+                        else Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage());
                     }
                 }
                 return $result;
@@ -41,7 +43,7 @@ return [
             //var_dump($method);
             //var_dump($result); // Page Object
             //var_dump($final);
-        }
+
         return $result;
-    }
+    },
 ];

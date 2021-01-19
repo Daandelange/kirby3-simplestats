@@ -12,5 +12,7 @@ App::plugin('daandelange/simplestats', [
     'options'      => require 'src/config/options.php',
     'api'          => require 'src/config/api.php',
     'hooks'        => require 'src/config/hooks.php',
-    'translations' => require 'src/config/translations.php'
+    'translations' => require 'src/config/translations.php',
+    'pageMethods'  => require 'src/config/pagemethods.php',
+    'routes'       => require 'src/config/routes.php',
 ]);
