@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace daandelange\SimpleStats;
 
 //use Kirby\Http\Header;
+@include_once __DIR__ . '/vendor/autoload.php';
 
 use Kirby\Database\Database;
 use Kirby\Toolkit\Collection;
@@ -28,11 +29,14 @@ class SimpleStats extends SimpleStatsDb {
             return false;
         }
 
+        // tmp : Sync daystats
+        Stats::syncDayStats();
+
         // Skip ignored roles
         if( count(option('daandelange.simplestats.tracking.ignore.roles')) > 0){
             $curUser = kirby()->user();
             $ignores = option('daandelange.simplestats.tracking.ignore.roles');
-            if($curUser->isLoggedIn()){
+            if($curUser && $curUser->isLoggedIn()){
                 foreach($curUser->roles() as $role){
                     if( in_array($role, $ignores)) return false;
                 }
