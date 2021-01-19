@@ -65,7 +65,7 @@
             </template>
             <!-- percentage entryslot -->
             <template slot="column-hitspercent" slot-scope="props">
-              <p v-bind:style="{ width: props.value + '%' }"></p>
+              <p v-bind:style="[ !props.value ? { width: '0%' } : { width: props.value + '%' }]"></p>
             </template>
           </tbl>
           <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
@@ -200,15 +200,5 @@ export default {
   min-height: 250px;
   margin-top: 1em;
   padding: 1em;
-}
-.row-percent {
-  //background-color: #bbb;
-}
-.row-percent p {
-  background-color: rgba(46, 64, 87,1);
-  color: white;
-  display: inline-block;
-  height: 4px;
-  position: relative;
 }
 </style>

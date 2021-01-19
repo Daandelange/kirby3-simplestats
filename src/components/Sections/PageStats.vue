@@ -11,7 +11,6 @@
           :data="visitsOverTimeData"
           :download="true"
           download="Site_PageVisits.png"
-          :diiiiscrete="true"
           label="Unique visits"
           xtitle="Time"
           ytitle="Visits"
@@ -27,11 +26,10 @@
           :data="pageVisitsOverTimeData"
           :download="true"
           download="Site_PageVisits.png"
-          :diiiscrete="true"
           label="Unique visits"
           xtitle="Time"
           ytitle="Visits"
-          heeight="300px"
+          height="300px"
           :stacked="true"
           :library="chartOptions"
           v-if="pageVisitsOverTimeData.length > 0"
@@ -59,9 +57,9 @@
             </p>
           </template>
           <!-- percentage entryslot -->
-            <template slot="column-hitspercent" slot-scope="props">
-              <p v-bind:style="{ width: props.value + '%' }"></p>
-            </template>
+          <template slot="column-hitspercent" slot-scope="props">
+            <p v-bind:style="[ !props.value ? { width: '0%' } : { width: props.value + '%' }]"></p>
+          </template>
         </tbl>
         <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
       </k-column>
@@ -109,11 +107,9 @@ export default {
   },
   components: {
     Tbl,
-    //Chartkick.use(Chart)
   },
   use() {
-    //Chartkick.use(Chart),
-    //Chartkick
+
   },
   // see: https://forum.getkirby.com/t/can-i-use-vue-use-inside-my-plugin/17822
   // Also see https://github.com/getkirby/ideas/issues/219
@@ -175,14 +171,6 @@ export default {
   margin-top: 1em;
   padding: 1em;
 }
-.row-percent {
-  //background-color: #bbb;
-}
-.row-percent p {
-  background-color: rgba(46, 64, 87,1);
-  color: white;
-  display: inline-block;
-  height: 4px;
-  position: relative;
-}
+
+
 </style>

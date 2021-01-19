@@ -60,7 +60,7 @@ class Stats extends SimpleStatsDb {
 //                     $rows[$key][$k] = ['label'=>$v];
 //                 }
                 // convert date format
-                $rows[$key]['timeregistered']=date('Y-m-d h:i',intval($rows[$key]['timeregistered']));
+                $rows[$key]['timeregistered'] = date('Y-m-d h:i', intval($rows[$key]['timeregistered']) );
 
             }
 
@@ -113,15 +113,14 @@ class Stats extends SimpleStatsDb {
                 //var_dump($device->toArray());
                 $allEngines[] = [$engine->engine,$engine->hits];
             }
+            //var_dump($allEngines);
         }
 
         // Get Devices over time
         $devicesOverTimeData=[];
         $devicesOverTime = $db->query("SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices` GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,1000");
         if($devicesOverTime){
-            //$mediumNames=[];
             $deviceMonths=[];
-            //$num = 0;
             foreach($devicesOverTime as $device){
                 $monthyear = intval($device->monthyear);
                 $name = $device->device;
@@ -165,7 +164,6 @@ class Stats extends SimpleStatsDb {
 
                 // Object to array (remove key)
                 $tmp[]=$devicesOverTimeData[$name];
-
 
                 // Should be ok now
             }

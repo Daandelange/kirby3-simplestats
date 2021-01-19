@@ -21,7 +21,7 @@ return [
         'database'      => kirby()->root('config') . '/../logs/simplestats.sqlite',
         // Respect DNT
         // pagecountermode : hits, uniquehitsUA, uniquehitsSession (not yet)
-        //'trackUniqueHitsOnly'   => true, // set to false for hitcounter behaviour
+        // todo : 'trackUniqueHitsOnly'   => true, // set to false for hitcounter behaviour
         'enableReferers'   => true, // Enables tracking of referers. Gives an insigt of who links your website.
         'enableDevices'    => true, // Enables tracking of minimal hardware configurations (device information)
         'enableVisits'     => true, // Enables tracking of page visits

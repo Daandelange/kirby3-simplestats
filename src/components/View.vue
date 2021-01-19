@@ -103,5 +103,23 @@ export default {
 </script>
 
 <style lang="scss">
-
+.row-percent {
+  //background-color: #bbb;
+}
+.row-percent p {
+  background-color: rgba(46, 64, 87,1);
+  color: white;
+  display: inline-block;
+  height: 4px;
+  position: relative;
+}
+.row-percent p {
+  background-color: rgba(46, 64, 87,.8);
+  color: white;
+  //display: inline-block;
+  height: 20%;
+  position: relative;
+  width: 0%; /* Default for unvalid values */
+  padding: 0em 0!important; /* overrides tbl default styling */
+}
 </style>

@@ -87,9 +87,6 @@ class SimpleStats extends SimpleStatsDb {
                     $devicetype = $info['device'];
                     $browserengine = $info['engine'];
                 }
-                else {
-                    //$osfamily = $devicetype = $browserengine = '';
-                }
 
                 //echo "INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ('${userID}', ${timestamp}, '${osfamily}', '${devicetype}', '${browserengine}', '${visitedpages}')";
                 if( !$db->query("INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ('${userID}', ${timestamp}, '${osfamily}', '${devicetype}', '${browserengine}', '${visitedpages}')") ){

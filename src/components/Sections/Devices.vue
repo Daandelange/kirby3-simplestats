@@ -133,14 +133,5 @@ export default {
   margin-top: 1em;
   padding: 1em;
 }
-.row-percent {
-  //background-color: #bbb;
-}
-.row-percent p {
-  background-color: rgba(46, 64, 87,1);
-  color: white;
-  display: inline-block;
-  height: 4px;
-  position: relative;
-}
+
 </style>
