@@ -8,6 +8,9 @@ use Kirby\Toolkit\Collection;
 use Kirby\Toolkit\F;
 use Kirby\Toolkit\Obj;
 
+use ErrorException;
+use Throwable;
+
 // This class retrieves analytics from the database
 /*
 function collectKeys($page) {
@@ -26,11 +29,87 @@ function getDateFromMonthYear($monthyear, $dateformat='M Y') : string {
 
 class Stats extends SimpleStatsDb {
 
-    public static function listvisitors()/* : array */ {
+    // Like bnomei/pageviewcounter
+    public static function pixel(){
+        $IMG = \imagecreate(1, 1);
+        $background = \imagecolorallocate($IMG, 0, 0, 0);
+        \header("Content-type: image/png");
+        \imagepng($IMG);
+        \imagecolordeallocate($IMG, $background);
+        \imagedestroy($IMG);
+        exit;
+    }
+
+    // Lists database version, history and upgrade status
+    public static function listDbInfo(): array {
+        $dbVersion = '';
+        $dbArray = [];
+        $dbvQ = self::database()->query("SELECT `version`, `migrationdate` FROM `simplestats` ORDER BY `migrationdate` DESC LIMIT 0,100");
+        if( $dbvQ ){
+            if( $dbvQ->isNotEmpty() ){
+                $dbVersion = intval($dbvQ->first()->version, 10);
+                foreach($dbvQ as $v){
+                    $dbArray[]=[
+                        'version' => intval($v->version, 10),
+                        'date'    => $v->migrationdate,
+                    ];
+                }
+            }
+            // No version but table exists = weird !
+            else {
+                $dbVersion = 'None!';
+            }
+        }
+        else {
+            $error = self::database()->lastError()->getMessage();
+            // v1 didn't have the simplestats table (only way to detect)
+            if( stripos($error, 'no such table:') !== false && stripos($error, 'simplestats') !== false ){
+                $dbVersion = '1 (versionless)';
+            }
+            else {
+                $dbVersion = 'Unable to query! '.$error;
+            }
+        }
+
+        // Check requirements
+        // Tmp: display lots of data, try to detect errors
+        $dbRequirements = 'PHP Extensions='.implode(', ', get_loaded_extensions());
+        $dbRequirements .= " --- PHP=".(kirby()->system()->php()?'OK':'ERROR');
+        $dbRequirements .= " --- SQLite3=".(class_exists('SQLite3')?'OK':'ERROR');
+        try{
+            $sql = new \SQLite3('');
+            $sql->close();
+            $dbRequirements .= " --- SQLite3.try=OK";
+        } catch(Throwable $e){
+            $dbRequirements .= " --- SQLite3.try=ERROR ".$e->getMessage();
+        }
+        try{
+            $x=(self::database()!==null)?'OK':'FAIL';
+            $dbRequirements .= " --- CreateDB()=".$x;
+        } catch(Throwable $e){
+            $dbRequirements .= " --- CreateDB()=ERROR ".$e->getMessage();
+        }
+        $dbRequirements .= " --- pdo_sqlite=".( in_array('pdo_sqlite', get_loaded_extensions())?'OK':'ERROR');
+        $dbRequirements .= " --- sqlite3=".( in_array('sqlite3', get_loaded_extensions())?'OK':'ERROR');
+
+        return [
+            'softwareDbVersion' => self::engineDbVersion,
+            'dbVersion'         => $dbVersion,
+            'dbRequirements'    => $dbRequirements,
+            'dbHistoryLabels'   => [
+                ['label'=>'Db version', 'field'=>'version', 'type'=>'number',   'sort'=>true,  'search'=>true, 'width'=>'1fr'],
+                ['label'=>'Used since', 'field'=>'date',    'type'=>'text',     'sort'=>true,  'search'=>true, 'width'=>'3fr'],
+            ],
+            'dbHistory'         => $dbArray,
+            'upgradeRequired'   => self::engineDbVersion != $dbVersion,
+        ];
+    }
+
+    public static function listvisitors(): array {
         //$log  = new Log;
         //var_dump( self::singleton()->database() );
-        $db = self::singleton()->database();
-        $result = $db->query("SELECT `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` LIMIT 0,1000");
+        //$db = self::database();
+        $result = self::database()->query("SELECT `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` LIMIT 0,1000");
         if($result){
             //var_dump(array_keys($result->get(0)->toArray()));
             //var_dump(($result));
@@ -80,11 +159,11 @@ class Stats extends SimpleStatsDb {
         // tmp
         //self::syncDayStats();
 
-        $db = self::singleton()->database();
+        //$db = self::database();
 
         // Get devices
         $allDevices = [];
-        $allDevicesResult = $db->query("SELECT `device`, `hits` FROM `devices` GROUP BY `device` ORDER BY `device` DESC LIMIT 0,1000");
+        $allDevicesResult = self::database()->query("SELECT `device`, `hits` FROM `devices` GROUP BY `device` ORDER BY `device` DESC LIMIT 0,1000");
         if($allDevicesResult){
             // parse sql result, line by line
             foreach($allDevicesResult as $device){
@@ -95,7 +174,7 @@ class Stats extends SimpleStatsDb {
 
         // Get Systems
         $allSystems = [];
-        $allSystemsResult = $db->query("SELECT `system`, `hits` FROM `systems` GROUP BY `system` ORDER BY `system` DESC LIMIT 0,1000");
+        $allSystemsResult = self::database()->query("SELECT `system`, `hits` FROM `systems` GROUP BY `system` ORDER BY `system` DESC LIMIT 0,1000");
         if($allSystemsResult){
             // parse sql result, line by line
             foreach($allSystemsResult as $system){
@@ -106,7 +185,7 @@ class Stats extends SimpleStatsDb {
 
         // Get Engines
         $allEngines = [];
-        $allEnginesResult = $db->query("SELECT `engine`, `hits` FROM `engines` GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,1000");
+        $allEnginesResult = self::database()->query("SELECT `engine`, `hits` FROM `engines` GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,1000");
         if($allEnginesResult){
             // parse sql result, line by line
             foreach($allEnginesResult as $engine){
@@ -118,7 +197,7 @@ class Stats extends SimpleStatsDb {
 
         // Get Devices over time
         $devicesOverTimeData=[];
-        $devicesOverTime = $db->query("SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices` GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,1000");
+        $devicesOverTime = self::database()->query("SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices` GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,1000");
         if($devicesOverTime){
             $deviceMonths=[];
             foreach($devicesOverTime as $device){
@@ -168,6 +247,8 @@ class Stats extends SimpleStatsDb {
                 // Should be ok now
             }
             $devicesOverTimeData=$tmp;
+            unset($tmp);
+            //var_dump($devicesOverTimeData);
         }
 
         return [
@@ -197,10 +278,10 @@ class Stats extends SimpleStatsDb {
         $allReferersRows = [];
         $allReferersColumns = [];
 
-        $db = self::singleton()->database();
+        //$db = self::database();
 
         //$globalStats = $db->query("SELECT `referer`, `domain`, SUM(`hits`) AS hits, `medium` from `referers`, MIN(`referers`.`monthyear`) AS firstseen, MAX(`monthyear`) AS lastseen GROUP BY `monthyear` ORDER BY `lastseen` DESC LIMIT 0,100");
-        $globalStats = $db->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,1000");
+        $globalStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,1000");
         if($globalStats){
             //echo 'RESULT=';
             //var_dump($globalStats->toArray());
@@ -214,12 +295,12 @@ class Stats extends SimpleStatsDb {
 
         }
         else {
-            Logger::LogWarning("refererStats(globalStats) : db error =".$db->lastError()->getMessage() );
+            Logger::LogWarning("refererStats(globalStats) : db error =".self::database()->lastError()->getMessage() );
             //echo 'DBERROR=';var_dump($db->lastError()->getMessage() );
         }
 
 
-        $mediumStats = $db->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `medium` ORDER BY `lastseen` DESC, `medium` ASC LIMIT 0,1000");
+        $mediumStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `medium` ORDER BY `lastseen` DESC, `medium` ASC LIMIT 0,1000");
 
         if($mediumStats){
             //echo 'RESULT=';
@@ -234,12 +315,12 @@ class Stats extends SimpleStatsDb {
 
         }
         else {
-            Logger::LogWarning("refererStats(mediumStats) : db error =".$db->lastError()->getMessage() );
+            Logger::LogWarning("refererStats(mediumStats) : db error =".self::database()->lastError()->getMessage() );
             //echo 'DBERROR=';var_dump($db->lastError()->getMessage() );
         }
 
         // Mediums over time
-        $mediumStatsOverTime = $db->query("SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers` GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,1000");
+        $mediumStatsOverTime = self::database()->query("SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers` GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,1000");
         if($mediumStatsOverTime){
             //$mediumNames=[];
             $mediumMonths=[];
@@ -296,12 +377,12 @@ class Stats extends SimpleStatsDb {
             $referersByMediumOverTimeData=$tmp;
         }
         else {
-            Logger::LogWarning("refererStats(mediumStatsOverTime) : db error =".$db->lastError()->getMessage() );
+            Logger::LogWarning("refererStats(mediumStatsOverTime) : db error =".self::database()->lastError()->getMessage() );
         }
 
         // Recent stats
         $monthyear = date('Ym');
-        $domainRecentStats = $db->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`=${monthyear} ) WHERE `monthyear`=${monthyear} GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000");
+        $domainRecentStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`=${monthyear} ) WHERE `monthyear`=${monthyear} GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000");
         if($domainRecentStats){
 
             foreach($domainRecentStats as $referer){
@@ -310,12 +391,12 @@ class Stats extends SimpleStatsDb {
 
         }
         else{
-            Logger::LogWarning("refererStats(domainRecentStats) : db error =".$db->lastError()->getMessage() );
+            Logger::LogWarning("refererStats(domainRecentStats) : db error =".self::database()->lastError()->getMessage() );
             //else echo 'DBERROR=';var_dump($db->lastError()->getMessage() );
         }
 
 
-        $AllDomainStats = $db->query("SELECT `id`, `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `timefrom`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000;");
+        $AllDomainStats = self::database()->query("SELECT `id`, `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `timefrom`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000;");
         if($AllDomainStats){
 
             // Set column names
@@ -348,7 +429,7 @@ class Stats extends SimpleStatsDb {
                 ];
             }
         }
-        else Logger::LogWarning("refererStats(AllDomainStats) : db error =".$db->lastError()->getMessage() );
+        else Logger::LogWarning("refererStats(AllDomainStats) : db error =".self::database()->lastError()->getMessage() );
 
         return [
             'referersbydomaindata'          => $referersByDomainData,
@@ -364,52 +445,77 @@ class Stats extends SimpleStatsDb {
         $pageStatsData  =[];
         $pageStatsLabels=[];
 
-        $visitsOverTimeData=[];
+        $visitsOverTimeData    =[];
         $pageVisitsOverTimeData=[];
+
+        $globalLanguagesData  =[];
+        $languagesOverTimeData=[];
 
         // SYNC (todo: make this an option?)
         self::syncDayStats(); // tmp
 
-        $db = self::singleton()->database();
+        //$db = selfdatabase();
+        $langQuery = '';
+        if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
+            foreach( kirby()->languages() as $l ){
+                $langQuery .= ', SUM(`hits_'.$l->code().'`) AS `hits_'.$l->code().'`';
+            }
+        }
 
-        $visitedPages = $db->query("SELECT `uid`, MIN(`monthyear`) AS `firstvisited`, MAX(`monthyear`) AS `lastvisited`, SUM(`hits`) AS `hits` FROM `pagevisits` GROUP BY `uid` ORDER BY `uid` ASC, `monthyear` DESC LIMIT 0,1000;");
+        $visitedPages = self::database()->query("SELECT `uid`, MIN(`monthyear`) AS `firstvisited`, MAX(`monthyear`) AS `lastvisited`, SUM(`hits`) AS `hits` ${langQuery} FROM `pagevisits` GROUP BY `uid` ORDER BY `uid` ASC, `monthyear` DESC LIMIT 0,1000;");
         if($visitedPages){
             // Set column names
             $pageStatsLabels = [
-                ['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'1fr'],
-                ['label'=>'URL',            'field'=>'url',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'4fr'],
-                ['label'=>'Title',          'field'=>'title',           'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'3fr'],
-                ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'1fr'],
+                //['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'1fr'],
+                //['label'=>'URL',            'field'=>'url',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'4fr'],
+                ['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'4fr'],
+                ['label'=>'Title',          'field'=>'title',           'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'3fr'],
+                ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'1fr'],
                 ['label'=>'Percentage',     'field'=>'hitspercent',     'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
-                ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'2fr'],
-                ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'2fr'],
+                ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'2fr'],
+                ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'2fr'],
             ];
+
+            // Add language columns
+            if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
+                foreach( kirby()->languages() as $l ){
+                    $pageStatsLabels[] = ['label'=>$l->name(), 'field'=>'hits_'.$l->code(), 'type'=>'number', 'sort'=>true,   'search'=>false,   'class'=>'', 'width'=>'1fr'];
+                }
+            }
 
             // Get max for calc
             $max = 0;
             foreach($visitedPages as $page){
-                if( $page->hits>$max ) $max = $page->hits;
+                if( $page->hits > $max ) $max = $page->hits;
             }
 
             // Set rows
             foreach($visitedPages as $page){
                 $kirbyPage = kirby()->page($page->uid);
                 $pageStatsData[] = [
-                    'uid'           => $page->uid,
-                    'url'           => $kirbyPage->url(),
+                    //'uid'           => $page->uid,
+                    'uid'           => '<a href="'.$kirbyPage->url().'">'.$page->uid.'</a>',
+                    //'url'           => $kirbyPage->url(),
                     'title'         => $kirbyPage->title()->value(),
-                    'hits'          => $page->hits,
+                    'hits'          => intval($page->hits, 10),
                     'hitspercent'   => round(($page->hits/$max)*100),
                     'firstvisited'  => getDateFromMonthYear($page->firstvisited),
                     'lastvisited'   => getDateFromMonthYear($page->lastvisited),
                 ];
 
-
+                // Inject language data
+                if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
+                    $lastEntry = count($pageStatsData)-1;
+                    foreach( kirby()->languages() as $l ){
+                        $langStr = 'hits_'.$l->code();
+                        $pageStatsData[$lastEntry][$langStr] = intval($page->$langStr, 10);
+                    }
+                }
             }
         }
 
         // Compute visits over time (monthly)
-        $visitsOverTime = $db->query("SELECT `monthyear`, SUM(`hits`) AS `hits` FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
+        $visitsOverTime = self::database()->query("SELECT `monthyear`, SUM(`hits`) AS `hits` FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
         if($visitsOverTime){
 
             foreach($visitsOverTime as $timeFrame){
@@ -418,12 +524,12 @@ class Stats extends SimpleStatsDb {
                 //$visitsOverTimeData[]=$timeFrame->hits;
             }
         }
-        else Logger::LogWarning("pageStats(visitsOverTime) : db error =".$db->lastError()->getMessage() );
+        else Logger::LogWarning("pageStats(visitsOverTime) : db error =".self::database()->lastError()->getMessage() );
 
         // Get pages over time
         // Todo: Add total and remove visitsOverTimeData, see https://stackoverflow.com/a/39374290/58565
         $pageVisitsOverTimeData=[];
-        $pageVisitsOverTime = $db->query("SELECT `uid`, SUM(`hits`) AS `hits`, `monthyear` FROM `pagevisits` GROUP BY `UID`, `monthyear` ORDER BY `monthyear` ASC, `uid` ASC LIMIT 0,1000");
+        $pageVisitsOverTime = self::database()->query("SELECT `uid`, SUM(`hits`) AS `hits`, `monthyear` FROM `pagevisits` GROUP BY `UID`, `monthyear` ORDER BY `monthyear` ASC, `uid` ASC LIMIT 0,1000");
         if($pageVisitsOverTime){
             $pageMonths=[];
             foreach($pageVisitsOverTime as $page){
@@ -477,7 +583,95 @@ class Stats extends SimpleStatsDb {
             }
             $pageVisitsOverTimeData=$tmp;
         }
-        else Logger::LogWarning("pageStats(pageVisitsOverTime) : db error =".$db->lastError()->getMessage() );
+        else Logger::LogWarning("pageStats(pageVisitsOverTime) : db error =".self::database()->lastError()->getMessage() );
+
+
+
+        // Compute Global languages data
+        if( option('daandelange.simplestats.tracking.enableVisitLanguages') === true /* && kirby()->multilang() */  ) {
+            // Build langs part of query
+            $queryLangs = '';
+            $kirbyLangs = [];
+            if( kirby()->multilang() ){
+                foreach( kirby()->languages() as $language){
+                    $queryLangs .= ', SUM(`hits_'.$language->code().'`) AS `'.$language->code().'`';
+                    $kirbyLangs[] = $language->code();
+
+                    // Create keys for each language
+                    $languagesOverTimeData[$language->code()]=[
+                        'name' => $language->name(),
+                        'data' => [], // holds pairs of [date,value]
+                    ];
+
+                    // Init $globalLanguagesData
+                    $globalLanguagesData[$language->code()] = [$language->name(),0];
+                }
+            }
+            else {
+                $queryLangs .= ', SUM(`hits_'.kirby()->defaultLanguage()->code().'`) AS `'.kirby()->defaultLanguage()->code().'`';
+                $kirbyLangs[] = kirby()->defaultLanguage()->code();
+            }
+
+            // Compute $languagesOverTime and $globalLanguagesData
+            $languagesOverTimeQ = self::database()->query("SELECT `monthyear` ${queryLangs} FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
+            if($languagesOverTimeQ){
+                //$allLangMonths = [];
+                foreach($languagesOverTimeQ as $timeFrame){
+                    $monthyear = getDateFromMonthYear(intval($timeFrame->monthyear),'Y-m-d');
+
+                    // Get hits for each lang on this period
+                    foreach($kirbyLangs as $l){
+                        // value
+                        $languagesOverTimeData[$l]['data'][$monthyear]=intval($timeFrame->$l);
+
+                        // compute globals
+                        $globalLanguagesData[$l][1] += $languagesOverTimeData[$l]['data'][$monthyear];
+                    }
+
+                    // Remember this period, needed to consolidate data for charts
+                    //if(array_search($monthyear, $allLangMonths)===false){
+                    //    $allLangMonths[]=$monthyear;
+                    //}
+                }
+
+                // Check if all languages have values (add zero-values)
+                // Not needed here, commented if needed in the future
+                //foreach($allLangMonths as $m){
+                //    foreach($kirbyLangs as $l){
+                //        if( !array_key_exists($m, $languagesOverTimeData[$l]['data'])) $languagesOverTimeData[$l]['data'][$m]=0;
+                //    }
+                //}
+
+                // Remove empty rows in $languagesOverTimeData
+                foreach($kirbyLangs as $l){
+                   if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) ){
+                       $total = 0;
+                       foreach($languagesOverTimeData[$l]['data'] as $hits){
+                           $total+=$hits;
+                       }
+                       if($total===0){
+                           unset($languagesOverTimeData[$l]);
+                       }
+                   }
+                }
+
+                // Rename keys to nums so that the charts accept the data
+                foreach( $languagesOverTimeData as $key => $data) {
+                    $languagesOverTimeData[]=$data;
+                    unset($languagesOverTimeData[$key]);
+                };
+                //var_dump($languagesOverTimeData);
+
+                // Rename keys to nums so that the charts accept the data
+                foreach( $globalLanguagesData as $key => $data) {
+                    // Only keep non-zero values (so panel sees them empty)
+                    if( isset($data[1]) && $data[1]!=0 ) $globalLanguagesData[]=$data;
+                    unset($globalLanguagesData[$key]);
+                };
+                //var_dump($globalLanguagesData);
+            }
+            else Logger::LogWarning("pageStats(languagesOverTime) : db error =".self::database()->lastError()->getMessage() );
+        }
 
 
         return [
@@ -486,6 +680,10 @@ class Stats extends SimpleStatsDb {
 
             'visitsovertimedata'    => $visitsOverTimeData,
             'pagevisitsovertimedata'=> $pageVisitsOverTimeData,
+
+            'globallanguagesdata'   => $globalLanguagesData,
+            'languagesovertimedata' => $languagesOverTimeData,
+            'languagesAreEnabled'   => (option('daandelange.simplestats.tracking.enableVisitLanguages') === true),
         ];
     }
 
@@ -493,7 +691,7 @@ class Stats extends SimpleStatsDb {
     public static function syncDayStats(): bool {
 
         // init db
-        $db = self::singleton()->database();
+        //$db = self::database();
 
         // init return variabes
         //$sitePages = [];
@@ -504,10 +702,10 @@ class Stats extends SimpleStatsDb {
 
         // Get visitors older then 1 day
         $yesterday = time() - option('daandelange.simplestats.tracking.uniqueSeconds', 24*60*60);
-        $visitors = $db->query("SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,1000;");
+        $visitors = self::database()->query("SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,1000;");
 
         if($visitors){
-            //echo 'RESULT=';
+            //echo 'RESULT='."SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,1000;";
             //var_dump($visitors->toArray());
 
             // process each one
@@ -520,23 +718,73 @@ class Stats extends SimpleStatsDb {
                     // Create keys
                     if( !array_key_exists($yearMonth, $newPageVisits) ) $newPageVisits[$yearMonth]=[];
 
+                    $visitorPages = [];
                     foreach( explode(',', $visitor->visitedpages) as $page){
                         $page = trim($page);
 
-                        // Insert ?
+                        // Default lang (normally never used)
+                        $pageLang = kirby()->multilang()?kirby()->language()->code():kirby()->defaultLanguage()->code();
+
+                        // Remove lang part
+                        //if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ) {
+                        if( ($pos=strpos($page, '::')) !== false ){
+                            // Separate page::lang
+                            $tmpLang = substr($page, $pos+strlen('::'));
+                            $page = substr($page, 0, $pos);
+                            $tmpL = kirby()->language($tmpLang);
+                            // Valid lang
+                            if($tmpL) $pageLang = $tmpL->code();
+                            // Unvalid
+                            //else $pageLang = kirby()->defaultLanguage()->code();
+                        }
+
+                        // Newly visited page ?
+                        if( !array_key_exists($page, $visitorPages) ){
+                            $visitorPages[$page]=[
+                                //'uid',
+                                'hits' => 1, // Only counts 1 global visit if user visited the same page in multiple languages
+                                'langs' => [],
+                            ];
+                            // Add languages
+                            if( kirby()->multilang() ){
+                                foreach( kirby()->languages() as $language){
+                                    $visitorPages[$page]['langs'][$language->code()]=0;
+                                }
+                            }
+                            else {
+                                $visitorPages[$page]['langs'][$pageLang] = 0; // Create only, incremented below
+                            }
+                        }
+
+                        // Count a language visit
+                        $visitorPages[$page]['langs'][$pageLang]++;
+                    }
+
+                    // Insert composed $visitorPages into $newPageVisits
+                    foreach($visitorPages as $page => $pageInfo){
+
+                        // Insert page ?
                         $key = array_search($page, array_column($newPageVisits[$yearMonth], 'uid') );
                         if( $key === false ){
                             //echo 'Created $newPageVisits['.$yearMonth.'][] --- as '.$page."\n";
                             $newPageVisits[$yearMonth][]=[
-                                'hits' => 1,
+                                'hits' => 1,//$pageInfo['hits'],
                                 'uid'  => $page,
                                 'yearmonth' => $yearMonth,
+                                'langhits' => $pageInfo['langs'],
                             ];
                         }
-                        // Increment ?
+                        // Increment existing page ?
                         else {
                             //echo 'Incrementing $newPageVisits['.$yearMonth.']['.$key.'] '."\n";
-                            $newPageVisits[$yearMonth][$key]['hits']++;
+
+                            // increment total hits
+                            $newPageVisits[$yearMonth][$key]['hits']++;// +=$pageInfo['hits'];
+
+                            // Append lang visits
+                            foreach( $newPageVisits[$yearMonth][$key]['langhits'] as $lang => $hits ){
+                                if( $hits > 0 ) $newPageVisits[$yearMonth][$key]['langhits'][$lang]++; // += $hits;
+                            }
 
                         }
                     }
@@ -600,8 +848,9 @@ class Stats extends SimpleStatsDb {
                 }
 
                 // Delete entry
-                if( $visitor->userunique && !$db->query("DELETE FROM `pagevisitors` WHERE `userunique`='".$visitor->userunique."' LIMIT 1;") ){
-                    Logger::LogWarning('DBFAIL. Error on syncing stats. On delete visitor. Error='.$db->lastError()->getMessage() );
+                // Todo: Assumes that saving the data won't fail. Make this deletion happen on succesful sync.
+                if( $visitor->userunique && !self::database()->query("DELETE FROM `pagevisitors` WHERE `userunique`='".$visitor->userunique."' LIMIT 1;") ){
+                    Logger::LogWarning('DBFAIL. Error on syncing stats. On delete visitor. Error='.self::database()->lastError()->getMessage() );
                 }
             }
 
@@ -613,24 +862,44 @@ class Stats extends SimpleStatsDb {
             // Update page visits
             if( count($newPageVisits)>0 ){
 
+                // Build langs part of query
+                // Todo: maybe not needed here ??
+                $queryLangs = '';
+                if( kirby()->multilang() ){
+                    foreach( kirby()->languages() as $language){
+                        $queryLangs .= ((strlen($queryLangs)>0)?', ':'').'`hits_'.$language->code().'`';
+                    }
+                }
+                else {
+                    $queryLangs = '`hits_'.kirby()->defaultLanguage()->code().'`';
+                }
+
                 // Loop dates
                 foreach( $newPageVisits as $monthYear => $monthlyPageVisits ){
 
                     //echo 'Updating page visits for '.$monthYear."\n"; continue;
-                    $existingPages = $db->query("SELECT `id`, `uid`, `hits` FROM `pagevisits` WHERE `monthyear` = ${monthYear} LIMIT 0,1000;");
+                    $existingPages = self::database()->query("SELECT `id`, `uid`, `hits`, ${queryLangs} FROM `pagevisits` WHERE `monthyear` = ${monthYear} LIMIT 0,1000;");
 
+                    // Dirty security for if languages make the request fail
+/*
+                    if( !$existingPages ){
+                        // retry query without the language strings
+                        $existingPages = self::database()->query("SELECT `id`, `uid`, `hits` FROM `pagevisits` WHERE `monthyear` = ${monthYear} LIMIT 0,1000;");
+                    }
+*/
+                    // Query ok ?
                     if($existingPages){
                         //echo "EXISTING=";var_dump($existingPages->toArray());
 
                         $monthPages = $existingPages->toArray();
 
 
-                        // Loop visited pages (existing)
+                        // Loop newly visited pages (existing)
                         foreach( $monthlyPageVisits as $newPageInfo ){
                             $newHits = $newPageInfo['hits'];
 
                             $key = array_search( $newPageInfo['uid'], array_column($monthPages, 'uid') );
-                            // Needs new entry ?
+                            // Needs new entry this month ?
                             if( $key === false ){
                                 //echo "NEED TO INSERT PAGE@DATE\n";
                                 //$newHits = $newPageInfo['hits'];
@@ -639,29 +908,79 @@ class Stats extends SimpleStatsDb {
                                 // Ignore non-existent pages
                                 if( !kirby()->page($uid) ){
                                     //echo 'Page not found !';
+                                    Logger::LogVerbose("Error syncing new visits : Kirby could not find the registered page (${uid}). Has it been deleted ?");
                                     continue;
                                 }
 
+                                // Compose languages
+                                $langKeys = '';
+                                $langValues = '';
+                                // Multilang query
+                                if( kirby()->multilang() ){
+                                    foreach( kirby()->languages() as $language){
+                                        //
+                                        $langKeys .= ', `hits_'.$language->code().'`';
+
+                                        if( isset($newPageInfo['langhits'][$language->code()]) && $newPageInfo['langhits'][$language->code()] > 0 ){
+                                            $langValues .= ', '.$newPageInfo['langhits'][$language->code()];
+                                        }
+                                        else {
+                                            $langValues .= ', 0';
+                                        }
+                                    }
+                                }
+                                // Single lang query
+                                else {
+                                    $langKeys = ', `hits_'.kirby()->defaultLanguage()->code().'`';
+                                    if( $newPageInfo['langhits'][kirby()->defaultLanguage()->code()] > 0 ){
+                                        $langValues .= ', '.$newPageInfo['langhits'][kirby()->defaultLanguage()->code()];
+                                    }
+                                    else {
+                                        $langValues .= ', 0';
+                                    }
+                                }
+
                                 // Save
-                                if(!$db->query("INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear`) VALUES ('${uid}', ${newHits}, ${monthYear})")){
-                                    Logger::LogWarning("Could not INSERT pagevisits while syncing. Error=".$db->lastError()->getMessage());
+                                if(!self::database()->query("INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear` ${langKeys} ) VALUES ('${uid}', ${newHits}, ${monthYear} ${langValues})")){
+                                    Logger::LogWarning("Could not INSERT pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
                             // Update existing entry
-                            elseif($newHits>0) {
+                            elseif($newHits>0) { // Todo : if robots dont count as a hit, this will need reviewed.
                                 //echo "---";var_dump($monthPages[$key]->id );
                                 //$newHits = intval($newPageInfo['hits']) + intval($monthPages->get($key)['hits']);
-                                $id = $monthPages[$key]->id;//->id;
+                                $id = $monthPages[$key]->id;
+
+                                // Prepare lang query
+                                $langEdits = '';
+                                // Multilang query
+                                if( kirby()->multilang() ){
+                                    foreach( kirby()->languages() as $language){
+
+                                        if( isset($newPageInfo['langhits'][$language->code()]) && $newPageInfo['langhits'][$language->code()] > 0 ){
+                                            $langEdits .= ', `hits_'.$language->code().'` = `hits_'.$language->code().'` + '.$newPageInfo['langhits'][$language->code()];
+                                        }
+                                    }
+                                }
+                                // Single lang query
+                                else {
+                                    $tmpL = kirby()->defaultLanguage()->code();
+                                    // Ignore 0 hits
+                                    if( isset($newPageInfo['langhits'][$tmpL]) && $newPageInfo['langhits'][$tmpL] > 0 ){
+                                        $langEdits .= ', `hits_'.$tmpL.'`=`hits_'.$tmpL.'` + '.$newPageInfo['langhits'][$tmpL];
+                                    }
+                                }
+
                                 //echo "UPDATE PAGE@DATE, HITS=${newHits} !\n";
-                                if(!$db->query("UPDATE `pagevisits` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
-                                    Logger::LogWarning("Could not UPDATE pagevisits while syncing. Error=".$db->lastError()->getMessage());
+                                if(!self::database()->query("UPDATE `pagevisits` SET `hits`=`hits` + ${newHits} ${langEdits} WHERE `id`=${id} LIMIT 1;") ){
+                                    Logger::LogWarning("Could not UPDATE pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
 
                         }
                     }
                     else{
-                        Logger::LogWarning("Could not SELECT pagevisits while syncing stats. Error=".$db->lastError()->getMessage());
+                        Logger::LogWarning("Could not SELECT pagevisits while syncing stats. Error=".self::database()->lastError()->getMessage());
                     }
 
                 }
@@ -673,7 +992,7 @@ class Stats extends SimpleStatsDb {
                 // Loop months
                 foreach( $newDevices as $monthYear => $monthlyDevices ){
                     // Query existing db
-                    $existingDevices = $db->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
+                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
 
                     if($existingDevices){
                         //echo "EXISTING=";var_dump($existingPages->toArray());
@@ -688,22 +1007,22 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!$db->query("INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ('".$newDeviceInfo['device']."', ${newHits}, ${monthYear})")){
-                                    Logger::LogWarning("Could not INSERT new device while syncing. Error=".$db->lastError()->getMessage());
+                                if(!self::database()->query("INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ('".$newDeviceInfo['device']."', ${newHits}, ${monthYear})")){
+                                    Logger::LogWarning("Could not INSERT new device while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingDevicesA[$key]->id;
-                                if(!$db->query("UPDATE `devices` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
-                                    Logger::LogWarning("Could not UPDATE devices hits while syncing. Error=".$db->lastError()->getMessage());
+                                if(!self::database()->query("UPDATE `devices` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
+                                    Logger::LogWarning("Could not UPDATE devices hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
 
                         }
                     }
                     else {
-                        Logger::LogWarning("Could not SELECT devices while syncing. Error=".$db->lastError()->getMessage());
+                        Logger::LogWarning("Could not SELECT devices while syncing. Error=".self::database()->lastError()->getMessage());
                     }
                 }
             }
@@ -714,7 +1033,7 @@ class Stats extends SimpleStatsDb {
                 // Loop months
                 foreach( $newSystems as $monthYear => $monthlySystems ){
                     // Query existing db
-                    $existingSystems = $db->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
+                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
 
                     if($existingSystems){
                         $existingSystemsA = $existingSystems->toArray();
@@ -728,23 +1047,23 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!$db->query("INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ('".$newSystemInfo['system']."', ${newHits}, ${monthYear})")){
+                                if(!self::database()->query("INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ('".$newSystemInfo['system']."', ${newHits}, ${monthYear})")){
                                     //echo 'DBFAIL [insert new system]'."\n";
-                                    Logger::LogWarning("Could not INSERT systems while syncing. Error=".$db->lastError()->getMessage());
+                                    Logger::LogWarning("Could not INSERT systems while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingSystemsA[$key]->id;
-                                if(!$db->query("UPDATE `systems` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
-                                    Logger::LogWarning("Could not UPDATE system hits while syncing. Error=".$db->lastError()->getMessage());
+                                if(!self::database()->query("UPDATE `systems` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
+                                    Logger::LogWarning("Could not UPDATE system hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
 
                         }
                     }
                     else{
-                        Logger::LogWarning("Could not SELECT monthly systems while syncing. Error=".$db->lastError()->getMessage());
+                        Logger::LogWarning("Could not SELECT monthly systems while syncing. Error=".self::database()->lastError()->getMessage());
                     }
                 }
             }
@@ -755,7 +1074,7 @@ class Stats extends SimpleStatsDb {
                 // Loop months
                 foreach( $newEngines as $monthYear => $monthlyEngines ){
                     // Query existing db
-                    $existingEngines = $db->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
+                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
 
                     if($existingEngines){
                         $existingEnginesA = $existingEngines->toArray();
@@ -769,16 +1088,16 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!$db->query("INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ('".$newEngineInfo['engine']."', ${newHits}, ${monthYear})")){
-                                    Logger::LogWarning("Could not INSERT engines while syncing stats. Error=".$db->lastError()->getMessage());
+                                if(!self::database()->query("INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ('".$newEngineInfo['engine']."', ${newHits}, ${monthYear})")){
+                                    Logger::LogWarning("Could not INSERT engines while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
                                 //else echo "INSERTED_ENGINE!";
                             }
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingEnginesA[$key]->id;
-                                if(!$db->query("UPDATE `engines` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
-                                    Logger::LogWarning("Could not UPDATE engine hits while syncing stats. Error=".$db->lastError()->getMessage());
+                                if(!self::database()->query("UPDATE `engines` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
+                                    Logger::LogWarning("Could not UPDATE engine hits while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
                                 //else echo "UPDATED_ENGINE!";
                             }
@@ -786,7 +1105,7 @@ class Stats extends SimpleStatsDb {
                         }
                     }
                     else {
-                        Logger::LogWarning("Could not SELECT monthly engines while syncing stats. Error=".$db->lastError()->getMessage());
+                        Logger::LogWarning("Could not SELECT monthly engines while syncing stats. Error=".self::database()->lastError()->getMessage());
                     }
                 }
             }
@@ -796,7 +1115,7 @@ class Stats extends SimpleStatsDb {
             return true;
         }
         else {
-            Logger::LogWarning("Error selecting visitors from DB while syncing stats. Error=".$db->lastError()->getMessage());
+            Logger::LogWarning("Error selecting visitors from DB while syncing stats. Error=".self::database()->lastError()->getMessage());
         }
 
         return false;

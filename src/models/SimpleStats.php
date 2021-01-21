@@ -48,7 +48,7 @@ class SimpleStats extends SimpleStatsDb {
 
         // Get unique visitor id
         $userID = SimpleStats::getUserUniqueString();
-        $db = self::singleton()->database();
+        $db = self::database();
 
         // Retrieve user from db
         $userEntry = null;
@@ -81,7 +81,7 @@ class SimpleStats extends SimpleStatsDb {
 
                 // Populate visited pages
                 if( option('daandelange.simplestats.tracking.enableVisits') === true ){
-                    $visitedpages = $page_uri;
+                    $visitedpages = self::getPageIDWithLang($page_uri);
                 }
 
                 // Populate device info ?
@@ -105,8 +105,9 @@ class SimpleStats extends SimpleStatsDb {
             $userIsBot = ($userEntry->osfamily == 'bot');
 
             // Append  visited pages (except bots)
-            // Note: Bot visits are not tracked.
+            // Note: Bot visits are not tracked. Todo: Make this an option
             if( !$userIsBot && option('daandelange.simplestats.tracking.enableVisits') === true ){
+                $page_uri = self::getPageIDWithLang($page_uri);
 
                 // Check if the page was already visited.
                 if( !in_array($page_uri, explode(',', $userEntry->visitedpages) )){
@@ -171,6 +172,21 @@ class SimpleStats extends SimpleStatsDb {
         }
 
         return true;
+    }
+
+    public static function getPageIDWithLang($page_uri): string {
+
+        // With language ?
+        if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ) {
+            $curLang = kirby()->language();
+            if(!$curLang) $curLang = 'none';
+            else $curLang = $curLang->code();
+            return $page_uri .'::'. $curLang;
+        }
+        else {
+            return $page_uri;
+        }
+
     }
 
     // Combines the ip + user_agent to get a unique user string

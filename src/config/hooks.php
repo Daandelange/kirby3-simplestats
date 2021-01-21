@@ -4,6 +4,7 @@ namespace daandelange\SimpleStats;
 
 //use Kirby\Http\Router;
 use ErrorException;
+use Throwable;
 
 return [
     ( option('daandelange.simplestats.tracking.onLoad', true) !== true )?[]:
@@ -28,7 +29,7 @@ return [
 
                 try {
                     SimpleStats::track($page);
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
 
                     // If logging enable, initialize model and add record
                     if (option('daandelange.simplestats.log.tracking') === true) {

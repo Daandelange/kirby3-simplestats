@@ -1,25 +1,25 @@
 # SimpleStats
 
 Track pageviews, referrers and devices on your Kirby 3 website.
-This plugin provides simple solution for **self-hosted**, **minimal** and **non-intrusive** visitor analytics.
+This plugin provides a simple solution for **self-hosted**, **minimal** and **non-intrusive** visitor analytics.
 
 ![Simplestats Screenshot](k3-simplestats.png)
 
 - It tracks referrer URLs to keep track of who links to your website, categorised as either `search`, `social` or `website`.
 - It tracks the device type, the browser engine and the OS family for keeping track of how your website is visited. (without version numbers)
-- It tracks page visits, counting 1 hit per page per unique user, every 24H. Soon, it will also track hits per language in multi-language setups.
+- It tracks page visits, counting 1 hit per page per unique user, every 24H. It can also track hits per language in multi-language setups.
 - It offers an optional panel view to visualise the statistics.
 
 All data is stored in a `.sqlite` database.
-A panel allows connected users to visualise the computed stats.
+A panel view lets authorized users visualise the computed stats.
 
 ### How it works
 - Tracking happens when the page is served by Kirby.
 - A crypted user-unique fingerprint is stored in order to track unique page views.
-The formula is `md5( trunc(IP) + trunc(UserAgent) + Salt )`, which still, according to GDPR, seems to be considered as personal data.
-It's stored together with a list of visited pages, a device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.
+_The formula is `md5( trunc(IP) + trunc(UserAgent) + Salt )`, which still, according to GDPR, seems to be considered as personal data._
+It's stored together with a list of visited pages, the device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.
 - After 24H, it's processed and any user identifying data is deleted.
-  - The visited pages' hit count are incremented
+  - The visited pages' hit counts are incremented.
   - Device, Engine and OS Family are separately incremented.
 - Referrers are processed immediately and not bound to any user-related identifier.
 - All data is summed up on a monthly basis. *There is no weekly or daily precision. (yet?)*
@@ -55,15 +55,15 @@ Eventually add `--depth 1` to discard the repo commit history. (saves disk space
 For now, check the comments in `options.php`, while it's not recommended to change the default behaviour yet.
 
 #### Language setup
-Multilanguage websites are supported, but there's only 1 counter for all languages.
-Also, the panel view has not been translated.
+Multilanguage websites are supported. For each page, there's a global counter, with an optional counter for each language.
+Also, the panel view has not (yet?) been translated.
 
 #### Legal configuration
 Depending on your local laws, you might need to sit down and define how personal visitor data is handled.
 You might want to inspect the source code to know what's going on in details.
 As the license states, there's no guarantee whatsoever.
 
-### Options
+#### Options
 Like any Kirby plugin, options can be set in your `site/config/config.php`.
 Available options are listed and explained in `src/config/options.php`.
 Example :
@@ -77,6 +77,15 @@ return [
   'daandelange.simplestats.tracking.enableReferers' => false, // Disable referer tracking
 ];
 ````
+
+### Updating
+Before updating, make sure to **backup your database file**. If something goes wrong, you'll be able to retrieve your stats.
+
+Depending on the installation method you used, proceed to the logical steps to update.
+
+After updating, review new options and configure as wished.
+Sometimes, a database upgrade is needed. If so, head to the panel's `Information` tab and follow instructions in the upgrade section.
+
 
 ****
 

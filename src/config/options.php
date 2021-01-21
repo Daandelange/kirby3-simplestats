@@ -25,6 +25,8 @@ return [
         'enableReferers'   => true, // Enables tracking of referers. Gives an insigt of who links your website.
         'enableDevices'    => true, // Enables tracking of minimal hardware configurations (device information)
         'enableVisits'     => true, // Enables tracking of page visits
+        'enableVisitLanguages' => true, // In multilanguage setups, separately count language hits with page counts
+        // Todo: option to exclude bots from hitcounter (still tracking the device)
         'salt'             => 'CHANGEME', // Salt used to obfuscate unique user string.
         'uniqueSeconds'    => 1*24*60*60, // Anonimised user data is deleted after this delay, don't touch for now.
         // Dont change onLoad yet !!! (keep to true)

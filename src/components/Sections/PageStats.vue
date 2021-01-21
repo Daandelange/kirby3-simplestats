@@ -37,6 +37,34 @@
         <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
       </k-column>
 
+      <k-column width="3/4" v-if="languagesAreEnabled">
+        <k-headline size="medium">Languages over time</k-headline>
+        <area-chart
+          :data="languagesOverTimeData"
+          :download="true"
+          download="Site_GlobalLanguages.png"
+          label="Language visits (any page)"
+          xtitle="Time"
+          ytitle="Visits"
+          height="250px"
+          :stacked="true"
+          :library="chartOptions"
+          v-if="languagesOverTimeData.length > 0"
+        ></area-chart>
+        <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+      </k-column>
+
+      <k-column width="1/4" v-if="languagesAreEnabled">
+        <k-headline>Global Languages</k-headline>
+        <pie-chart
+          :data="globalLanguagesData"
+          v-if="globalLanguagesData.length > 0"
+          height="250px"
+        />
+        <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+      </k-column>
+      <br/>
+
       <k-column>
         <tbl
           :rows="rows"
@@ -60,6 +88,10 @@
           <template slot="column-hitspercent" slot-scope="props">
             <p v-bind:style="[ !props.value ? { width: '0%' } : { width: props.value + '%' }]"></p>
           </template>
+          <!-- UID is HTML format -->
+          <template slot="column-uid" slot-scope="props">
+            <p v-html="props.value"></p>
+          </template>
         </tbl>
         <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
       </k-column>
@@ -82,6 +114,10 @@ export default {
 
       visitsOverTimeData:   [],
       pageVisitsOverTimeData:   [],
+
+      languagesOverTimeData: [],
+      globalLanguagesData: [],
+      languagesAreEnabled: false,
 
       chartOptions: {
         scales: {
@@ -140,6 +176,10 @@ export default {
           //this.visitsOverTimeLabels = response.visitsovertimelabels
 
           this.pageVisitsOverTimeData = response.pagevisitsovertimedata
+
+          this.globalLanguagesData = response.globallanguagesdata
+          this.languagesOverTimeData = response.languagesovertimedata
+          this.languagesAreEnabled = response.languagesAreEnabled
 
           //console.warn(response);
           //console.log(response.data.rows);

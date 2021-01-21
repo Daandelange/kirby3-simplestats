@@ -17,20 +17,42 @@ class Logger extends SimpleStatsDb {
         $file = option('daandelange.simplestats.log.file', kirby()->root('config') . '/../logs/simplestats_errors.txt');
         if(!$file) return false;
 
-        return @error_log(date('[Y-m-d H:i] ').$message."\n", 3, $file);
+        // tmp, debug backtrace
+        $traceInfo="";
+        if(false){
+            $bt = debug_backtrace(0,5);
+            for($i=0; $i < 10 && $i < sizeof($bt); $i++ ){
+                if( isset($bt[$i]['file']) && strpos($bt[$i]['file'], __FILE__)!==false ) continue; // exclude this file
+                $traceInfo.="in :";
+                if(isset($bt[$i]['file'])) $traceInfo .= basename($bt[$i]['file']);
+                if(isset($bt[$i]['line'])) $traceInfo .= ' (line '.$bt[$i]['line'].')';
+                if(isset($bt[$i]['function'])) $traceInfo .= ' (function '.$bt[$i]['function'].')';
+                if(isset($bt[$i]['class'])) $traceInfo .= ' (class '.$bt[$i]['class'].')';
+                if(isset($bt[$i]['object'])) $traceInfo .= ' (object '.$bt[$i]['class'].')';
+                $traceInfo.="\n";
+                break; // Only show the first stack trace
+            }
+            $traceInfo.="\n";
+        }
+
+        return @error_log(date('[Y-m-d H:i] ').$message."\n".$traceInfo, 3, $file);
     }
 
     public static function logWarning($message): bool {
         if(option('daandelange.simplestats.log.warning')===false) return true;
-        return self::log('[Warning ] '.$message);
+        return self::log('[Warning] '.$message);
     }
     public static function logTracking($message): bool {
         if(option('daandelange.simplestats.log.tracking')===false) return true;
         return self::log('[Tracking] '.$message);
     }
+    public static function logNotice($message): bool {
+        if(option('daandelange.simplestats.log.verbose')===false) return true;
+        return self::log('[Notice] '.$message);
+    }
     public static function logVerbose($message): bool {
         if(option('daandelange.simplestats.log.verbose')===false) return true;
-        return self::log('[Verbose ] '.$message);
+        return self::log('[Verbose] '.$message);
     }
 
 }
