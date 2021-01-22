@@ -13,9 +13,10 @@
 # files of Composer dependencies that are not needed for the plugin
 /vendor/**/.*
 /vendor/**/*.json
+!/vendor/**/referers.json
 /vendor/**/*.txt
 /vendor/**/*.md
-/vendor/**/*.yml
+#/vendor/**/*.yml
 /vendor/**/*.yaml
 /vendor/**/*.xml
 /vendor/**/*.dist
@@ -34,7 +35,7 @@
 # Manually added composer vendors
 /vendor/**/*.py
 /vendor/**/Vagrantfile
-/vendor/**/data/*
+#/vendor/**/data/*
 /vendor/**/bin/*
 
 # License file fixes
@@ -51,6 +52,8 @@
 !/vendor/snowplow/referer-parser/php/src/Snowplow/RefererParser/*
 !/vendor/snowplow/referer-parser/php/*
 !/vendor/snowplow/referer-parser/php/*/*.php
+/vendor/snowplow/referer-parser/php/*.DS_Store
+/vendor/snowplow/referer-parser/php/**/*.DS_Store
 /vendor/snowplow/referer-parser/php/*.dist
 /vendor/snowplow/referer-parser/php/*.xml
 /vendor/snowplow/referer-parser/php/*.md
