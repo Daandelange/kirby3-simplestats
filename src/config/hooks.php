@@ -33,8 +33,7 @@ return [
 
                     // If logging enable, initialize model and add record
                     if (option('daandelange.simplestats.log.tracking') === true) {
-                        if( $e instanceof ErrorException ) Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
-                        else Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage());
+                        Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
                     }
                 }
                 return $result;

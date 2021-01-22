@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace daandelange\SimpleStats;
 
 use SQLite3;
+//use ErrorException;
+use Throwable;
+
 use Kirby\Database\Database;
 use Kirby\Toolkit\Collection;
 use Kirby\Toolkit\F;
@@ -49,12 +52,17 @@ class SimpleStatsDb
             }
 
             // Create db file
-            $db = new SQLite3($target);
+            try {
+                $db = new SQLite3($target);
+            } catch (Throwable $e) {
+                Logger::logWarning('Error creating SQLite3 instance. Error='.$e->getMessage());
+                return false;
+            }
 
             // pre-compute languages string
             $langKeys = '';
             if( !kirby()->multilang() ){
-                $langKeys = '`hits_'.kirby()->languages()->default()->code().'` INTEGER';
+                $langKeys = '`hits_en` INTEGER';
             }
             else {
                 foreach( kirby()->languages() as $language ){
@@ -95,8 +103,8 @@ class SimpleStatsDb
                     'database' => $target,
                 ]);
             } catch (Throwable $e) {
-                Logger::logWarning('Error create db singleton. Error='.$e->getMessage());
-                self::$database=null;
+                Logger::logWarning('Error creating the DataBase singleton. Error='.$e->getMessage());
+                //self::$database=null;
             }
 
             if(self::$database===null){
@@ -127,7 +135,6 @@ class SimpleStatsDb
     public static function checkUpgradeDatabase( bool $dryRun = true ) : bool {
         $ret = true;
         // Update old databases ?
-        // Todo: make this an utility that runs on demand.
         if( $db = self::database() ){
 
             // Compare db version with software version, update if needed
@@ -215,8 +222,8 @@ class SimpleStatsDb
 
                     // Compose missing langs
                     if( !kirby()->multilang() ){
-                        if( array_key_exists('hits_'.kirby()->languages()->default()->code(), $langs) ){
-                            $missingLangs[]=kirby()->languages()->default()->code();
+                        if( array_key_exists('hits_en', $langs) ){
+                            $missingLangs[]='en';
                         }
                     }
                     else {

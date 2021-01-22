@@ -71,31 +71,9 @@ class Stats extends SimpleStatsDb {
             }
         }
 
-        // Check requirements
-        // Tmp: display lots of data, try to detect errors
-        $dbRequirements = 'PHP Extensions='.implode(', ', get_loaded_extensions());
-        $dbRequirements .= " --- PHP=".(kirby()->system()->php()?'OK':'ERROR');
-        $dbRequirements .= " --- SQLite3=".(class_exists('SQLite3')?'OK':'ERROR');
-        try{
-            $sql = new \SQLite3('');
-            $sql->close();
-            $dbRequirements .= " --- SQLite3.try=OK";
-        } catch(Throwable $e){
-            $dbRequirements .= " --- SQLite3.try=ERROR ".$e->getMessage();
-        }
-        try{
-            $x=(self::database()!==null)?'OK':'FAIL';
-            $dbRequirements .= " --- CreateDB()=".$x;
-        } catch(Throwable $e){
-            $dbRequirements .= " --- CreateDB()=ERROR ".$e->getMessage();
-        }
-        $dbRequirements .= " --- pdo_sqlite=".( in_array('pdo_sqlite', get_loaded_extensions())?'OK':'ERROR');
-        $dbRequirements .= " --- sqlite3=".( in_array('sqlite3', get_loaded_extensions())?'OK':'ERROR');
-
         return [
             'softwareDbVersion' => self::engineDbVersion,
             'dbVersion'         => $dbVersion,
-            'dbRequirements'    => $dbRequirements,
             'dbHistoryLabels'   => [
                 ['label'=>'Db version', 'field'=>'version', 'type'=>'number',   'sort'=>true,  'search'=>true, 'width'=>'1fr'],
                 ['label'=>'Used since', 'field'=>'date',    'type'=>'text',     'sort'=>true,  'search'=>true, 'width'=>'3fr'],
@@ -608,7 +586,7 @@ class Stats extends SimpleStatsDb {
                 }
             }
             else {
-                $queryLangs .= ', SUM(`hits_'.kirby()->defaultLanguage()->code().'`) AS `'.kirby()->defaultLanguage()->code().'`';
+                $queryLangs .= ', SUM(`hits_en`) AS `en`';
                 $kirbyLangs[] = kirby()->defaultLanguage()->code();
             }
 
@@ -723,7 +701,7 @@ class Stats extends SimpleStatsDb {
                         $page = trim($page);
 
                         // Default lang (normally never used)
-                        $pageLang = kirby()->multilang()?kirby()->language()->code():kirby()->defaultLanguage()->code();
+                        $pageLang = kirby()->multilang()?kirby()->language()->code():'en';
 
                         // Remove lang part
                         //if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ) {
@@ -871,7 +849,7 @@ class Stats extends SimpleStatsDb {
                     }
                 }
                 else {
-                    $queryLangs = '`hits_'.kirby()->defaultLanguage()->code().'`';
+                    $queryLangs = '`hits_en`';
                 }
 
                 // Loop dates
@@ -931,9 +909,9 @@ class Stats extends SimpleStatsDb {
                                 }
                                 // Single lang query
                                 else {
-                                    $langKeys = ', `hits_'.kirby()->defaultLanguage()->code().'`';
-                                    if( $newPageInfo['langhits'][kirby()->defaultLanguage()->code()] > 0 ){
-                                        $langValues .= ', '.$newPageInfo['langhits'][kirby()->defaultLanguage()->code()];
+                                    $langKeys = ', `hits_en`';
+                                    if( $newPageInfo['langhits']['en'] > 0 ){
+                                        $langValues .= ', '.$newPageInfo['langhits']['en'];
                                     }
                                     else {
                                         $langValues .= ', 0';
@@ -964,7 +942,7 @@ class Stats extends SimpleStatsDb {
                                 }
                                 // Single lang query
                                 else {
-                                    $tmpL = kirby()->defaultLanguage()->code();
+                                    $tmpL = 'en';
                                     // Ignore 0 hits
                                     if( isset($newPageInfo['langhits'][$tmpL]) && $newPageInfo['langhits'][$tmpL] > 0 ){
                                         $langEdits .= ', `hits_'.$tmpL.'`=`hits_'.$tmpL.'` + '.$newPageInfo['langhits'][$tmpL];

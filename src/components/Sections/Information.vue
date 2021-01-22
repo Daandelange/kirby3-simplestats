@@ -60,8 +60,11 @@
               <k-button @click="load" theme="neutral">Refresh db info</k-button>
             </div>
           </div>
-          <div v-else>
+          <div v-else-if="updateMessage==null">
             <k-info-field label="Up to date" text="Your database is up to date. &nbsp; :) " theme="positive" />
+          </div>
+          <div v-else-if="updateMessage!==null">
+            <k-info-field label="Load Error" :text="updateMessage" theme="negative" />
           </div>
         </div>
       </k-column>
@@ -98,7 +101,8 @@ export default {
   },
   methods: {
     load() {
-
+      this.updateMessage=null
+      // Load DB info
       this.$api
         .get("simplestats/listdbinfo")
         .then(response => {
@@ -108,14 +112,28 @@ export default {
           this.upgradeRequired  = response.upgradeRequired
           this.softwareDbVersion= response.softwareDbVersion
           this.dbVersion        = response.dbVersion
-          this.dbRequirements   = response.dbRequirements
+          //this.dbRequirements   = response.dbRequirements
           //this.unlockUpgrade = true
           this.updateMessage    = null
           //console.log(response.data.rows);
         })
         .catch(error => {
           this.isLoading = false
-          this.error = error.message
+          this.updateMessage = error.message
+          this.$store.dispatch("notification/open", {
+            type: "error",
+            message: error.message,
+            timeout: 5000
+          });
+        });
+      // Load requirements
+      this.$api
+        .get("simplestats/checkrequirements")
+        .then(response => {
+          this.dbRequirements   = response.dbRequirements
+        })
+        .catch(error => {
+          this.dbRequirements = error.message
           this.$store.dispatch("notification/open", {
             type: "error",
             message: error.message,
