@@ -587,7 +587,7 @@ class Stats extends SimpleStatsDb {
             }
             else {
                 $queryLangs .= ', SUM(`hits_en`) AS `en`';
-                $kirbyLangs[] = kirby()->defaultLanguage()->code();
+                $kirbyLangs[] = 'en';
             }
 
             // Compute $languagesOverTime and $globalLanguagesData
