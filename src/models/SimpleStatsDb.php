@@ -158,7 +158,7 @@ class SimpleStatsDb
                             !$dbsql3->exec("CREATE TABLE IF NOT EXISTS `simplestats` (`id` INTEGER primary key unique, `version` INTEGER, `migrationdate` INTEGER)") ||
                             !$dbsql3->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, ".self::engineDbVersion.", ".date('Ymd').")")
                         ){
-                            Logger::LogWarning("UPGRADE from db v1 to v2+ FAILED creating the simplestats table. Error=".$dbsql3->lastError()->getMessage());
+                            Logger::LogWarning("UPGRADE from db v1 to v2+ FAILED creating the simplestats table. Error=".$dbsql3->lastErrorMsg() );
                             $dbsql3->close();
                             return false;
                         }
