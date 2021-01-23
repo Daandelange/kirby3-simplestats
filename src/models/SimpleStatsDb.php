@@ -40,7 +40,7 @@ class SimpleStatsDb
     }
 
     private static function createDBInstance() : bool {
-        $target = self::getConfigPath();
+        $target = self::getDbFile();
 
         // Initially create the db, if it doesn't exist yet.
         if (!F::exists($target)) {
@@ -119,17 +119,23 @@ class SimpleStatsDb
         return true;
     }
 
-    public static function getConfigPath() : String {
+    public static function getDbFile() : String {
         // Get DB file
         $target = option('daandelange.simplestats.tracking.database', false);
 
         // Override the setting if it aint an .sqlite file
         if( !$target || F::extension($target)!='sqlite'){
-            // Todo: make this use root('logs')
-            $target = kirby()->root('config').'/../logs/simplestats.sqlite';
+            // Note, the log root is not available in early k3 distributions, so use a fallback
+            $target = self::getLogsPath('simplestats.sqlite');
             Logger::LogVerbose("Config --> db file replaced by default = ${target}.");
         }
         return $target;
+    }
+
+    public static function getLogsPath($file='') : String {
+        return ( kirby()->roots()->logs()!==NULL ?
+            kirby()->root('logs').'/'.$file :
+            kirby()->root('config').'/../logs/'.$file );
     }
 
     public static function checkUpgradeDatabase( bool $dryRun = true ) : bool {
@@ -148,7 +154,7 @@ class SimpleStatsDb
                     }
                     // Upgrade
                     else {
-                        $target = self::getConfigPath();
+                        $target = self::getDbFile();
 
                         // SQL
                         $dbsql3 = new SQLite3($target);
@@ -159,7 +165,7 @@ class SimpleStatsDb
                             !$dbsql3->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, ".self::engineDbVersion.", ".date('Ymd').")")
                         ){
                             Logger::LogWarning("UPGRADE from db v1 to v2+ FAILED creating the simplestats table. Error=".$dbsql3->lastErrorMsg() );
-                            $dbsql3->close();
+                            @$dbsql3->close();
                             return false;
                         }
                         else {
@@ -242,7 +248,7 @@ class SimpleStatsDb
                         }
                         // Upgrade langs
                         else {
-                            $target = self::getConfigPath();
+                            $target = self::getDbFile();
                             Logger::LogVerbose('UPGRADE db, adding LANGUAGES '.implode(', ', $missingLangs).' to pagevisits.');
 
                             // SQL

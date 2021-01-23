@@ -14,7 +14,7 @@ class Logger extends SimpleStatsDb {
     public static function log($message): bool {
         if(option('daandelange.simplestats.log', false)===false) return true;
 
-        $file = option('daandelange.simplestats.log.file', kirby()->root('config') . '/../logs/simplestats_errors.txt');
+        $file = option('daandelange.simplestats.log.file', self::getLogsPath('simplestats_errors.txt'));
         if(!$file) return false;
 
         // tmp, debug backtrace

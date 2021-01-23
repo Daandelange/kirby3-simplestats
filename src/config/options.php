@@ -13,12 +13,12 @@ return [
         'tracking'  => true, // Enable tracking errors.
         'warnings'  => true, // Functional warnings. Mostly db related.
         'verbose'   => true, // For testing / dev, logs almost anything else.
-        'file'      => kirby()->root('config') . '/../logs/simplestats_errors.txt',
+        'file'      => SimpleStatsDb::getLogsPath('simplestats_errors.txt'),
     ],
 
     // Tracking options
     'tracking' => [
-        'database'      => kirby()->root('config') . '/../logs/simplestats.sqlite',
+        'database'      => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
         // Respect DNT
         // pagecountermode : hits, uniquehitsUA, uniquehitsSession (not yet)
         // todo : 'trackUniqueHitsOnly'   => true, // set to false for hitcounter behaviour

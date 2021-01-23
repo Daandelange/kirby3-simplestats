@@ -586,8 +586,8 @@ class Stats extends SimpleStatsDb {
                 }
             }
             else {
-                $queryLangs .= ', SUM(`hits_en`) AS `en`';
-                $kirbyLangs[] = 'en';
+                //$queryLangs .= ', SUM(`hits_en`) AS `en`';
+                //$kirbyLangs[] = 'en';
             }
 
             // Compute $languagesOverTime and $globalLanguagesData
@@ -661,7 +661,7 @@ class Stats extends SimpleStatsDb {
 
             'globallanguagesdata'   => $globalLanguagesData,
             'languagesovertimedata' => $languagesOverTimeData,
-            'languagesAreEnabled'   => (option('daandelange.simplestats.tracking.enableVisitLanguages') === true),
+            'languagesAreEnabled'   => (option('daandelange.simplestats.tracking.enableVisitLanguages') === true) && kirby()->multilang(),
         ];
     }
 
