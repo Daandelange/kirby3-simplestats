@@ -6,6 +6,26 @@
       Simple Stats
     </k-header>
 -->
+
+    <k-grid v-if="!isLoading && !dismissDisclaimer">
+      <k-column>
+        <!-- DISCLAIMER -->
+        <k-headline size="medium" align="center">Disclaimer - Collecting Data</k-headline>
+        <k-text size="small" align="center">
+          You are actively collecting stats : you have to know what you are doing, and be responsible.<br>
+          You should know your legal obligations regarding personal data storage of your visitors, and their rights.<br>
+          SimpleStats is free to use, and [according to its license] it doesn't come with any guarantees or legal advice whatsoever.<br>
+          By using SimpleStats, you agree to .
+          <span class="hover-to-help">
+            <k-icon type="question" />
+            <div class="help"><k-text theme="help" size="small" align="center">To dismiss this message : refer to the readme.</k-text></div>
+          </span>
+          <br>
+        </k-text>
+
+      </k-column>
+    </k-grid>
+
     <k-tabs
       ref="tabs-ref"
       :tabs="tabs"
@@ -68,6 +88,8 @@ export default {
         {name:'simplestats-tabs-referers', label:'Referers', icon:'chart', columns: []},
         {name:'simplestats-tabs-info', label:'Information', icon:'map', columns: []},
       ],
+      dismissDisclaimer : false,
+      isLoading : true,
     };
   },
   watch: {
@@ -89,7 +111,33 @@ export default {
       return this.tab;
     },
   },
+  created() {
+    this.load();
+  },
+
   methods: {
+    load(reload) {
+      if (!reload) this.isLoading = true
+
+      this.$api
+        .get("simplestats/mainview")
+        .then(response => {
+          this.isLoading = false
+          this.dismissDisclaimer   = response.dismissDisclaimer
+        })
+        .catch(error => {
+          this.isLoading = false
+          this.error = error.message
+
+          this.$store.dispatch("notification/open", {
+            type: "error",
+            message: error.message,
+            timeout: 5000
+          });
+        })
+    },
+
+    // Bind tab changing
     onTab(tab) {
       //console.log('onTab()', this.tab)
       this.tab = tab.name;
@@ -117,5 +165,36 @@ export default {
   position: relative;
   width: 0%; /* Default for unvalid values */
   padding: 0em 0!important; /* overrides tbl default styling */
+}
+
+.hover-to-help {
+  position: relative;
+
+  .k-icon {
+    display: inline;
+  }
+
+  .help {
+    display: inline-block;
+    visibility: hidden;
+    z-index: 1;
+    position: relative;
+    left: 10px;
+    top: 0;
+    overflow: visible;
+    width: 0;
+
+    .k-text {
+      width: 350px;
+      background-color: #efefef;
+      border: 1px solid black;
+      padding: 8px 10px;
+      color: black;
+    }
+  }
+  &:hover .help {
+    //display: inline-block;
+    visibility: visible;
+  }
 }
 </style>

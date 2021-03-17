@@ -1,13 +1,5 @@
 <template>
   <div>
-    <!-- DISCLAIMER -->
-    <k-headline size="small" align="center">All your data are belong to us.</k-headline>
-    <k-text size="small" align="center">
-      You are collecting stats. You know what you are doing as you are responsible.<br>
-      Thus, you know your legal obligations regarding personal data storage of your visitors.<br>
-      By using SimpleStats, you fully agree to this.<br>
-      <br>
-    </k-text>
 
     <k-headline size="large">Database Information</k-headline>
 

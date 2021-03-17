@@ -137,6 +137,22 @@ return [
                 }
             },
         ],
+        [
+            'pattern' => 'simplestats/mainview',
+            'method'  => 'GET',
+            'action'  => function () {
+                // Only allow admins
+                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), ['admin'] ) ){
+                    return [
+                        'dismissDisclaimer' => option('daandelange.simplestats.panel.dismissDisclaimer', false),
+
+                    ];
+                }
+                else {
+                    throw new PermissionException('You are not authorised to upgrade the db file.');
+                }
+            },
+        ],
     ],
 
 ];
