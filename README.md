@@ -80,7 +80,7 @@ return [
 ];
 ````
 
-|--------|------|---------|--------|
+
 | Option | Type | Default |Comment |
 |--------|------|---------|--------|
 | panel.dismissDisclaimer | Bool | false | Dismisses the panel disclaimer message. |
