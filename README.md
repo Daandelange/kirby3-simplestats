@@ -1,34 +1,36 @@
 # SimpleStats
 
-Track pageviews, referrers and devices on your Kirby 3 website.
+Track page views, referrers and devices on your Kirby 3 website.
 This plugin provides a simple solution for **self-hosted**, **minimal** and **non-intrusive** visitor analytics.
 
 ![Simplestats Screenshot](k3-simplestats.png)
 
-- It tracks referrer URLs to keep track of who links to your website, categorised as either `search`, `social` or `website`.
-- It tracks the device type, the browser engine and the OS family for keeping track of how your website is visited. (without version numbers)
-- It tracks page visits, counting 1 hit per page per unique user, every 24H. It can also track hits per language in multi-language setups.
-- It offers an optional panel view to visualise the statistics.
-
-All data is stored in a `.sqlite` database.
-A panel view lets authorized users visualise the computed stats.
+- It tracks **referrer URLs** to keep track of who links to your website, categorised as either `search`, `social` or `website`.
+- It tracks **device information** (device types, browser engine, OS family; all version-less) for keeping track of how your website is visited.
+- It tracks **page visits**, counting 1 hit per page per unique user per language, every 24H.
+- The collected data is stored in a **.sqlite database** (raw data) and can be visualised using Kirby's admin panel (computed).
 
 ### How it works
 - Tracking happens when the page is served by Kirby.
 - A crypted user-unique fingerprint is stored in order to track unique page views.
 _The formula is `md5( trunc(IP) + trunc(UserAgent) + Salt )`, which still, according to GDPR, seems to be considered as personal data._
 It's stored together with a list of visited pages, the device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.
-- After 24H, it's processed and any user identifying data is deleted.
-  - The visited pages' hit counts are incremented.
+This data is kept for a very short amount of time to ensure only counting unique hits.
+- After 24H, the collected data is processed and any user identifying data is deleted :
+  - The visited pages' hit counts are incremented, globally and per language.
   - Device, Engine and OS Family are separately incremented.
 - Referrers are processed immediately and not bound to any user-related identifier.
-- All data is summed up on a monthly basis. *There is no weekly or daily precision. (yet?)*
+- For now, all data is summed up on a monthly basis; it only tracks the amount of visits per month. *Future releases might let you set a custom time span.*
 
 
 ### Current state
-This is very alpha, and has not been tested. It is an initial codebase to be improved.
-The database structure might evolve over time.
-Discussions and contributions are welcome, as long as the stats stay minimal.
+This is very alpha state. I've tested it on a few online and online configurations. It's been reported to work on other websites too, while there are also reports of this plugin not working.
+Please note that the database structure might evolve over time, until a more stable release is available.
+
+
+### Contributing
+I guess a lot of options could be added to suit the plugin for a wider variety of website setups. The panel interface could also be improved and translated.
+Any contributions (discussions, reports, feedback and pull requests) are welcome, as long as the collected stats stay minimal and reasonably non-intrusive.
 
 ****
 
@@ -136,4 +138,4 @@ Development was started from [a standard Kirby PluginKit](https://github.com/get
 
 - [MIT](./LICENSE.md) - Free to use, free to improve.
 
-- Copyright 2020 [Daan de Lange](https://github.com/daandelange)
+- Copyright 2020-2021 [Daan de Lange](https://github.com/daandelange)
