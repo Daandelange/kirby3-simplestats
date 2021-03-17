@@ -470,6 +470,20 @@ class Stats extends SimpleStatsDb {
             // Set rows
             foreach($visitedPages as $page){
                 $kirbyPage = kirby()->page($page->uid);
+
+                // Pages that don't exist (anymore?)
+                if(!$kirbyPage){
+                    $pageStatsData[] = [
+                        'uid'           => '<a href="#'.$page->uid.'">'.$page->uid.'</a>',
+                        'title'         => $page->uid . ' (404)',
+                        'hits'          => intval($page->hits, 10),
+                        'hitspercent'   => round(($page->hits/$max)*100),
+                        'firstvisited'  => getDateFromMonthYear($page->firstvisited),
+                        'lastvisited'   => getDateFromMonthYear($page->lastvisited),
+                    ];
+                    continue;
+                }
+
                 $pageStatsData[] = [
                     //'uid'           => $page->uid,
                     'uid'           => '<a href="'.$kirbyPage->url().'">'.$page->uid.'</a>',
