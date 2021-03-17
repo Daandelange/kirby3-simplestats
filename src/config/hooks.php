@@ -16,8 +16,20 @@ return [
                 //var_dump($result);
                 $page = $path;
                 if( is_a($result, 'Page') ) {
-                    //var_dump( $result->uri() );
+                    //var_dump( $result->id() );
                     $page = $result->id();
+
+                    try {
+                        SimpleStats::track($page);
+                    } catch (Throwable $e) {
+
+                        // If logging enable, initialize model and add record
+                        if (option('daandelange.simplestats.log.tracking') === true) {
+                            Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
+                        }
+                    }
+
+                    return $result;
                 }
                 else {
                     // Panel and other requests are not Page objects. (HttpResponse)
@@ -27,16 +39,6 @@ return [
                     return $result;
                 }
 
-                try {
-                    SimpleStats::track($page);
-                } catch (Throwable $e) {
-
-                    // If logging enable, initialize model and add record
-                    if (option('daandelange.simplestats.log.tracking') === true) {
-                        Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
-                    }
-                }
-                return $result;
             }
 
 
