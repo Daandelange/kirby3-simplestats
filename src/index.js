@@ -5,26 +5,33 @@ import View from "./components/View.vue";
 import Chartkick from 'vue-chartkick'
 import Chart from 'chart.js'
 Chartkick.options = {
-//  colors: ['rgba(11,133,55,1)', 'rgba(15,115,90,1)', 'rgba(190, 115, 15,1)', 'rgba(45,55,65,1)', 'rgba(130,140,150)', 'rgba(136,36,25,1)'],
-colors: ['rgba(46, 64, 87,1)', 'rgba(102, 161, 130,1)', 'rgba(237, 174, 73,1)', 'rgba(209, 73, 91,1)', 'rgba(0, 121, 140,1)'],
-  //colors: ['rgba(249, 65, 68,1)', 'rgba(243, 114, 44,1)', 'rgba(248, 150, 30,1)', 'rgba(249, 199, 79,1)', 'rgba(144, 190, 109,1)', 'rgba(67, 170, 139,1)', 'rgba(87, 117, 144,1)'],
-  dataset : {borderWidth: 1, borderColor: 'black'},
-  options: {scales: {
-          xAxes: [{
-            //display: false,
-            type: 'time',
-            time: {
-              unit: 'month',
-              displayFormats: {
-                  month: 'MMM YYYY'
-              }
-            }
-          }],
-          yAxes: [{
-            stacked: true
-          }]
-        }}
-}
+  colors: [
+    // Generate a color palette in console :
+    // var colors=8; var variants=4; out=""; for(var v=0; v<variants; v++){var b=70+(i%2)*10; var s=70+((i+1)%2)*10; for(var i=0; i<colors; i++){out+="'hsl("+((i/colors)*360)+", "+s+"%, "+b+"%)', ";}} out;
+    var colors=8; var variants=4; out=""; for(var v=0; v<variants; v++){var b=70+(i%2)*10; var s=70+((i+1)%2)*10; for(var i=0; i<colors; i++){out+="'hsl("+((i/colors)*360)+", "+s+"%, "+b+"%)', ";}} out;
+  ],
+  dataset : {
+    borderWidth: 1,
+    borderColor: 'black',
+  },
+  options: {
+    scales: {
+      xAxes: [{
+        //display: false,
+        type: 'time',
+        time: {
+          unit: 'month',
+          displayFormats: {
+              month: 'MMM YYYY',
+          }
+        }
+      }],
+      yAxes: [{
+        stacked: true,
+      }]
+    }
+  }
+};
 Chartkick.use(Chart);
 
 // 3rd party assets
@@ -36,20 +43,11 @@ panel.plugin("daandelange/simplestats", {
     simplestats: {
       component: View,
       icon: "chart",
-      label: "SimpleStats"
+      label: "SimpleStats",
     }
-  },
-//   beforeCreate(){
-//     console.warn('Chartkick injected !');
-//     Chartkick.use(Chart);
-//   },
-  components: {
-    //Chartkick,
   },
   use: {
     Chartkick,
-    //console.warn('UUSSEE!!');
-    //chartkick: [Chartkick.use(Chart)]
   },
   devtool: 'source-map', // vue debugging
 });
