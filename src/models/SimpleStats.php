@@ -22,6 +22,7 @@ use WhichBrowser\Constants\BrowserType;
 class SimpleStats extends SimpleStatsDb {
 
     // Trigger track function
+    // Note : the uri should be an id, the Kirby uri is translateable.
     public static function track( string $page_uri = '' ): bool {
 
         // skip ignored paths

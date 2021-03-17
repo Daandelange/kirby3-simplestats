@@ -17,7 +17,7 @@ return [
                 $page = $path;
                 if( is_a($result, 'Page') ) {
                     //var_dump( $result->uri() );
-                    $page = $result->uri();
+                    $page = $result->id();
                 }
                 else {
                     // Panel and other requests are not Page objects. (HttpResponse)
