@@ -78,6 +78,7 @@ return [
   'daandelange.simplestats.panel.enable' => false, // Disable the panel view completely
   'daandelange.simplestats.tracking.enableReferers' => false, // Disable referer tracking
 ];
+````
 
 |--------|------|---------|--------|
 | Option | Type | Default |Comment |
@@ -85,8 +86,6 @@ return [
 | panel.dismissDisclaimer | Bool | false | Dismisses the panel disclaimer message. |
 | panel.enable | Bool | true | Enable/Disable viewing stats in the panel. |
 
-
-````
 
 ### Updating
 Before updating, make sure to **backup your database file**. If something goes wrong, you'll be able to retrieve your stats.
