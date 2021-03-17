@@ -145,7 +145,14 @@ return [
                 if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), ['admin'] ) ){
                     return [
                         'dismissDisclaimer' => option('daandelange.simplestats.panel.dismissDisclaimer', false),
-
+                        'translations' => [
+                            'tabs' => [
+                                'pagevisits'        => t('simplestats.tabs.pagevisits',     'Page Visits'),
+                                'visitordevices'    => t('simplestats.tabs.visitordevices', 'Visitor Devices'),
+                                'referers'          => t('simplestats.tabs.referers',       'Referers'),
+                                'information'       => t('simplestats.tabs.information',    'Information'),
+                            ],
+                        ],
                     ];
                 }
                 else {

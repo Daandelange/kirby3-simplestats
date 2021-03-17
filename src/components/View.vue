@@ -10,19 +10,16 @@
     <k-grid v-if="!isLoading && !dismissDisclaimer">
       <k-column>
         <!-- DISCLAIMER -->
-        <k-headline size="medium" align="center">Disclaimer - Collecting Data</k-headline>
+        <k-headline size="medium" align="center">{{ $t('simplestats.disclaimer.title') }}</k-headline>
         <k-text size="small" align="center">
-          You are actively collecting stats : you have to know what you are doing, and be responsible.<br>
-          You should know your legal obligations regarding personal data storage of your visitors, and their rights.<br>
-          SimpleStats is free to use, and [according to its license] it doesn't come with any guarantees or legal advice whatsoever.<br>
-          By using SimpleStats, you agree to .
+          <span v-html="$t('simplestats.disclaimer.text')"></span>
           <span class="hover-to-help">
             <k-icon type="question" />
-            <div class="help"><k-text theme="help" size="small" align="center">To dismiss this message : refer to the readme.</k-text></div>
+            <div class="help"><k-text theme="help" size="small" align="center">{{ $t('simplestats.disclaimer.dismiss') }}</k-text></div>
           </span>
           <br>
         </k-text>
-
+        <br/><br/>
       </k-column>
     </k-grid>
 
@@ -33,7 +30,6 @@
       :key="tabsKey"
       @tab="onTab"
     />
-
     <p><br/></p>
 
     <div v-if="tab == 'simplestats-tabs-visitedpages'">
@@ -124,6 +120,12 @@ export default {
         .then(response => {
           this.isLoading = false
           this.dismissDisclaimer   = response.dismissDisclaimer
+          //this.translations = response.translations
+
+          this.tabs[0].label = response.translations.tabs.pagevisits;
+          this.tabs[1].label = response.translations.tabs.visitordevices;
+          this.tabs[2].label = response.translations.tabs.referers;
+          this.tabs[3].label = response.translations.tabs.information;
         })
         .catch(error => {
           this.isLoading = false
@@ -183,6 +185,7 @@ export default {
     top: 0;
     overflow: visible;
     width: 0;
+    height: 0;
 
     .k-text {
       width: 350px;

@@ -4,7 +4,7 @@
 
     <k-grid style="margin: 0 1em;">
       <k-column>
-        <k-headline size="medium">Visits over time</k-headline>
+        <k-headline size="medium">{{ $t('simplestats.visitsovertime') }}</k-headline>
         <br/>
 <!--      <histogram :dataset="[visitsOverTimeData]" :labels="visitsOverTimeLabels" /> -->
         <area-chart
@@ -12,56 +12,56 @@
           :download="true"
           download="Site_PageVisits.png"
           label="Unique visits"
-          xtitle="Time"
-          ytitle="Visits"
+          :xtitle="$t('simplestats.charts.time')"
+          :ytitle="$t('simplestats.charts.visits')"
           height="150px"
         ></area-chart>
       </k-column>
 
 
       <k-column>
-        <k-headline size="medium">Page visits over time</k-headline>
+        <k-headline size="medium">{{ $t('simplestats.pagevisitsovertime') }}</k-headline>
         <br/>
         <column-chart
           :data="pageVisitsOverTimeData"
           :download="true"
           download="Site_PageVisits.png"
           label="Unique visits"
-          xtitle="Time"
-          ytitle="Visits"
+          :xtitle="$t('simplestats.charts.time')"
+          :ytitle="$t('simplestats.charts.visits')"
           height="300px"
           :stacked="true"
           :library="chartOptions"
           v-if="pageVisitsOverTimeData.length > 0"
         ></column-chart>
-        <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+        <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
       </k-column>
 
       <k-column width="3/4" v-if="languagesAreEnabled">
-        <k-headline size="medium">Languages over time</k-headline>
+        <k-headline size="medium">{{ $t('simplestats.languagesovertime') }}</k-headline>
         <area-chart
           :data="languagesOverTimeData"
           :download="true"
           download="Site_GlobalLanguages.png"
           label="Language visits (any page)"
-          xtitle="Time"
-          ytitle="Visits"
+          :xtitle="$t('simplestats.charts.time')"
+          :ytitle="$t('simplestats.charts.visits')"
           height="250px"
           :stacked="true"
           :library="chartOptions"
           v-if="languagesOverTimeData.length > 0"
         ></area-chart>
-        <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+        <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
       </k-column>
 
       <k-column width="1/4" v-if="languagesAreEnabled">
-        <k-headline>Global Languages</k-headline>
+        <k-headline>{{ $t('simplestats.globallanguages') }}</k-headline>
         <pie-chart
           :data="globalLanguagesData"
           v-if="globalLanguagesData.length > 0"
           height="250px"
         />
-        <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+        <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
       </k-column>
       <br/>
 
@@ -75,7 +75,7 @@
           :pagination="{}"
           :isLoading="isLoading"
           :options="{add:false,reset:false}"
-          headline="Visited pages"
+          :headline="$t('simplestats.visitedpages')"
           v-if="rows.length > 0"
         >
           <!-- Default entryslot -->

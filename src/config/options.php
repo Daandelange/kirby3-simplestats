@@ -37,7 +37,7 @@ return [
 
         // Tracking blacklist
         'ignore' => [
-            'roles' => kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users.
+            'roles' => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here (causes the plugin's translations to vanish from php)
             'pages' => [], // Array of plain text page uris.
         ],
     ],
