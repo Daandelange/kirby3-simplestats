@@ -240,7 +240,7 @@ class SimpleStatsDb
                                     // Note : ALTER TABLE cannot add several columns in 1 command.
                                     if( !$dbsql3->exec('ALTER TABLE `pagevisits` ADD COLUMN `hits_'.$l.'` INTEGER') ){
                                         Logger::LogWarning("UPGRADE db, adding LANGUAGES FAILED creating columns for ${l}. Error=".$dbsql3->lastError()->getMessage());
-                                        $dbsql3->close();
+                                        //$dbsql3->close();
                                         //return true;
                                         $ret = false;
                                     }
@@ -307,8 +307,19 @@ class SimpleStatsDb
                                     Logger::LogWarning("Upgrade : Error renaming translated slugs for v2->v3. Error=".$db->lastError()->getMessage());
                                 }
 
-                            	// Select duplicates
-                            	$selectDuplicates = 'SELECT min(`id`) as "idtokeep", `uid`, COUNT(`id`)  as "numentries", `monthyear`, SUM(`hits_fr`) AS "newhits_fr", SUM(`hits`) as "newhits", SUM(`hits_en`) AS "newhits_en" FROM `pagevisits` GROUP BY  uid, monthyear HAVING COUNT(`id`) > 1 LIMIT 10000;';
+                            	// pre-compute languages string
+                            	$hitsQueryPart = 'SUM(`hits`) as "newhits"';
+                                if( !kirby()->multilang() ){
+                                    $hitsQueryPart .= ', SUM(`hits_en`) AS "newhits_en"';
+                                }
+                                else {
+                                    foreach( kirby()->languages() as $language ){
+                                        //if( strlen($hitsQueryPart) > 0 ) $hitsQueryPart .= ', ';
+                                        $hitsQueryPart .= ', SUM(`hits_'.$language->code().'`) AS "newhits_'.$language->code().'"';
+                                    }
+                                }
+                                // Select duplicates
+                            	$selectDuplicates = 'SELECT min(`id`) as "idtokeep", `uid`, COUNT(`id`)  as "numentries", `monthyear`, '.$hitsQueryPart.' FROM `pagevisits` GROUP BY  uid, monthyear HAVING COUNT(`id`) > 1 LIMIT 10000;';
 
                             	// For each duplicate, merge hits and only keep the one with the lowest ID.
                             	if($duplicatesResult = $db->query($selectDuplicates)){
@@ -316,13 +327,25 @@ class SimpleStatsDb
                             		$mergeDeleteQuery = '';
                             		if($duplicatesResult->isNotEmpty()){
                             			$duplicates = $duplicatesResult->toArray();//function($item){ return ['idtokeep'=>$item->idtokeep,'uid'=>$item->uid];});
-                            			//var_dump($duplicates);
+
                             			foreach($duplicates as $d){
-                            				//var_dump($d);
-                            				$mergeUpdateQuery .= 'UPDATE `pagevisits` SET `hits` = '.$d->newhits.', `hits_fr` = '.$d->newhits_fr.', `hits_en` = '.$d->newhits_en.' WHERE `id`='.$d->idtokeep.'; ';
+
+                            				// pre-compute languages string
+                                        	$hitsUpdatePart = '`hits` = '.$d->newhits;
+                                            if( !kirby()->multilang() ){
+                                                $hitsUpdatePart .= ', `hits_en` = '.$d->newhits_en;
+                                            }
+                                            else {
+                                                foreach( kirby()->languages() as $language ){
+                                                    $hitsUpdatePart .= ', `hits_'.$language->code().'` = '.$d->{'newhits_'.$language->code()};
+                                                }
+                                            }
+
+                            				$mergeUpdateQuery .= 'UPDATE `pagevisits` SET '.$hitsUpdatePart.' WHERE `id`='.$d->idtokeep.'; ';
                             				$mergeDeleteQuery .= 'DELETE FROM `pagevisits` WHERE `uid` = "'.$d->uid.'" AND `monthyear` = '.$d->monthyear.' AND `id` != '.$d->idtokeep.'; ';// LIMIT '.(intval($d->numentries,10)-1).'; ';
 
                             			}
+                            			//var_dump($mergeUpdateQuery);
                             		}
 
                                     $changeToV3 = false;
