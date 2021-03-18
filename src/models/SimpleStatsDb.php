@@ -275,19 +275,21 @@ class SimpleStatsDb
                         }
                         // Upgrade the database to the newest version
                         else {
-                            // Upgrade processes v2 -> v3
+                            // Upgrade processes
+
+                            // v2 -> v3
                             if( $dbVersion < 3){
                                 //$ret=true;
 
                                 // v2 was using $page->slug() instead of $page->id(), causing unique page IDs to be translated. Untranslate them.
                             	$langs = kirby()->languages()->toArray( function($v){return $v->code();} );
-                            	$defaultlang = kirby()->defaultLanguage()->code();
+                            	//$defaultlang = kirby()->defaultLanguage()->code();
                             	$slugsToRestore = [];
                             	// Grap all pages and build a translations array
                             	foreach( site()->index() as $p ){
                             		foreach($langs as $l){
                             			$from = $p->slug($l);
-                            			$to = $p->slug($defaultlang);
+                            			$to = $p->id();
                             			if($from !== $to){
                             				$slugsToRestore[] = ['from'=>$from, 'to'=>$to];
                             				//var_dump($from.' --> '.$to);
