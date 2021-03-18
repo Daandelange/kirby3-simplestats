@@ -26,7 +26,15 @@
         </tbl>
 
         <k-headline>Database Requirements</k-headline>
-        {{dbRequirements}}<br/>
+        <div v-if="dbRequirementsPassed">
+          <k-info-field theme="positive" text="It looks like SimpleStats should run on your server. :) "></k-info-field>
+        </div>
+        <div v-else>
+          <k-info-field theme="negative" text="Ouch ! Your server doesn't meet the requirements to run SimpleStats..."></k-info-field>
+          <hr />
+          {{dbRequirements}}
+        </div>
+        <br/>
       </k-column>
 
       <!-- UPGRADE -->
@@ -79,6 +87,7 @@ export default {
       softwareDbVersion: "unknown",
       dbVersion: "undefined",
       dbRequirements: "unknown",
+      dbRequirementsPassed: true,
       unlockUpgrade: false,
       isUpdatingDb: false,
       updateMessage: null,
@@ -122,7 +131,8 @@ export default {
       this.$api
         .get("simplestats/checkrequirements")
         .then(response => {
-          this.dbRequirements   = response.dbRequirements
+          this.dbRequirements       = response.dbRequirements
+          this.dbRequirementsPassed = response.dbRequirementsPassed
         })
         .catch(error => {
           this.dbRequirements = error.message

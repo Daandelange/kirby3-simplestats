@@ -84,29 +84,39 @@ return [
             'action'  => function () {
                 if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
                     try {
+                        $reqs = [
+                            'php' => kirby()->system()->php(),
+                            'kirby' => (intval(str_replace('.','',substr(kirby()->version(), 0, 3) ), 10) <= 35),
+                            'sqlite3' => (class_exists('SQLite3') && in_array('pdo_sqlite', get_loaded_extensions()) && in_array('sqlite3', get_loaded_extensions())),
+                        ];
                         // Check requirements
+
+                        $dbRequirements = "PHP=".($reqs['php']?'OK':'ERROR').', ';
+                        $dbRequirements .= "SQLite3=".($reqs['sqlite3']?'OK':'ERROR').', ';
+                        $dbRequirements .= "Kirby=".($reqs['sqlite3']?'OK':'ERROR').' --- --- --- ';
                         // Tmp: display lots of data, try to detect errors
-                        $dbRequirements = 'PHP Extensions='.implode(', ', get_loaded_extensions());
-                        $dbRequirements .= " --- PHP=".(kirby()->system()->php()?'OK':'ERROR');
-                        $dbRequirements .= " --- SQLite3=".(class_exists('SQLite3')?'OK':'ERROR');
-                        try{
-                            $sql = new \SQLite3('');
-                            $sql->close();
-                            $dbRequirements .= " --- SQLite3.try=OK";
-                        } catch(Throwable $e){
-                            $dbRequirements .= " --- SQLite3.try=ERROR ".$e->getMessage();
-                        }
-                        try{
-                            $db=new \Kirby\Database\Database(['type'=>'sqlite','database'=>'']);
-                            $dbRequirements .= " --- CreateDB()=".(($db)?'OK':'FAIL');
-                        } catch(Throwable $e){
-                            $dbRequirements .= " --- CreateDB()=ERROR:".$e->getMessage();
-                        }
-                        $dbRequirements .= " --- pdo_sqlite=".( in_array('pdo_sqlite', get_loaded_extensions())?'OK':'ERROR');
-                        $dbRequirements .= " --- sqlite3=".( in_array('sqlite3', get_loaded_extensions())?'OK':'ERROR');
+                        $dbRequirements .= 'PHP Extensions='.implode(', ', get_loaded_extensions());
+//                         $dbRequirements .= " --- PHP=".($reqs['php']?'OK':'ERROR');
+//                         $dbRequirements .= " --- SQLite3=".($reqs['sqlite3']?'OK':'ERROR');
+//                         try{
+//                             $sql = new \SQLite3('');
+//                             $sql->close();
+//                             $dbRequirements .= " --- SQLite3.try=OK";
+//                         } catch(Throwable $e){
+//                             $dbRequirements .= " --- SQLite3.try=ERROR ".$e->getMessage();
+//                         }
+//                         try{
+//                             $db=new \Kirby\Database\Database(['type'=>'sqlite','database'=>'']);
+//                             $dbRequirements .= " --- CreateDB()=".(($db)?'OK':'FAIL');
+//                         } catch(Throwable $e){
+//                             $dbRequirements .= " --- CreateDB()=ERROR:".$e->getMessage();
+//                         }
+//                         $dbRequirements .= " --- pdo_sqlite=".( in_array('pdo_sqlite', get_loaded_extensions())?'OK':'ERROR');
+//                         $dbRequirements .= " --- sqlite3=".( in_array('sqlite3', get_loaded_extensions())?'OK':'ERROR');
 
                         return [
-                            'dbRequirements'    => $dbRequirements,
+                            'dbRequirements'       => $dbRequirements,
+                            'dbRequirementsPassed' => ($reqs['php'] && $reqs['kirby'] && $reqs['sqlite3']),
                         ];
                     } catch (Throwable $e) {
                         Logger::logTracking('Could not fetch requirements... Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
