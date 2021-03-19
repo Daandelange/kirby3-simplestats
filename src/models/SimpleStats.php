@@ -160,13 +160,16 @@ class SimpleStats extends SimpleStatsDb {
                     }
                 }
                 else {
-                    Logger::LogWarning("Failed to retrieve this month's referers from db. Referer : ${refererUrl}. Error=".$db->lastError()->getMessage());
+                    Logger::LogWarning("Failed to retrieve this month's referrers from db. Referrer : ${refererUrl}. Error=".$db->lastError()->getMessage());
                 }
             }
-            // Unable to pars referer ?
+            // Unable to parse referer ?
             else {
-                // Empty or incorrect referer, don't track anything.
-                if( isset($_SERVER['HTTP_REFERER']) ) Logger::LogVerbose("Referer is set, but could not parse it : ".$_SERVER['HTTP_REFERER'].'.');
+                // Internal, Empty or incorrect referer, don't track anything.
+                if( isset($_SERVER['HTTP_REFERER']) && (stripos((isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'], $_SERVER['HTTP_REFERER']) === 0) ){
+                    Logger::LogVerbose("Referrer is set, but could not parse it : ".$_SERVER['HTTP_REFERER'].'.');
+                }
+
                 return true;
             }
 
@@ -348,68 +351,68 @@ class SimpleStats extends SimpleStatsDb {
 
         if( isset($_SERVER['HTTP_REFERER']) ){
             $refHeader = $_SERVER['HTTP_REFERER'];
-        	$parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
-        	$referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
-        	//echo "Got referer! == ".$_SERVER['HTTP_REFERER']."\n";
-        	//echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-        	if( $referer->isValid() ){
-        		if ($referer->isKnown()) {
-        			$returnData['medium']=$referer->getMedium();
-                    $returnData['source']=$referer->getSource();
+            	$parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
+            	$referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
+            	//echo "Got referer! == ".$_SERVER['HTTP_REFERER']."\n";
+            	//echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+            	if( $referer->isValid() ){
+            		if ($referer->isKnown()) {
+            			$returnData['medium']=$referer->getMedium();
+                        $returnData['source']=$referer->getSource();
 
-                    if( $urlParts = parse_url($refHeader) ){
-                        //var_dump($urlParts);
-                        // Note: protocol and query strings are stripped
-                        $returnData['url']=$urlParts['host'].$urlParts['path'];//str_replace('www.','', $urlParts['host'].$urlParts['path'];
-                        $returnData['host']=$urlParts['host'];
-
-                        // Todo: protect url against sql injections via url ?
-                    }
-                    //var_dump($returnData);
-                    return $returnData;
-        		}
-        		else {
-        			if( $referer->getMedium() == Medium::INTERNAL ){
-        				// IGNORE internals
-        				//echo "Got INTERNAL referer !";
-        				return null;
-        			}
-        			// Referer is valid but unknown (other)
-        			else {
-        				//echo "Got UNKNOWN referer!";
-        				//echo $referer->getMedium(); // "Search"
-            			//echo ' - ';
-            			//echo $referer->getSource(); // "Google"
-                        $returnData['medium']='website';$referer->getMedium(); // unknown
-                        $returnData['source']=''; // other ?
                         if( $urlParts = parse_url($refHeader) ){
                             //var_dump($urlParts);
                             // Note: protocol and query strings are stripped
-                            $returnData['url']=$urlParts['host'].$urlParts['path'];
+                            $returnData['url']=$urlParts['host'].$urlParts['path'];//str_replace('www.','', $urlParts['host'].$urlParts['path'];
                             $returnData['host']=$urlParts['host'];
 
                             // Todo: protect url against sql injections via url ?
+                        }
+                        //var_dump($returnData);
+                        return $returnData;
+            		}
+            		else {
+            			if( $referer->getMedium() == Medium::INTERNAL ){
+            				// IGNORE internals
+            				//echo "Got INTERNAL referer !";
+            				return null;
+            			}
+            			// Referer is valid but unknown (other)
+            			else {
+            				//echo "Got UNKNOWN referer!";
+            				//echo $referer->getMedium(); // "Search"
+                			//echo ' - ';
+                			//echo $referer->getSource(); // "Google"
+                            $returnData['medium']='website';$referer->getMedium(); // unknown
+                            $returnData['source']=''; // other ?
+                            if( $urlParts = parse_url($refHeader) ){
+                                //var_dump($urlParts);
+                                // Note: protocol and query strings are stripped
+                                $returnData['url']=$urlParts['host'].$urlParts['path'];
+                                $returnData['host']=$urlParts['host'];
+
+                                // Todo: protect url against sql injections via url ?
+
+                                //var_dump($returnData);
+                                return $returnData;
+                            }
+                            else {
+                                // No valid URL
+                                return null;
+                            }
 
                             //var_dump($returnData);
-                            return $returnData;
-                        }
-                        else {
-                            // No valid URL
-                            return null;
-                        }
-
-                        //var_dump($returnData);
-        			}
-        			//var_dump($referer);
-        			//echo $referer->getMedium();
-        		}
-        	}
-        	// Referer is an invalid URL (or empty)
-        	else {
-        		// IGNORE
-        		//echo "Got INVALID referer !\n";
-        		return null;
-        	}
+            			}
+            			//var_dump($referer);
+            			//echo $referer->getMedium();
+            		}
+            	}
+            	// Referer is an invalid URL (or empty)
+            	else {
+            		// IGNORE
+            		//echo "Got INVALID referer !\n";
+            		return null;
+            	}
         }
         // default return value (no referrer)
         return null;

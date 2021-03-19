@@ -279,16 +279,15 @@ class SimpleStatsDb
 
                             // v2 -> v3
                             if( $dbVersion < 3){
-                                //$ret=true;
 
                                 // v2 was using $page->slug() instead of $page->id(), causing unique page IDs to be translated. Untranslate them.
                             	$langs = kirby()->languages()->toArray( function($v){return $v->code();} );
                             	//$defaultlang = kirby()->defaultLanguage()->code();
                             	$slugsToRestore = [];
-                            	// Grap all pages and build a translations array
+                            	// Grab all pages and build a translations array
                             	foreach( site()->index() as $p ){
                             		foreach($langs as $l){
-                            			$from = $p->slug($l);
+                            			$from = $p->uri($l);
                             			$to = $p->id();
                             			if($from !== $to){
                             				$slugsToRestore[] = ['from'=>$from, 'to'=>$to];
@@ -296,21 +295,27 @@ class SimpleStatsDb
                             			}
                             		}
                             	}
-                            	$renameQuery = '';
-                            	foreach($slugsToRestore as $slug){
-                            		$renameQuery .= 'UPDATE `pagevisits` SET `uid` = "'.$slug['to'].'" WHERE `uid` = "'.$slug['from'].'"; ';
+
+                            	$renameResult = true;
+                            	$renameCount = 0;
+
+                                foreach( $slugsToRestore as $slug ){
+                                	if(!$db->execute('UPDATE `pagevisits` SET `uid` = "'.$slug['to'].'" WHERE `uid` = "'.$slug['from'].'"; ')){
+    	                            	$renameResult = false;
+    	                            }
+    	                            else $renameCount += $db->affected();
                             	}
-                            	if( $renameResult = $db->execute($renameQuery) ){
-                                	// ok
-                                	Logger::LogVerbose("Upgrade : Renamed translated slugs for v2->v3.");
+                            	// ok
+                            	if($renameResult){
+                                	Logger::LogVerbose('Upgrade : Renamed '.$renameCount.' translated slugs for v2->v3.');
                                 }
                                 else {
                                     $ret = false;
-                                    Logger::LogWarning("Upgrade : Error renaming translated slugs for v2->v3. Error=".$db->lastError()->getMessage());
+                                    Logger::LogWarning("Upgrade : Error renaming translated slugs for v2->v3. Error=".($db->lastError()?$db->lastError()->getMessage():'Unknown...'));
                                 }
 
-                            	// pre-compute languages string
-                            	$hitsQueryPart = 'SUM(`hits`) as "newhits"';
+                                // pre-compute languages string
+                                $hitsQueryPart = 'SUM(`hits`) as "newhits"';
                                 if( !kirby()->multilang() ){
                                     $hitsQueryPart .= ', SUM(`hits_en`) AS "newhits_en"';
                                 }
@@ -325,48 +330,59 @@ class SimpleStatsDb
 
                             	// For each duplicate, merge hits and only keep the one with the lowest ID.
                             	if($duplicatesResult = $db->query($selectDuplicates)){
-                            		$mergeUpdateQuery = '';
-                            		$mergeDeleteQuery = '';
+                            		$mergeUpdateQuery = [];
+                            		$mergeDeleteQuery = [];
                             		if($duplicatesResult->isNotEmpty()){
                             			$duplicates = $duplicatesResult->toArray();//function($item){ return ['idtokeep'=>$item->idtokeep,'uid'=>$item->uid];});
 
                             			foreach($duplicates as $d){
-
                             				// pre-compute languages string
-                                        	$hitsUpdatePart = '`hits` = '.$d->newhits;
+                                            $hitsUpdatePart = '`hits` = '.$d->newhits;
                                             if( !kirby()->multilang() ){
                                                 $hitsUpdatePart .= ', `hits_en` = '.$d->newhits_en;
                                             }
                                             else {
                                                 foreach( kirby()->languages() as $language ){
-                                                    $hitsUpdatePart .= ', `hits_'.$language->code().'` = '.$d->{'newhits_'.$language->code()};
+                                                      $hitsUpdatePart .= ', `hits_'.$language->code().'` = '.$d->{'newhits_'.$language->code()};
                                                 }
                                             }
 
-                            				$mergeUpdateQuery .= 'UPDATE `pagevisits` SET '.$hitsUpdatePart.' WHERE `id`='.$d->idtokeep.'; ';
-                            				$mergeDeleteQuery .= 'DELETE FROM `pagevisits` WHERE `uid` = "'.$d->uid.'" AND `monthyear` = '.$d->monthyear.' AND `id` != '.$d->idtokeep.'; ';// LIMIT '.(intval($d->numentries,10)-1).'; ';
+                            				$mergeUpdateQuery[] = 'UPDATE `pagevisits` SET '.$hitsUpdatePart.' WHERE `id`='.$d->idtokeep.'; ';
+                            				$mergeDeleteQuery[] = 'DELETE FROM `pagevisits` WHERE `uid` = "'.$d->uid.'" AND `monthyear` = '.$d->monthyear.' AND `id` != '.$d->idtokeep.'; ';// LIMIT '.(intval($d->numentries,10)-1).'; ';
 
                             			}
                             			//var_dump($mergeUpdateQuery);
                             		}
 
                                     $changeToV3 = false;
-                                    if(!empty($mergeDeleteQuery) || !empty($mergeUpdateQuery)){
-                                        if( $updateResult = $db->execute($mergeUpdateQuery) ){
+                                    if( count($mergeDeleteQuery) > 0 || count($mergeUpdateQuery) > 0 ){
+                                    	$updateResult = true;
+                                    	foreach($mergeUpdateQuery as $q){
+                                    		if( !$db->execute($q) ){
+    	                                		$updateResult = false;
+                                    		}
+                                    	}
 
-                                            // Note: without updating, dont proceed to deletion !
-                                            if( $deleteResult = $db->execute($mergeDeleteQuery) ){
+                                        // Note: without updating, dont proceed to deletion !
+                                        if( $updateResult ){
+                                            $deleteResult = true;
+                                            foreach($mergeUpdateQuery as $q){
+    	                                		if( !$db->execute($q) ){
+    		                                		$updateResult = false;
+    	                                		}
+    			                            }
+                                            if( $deleteResult ){
                                                 // ok
                                                 Logger::LogVerbose("Upgrade : v2 to v3 was successful ! (translated pagevisits have been merged)");
                                                 $changeToV3 = true;
                                             }
                                             else {
-                                                Logger::LogWarning("Db Upgrade, could not delete duplicate entries for v2->v3! Error=".$db->lastError()->getMessage());
+                                                Logger::LogWarning("Db Upgrade, could not delete duplicate entries for v2->v3! Error=".($db->lastError()?$db->lastError()->getMessage():'Unknown...'));
                                                 $ret = false;
                                             }
                                         }
                                         else {
-                                            Logger::LogWarning("Db Upgrade, could not update duplicate entries for v2->v3! Error=".$db->lastError()->getMessage());
+                                            Logger::LogWarning("Db Upgrade, could not update duplicate entries for v2->v3! Error=".($db->lastError()?$db->lastError()->getMessage():'Unknown...'));
                                             $ret = false;
                                         }
 
