@@ -166,7 +166,7 @@ class SimpleStats extends SimpleStatsDb {
             // Unable to parse referer ?
             else {
                 // Internal, Empty or incorrect referer, don't track anything.
-                if( isset($_SERVER['HTTP_REFERER']) && (stripos((isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'], $_SERVER['HTTP_REFERER']) === 0) ){
+                if( isset($_SERVER['HTTP_REFERER']) && (stripos((isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'], $_SERVER['HTTP_REFERER']) !== 0 ) ){
                     Logger::LogVerbose("Referrer is set, but could not parse it : ".$_SERVER['HTTP_REFERER'].'.');
                 }
 
