@@ -558,7 +558,7 @@ class Stats extends SimpleStatsDb {
                 // Convert monthyear to date string
                 $pageVisitsOverTimeData[$name]['data2']=[];
                 foreach($pageVisitsOverTimeData[$name]['data'] as $my => $hits){
-                    $pageVisitsOverTimeData[$name]['data2'][getDateFromMonthYear($my)]=$hits;
+                    $pageVisitsOverTimeData[$name]['data2'][getDateFromMonthYear($my, 'Y-m-d')]=$hits;
                 }
                 $pageVisitsOverTimeData[$name]['data']=$pageVisitsOverTimeData[$name]['data2'];
                 unset($pageVisitsOverTimeData[$name]['data2']);
