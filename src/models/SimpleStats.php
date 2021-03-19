@@ -114,7 +114,7 @@ class SimpleStats extends SimpleStatsDb {
                 if( !in_array($page_uri, explode(',', $userEntry->visitedpages) )){
                     // Add page visit
                     $newPages = (!empty($userEntry->visitedpages)?$userEntry->visitedpages.',':'').$page_uri;
-                    if( !$db->query("UPDATE `pagevisitors` SET `visitedpages` = '${newPages}' WHERE `userunique`='${userID}' LIMIT 1;") ){
+                    if( !$db->query("UPDATE `pagevisitors` SET `visitedpages` = '${newPages}' WHERE `userunique`='${userID}'; ") ){
                         Logger::LogWarning("Failed to update page visitors : ${userID}. Error=".$db->lastError()->getMessage());
                     }
                 }
@@ -144,7 +144,7 @@ class SimpleStats extends SimpleStatsDb {
                     if( $refererEntry->isNotEmpty() ){
                         $id = intval( $refererEntry->first()->id );
 
-                        if( !$db->query("UPDATE `referers` SET `hits` = `hits`+1 WHERE `id`='${id}' LIMIT 1;") ){
+                        if( !$db->query("UPDATE `referers` SET `hits` = `hits`+1 WHERE `id`='${id}'; ") ){
                             Logger::LogWarning("Failed to update referer : ${refererUrl}. Error=".$db->lastError()->getMessage());
                         }
                     }

@@ -841,7 +841,7 @@ class Stats extends SimpleStatsDb {
 
                 // Delete entry
                 // Todo: Assumes that saving the data won't fail. Make this deletion happen on succesful sync.
-                if( $visitor->userunique && !self::database()->query("DELETE FROM `pagevisitors` WHERE `userunique`='".$visitor->userunique."' LIMIT 1;") ){
+                if( $visitor->userunique && !self::database()->query("DELETE FROM `pagevisitors` WHERE `userunique`='".$visitor->userunique."'; ") ){
                     Logger::LogWarning('DBFAIL. Error on syncing stats. On delete visitor. Error='.self::database()->lastError()->getMessage() );
                 }
             }
@@ -964,7 +964,7 @@ class Stats extends SimpleStatsDb {
                                 }
 
                                 //echo "UPDATE PAGE@DATE, HITS=${newHits} !\n";
-                                if(!self::database()->query("UPDATE `pagevisits` SET `hits`=`hits` + ${newHits} ${langEdits} WHERE `id`=${id} LIMIT 1;") ){
+                                if(!self::database()->query("UPDATE `pagevisits` SET `hits`=`hits` + ${newHits} ${langEdits} WHERE `id`=${id}") ){
                                     Logger::LogWarning("Could not UPDATE pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1006,7 +1006,7 @@ class Stats extends SimpleStatsDb {
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingDevicesA[$key]->id;
-                                if(!self::database()->query("UPDATE `devices` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
+                                if(!self::database()->query("UPDATE `devices` SET `hits`=`hits` + ${newHits} WHERE `id`=${id};") ){
                                     Logger::LogWarning("Could not UPDATE devices hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1047,7 +1047,7 @@ class Stats extends SimpleStatsDb {
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingSystemsA[$key]->id;
-                                if(!self::database()->query("UPDATE `systems` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
+                                if(!self::database()->query("UPDATE `systems` SET `hits`=`hits` + ${newHits} WHERE `id`=${id}") ){
                                     Logger::LogWarning("Could not UPDATE system hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1088,7 +1088,7 @@ class Stats extends SimpleStatsDb {
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingEnginesA[$key]->id;
-                                if(!self::database()->query("UPDATE `engines` SET `hits`=`hits` + ${newHits} WHERE `id`=${id} LIMIT 1;") ){
+                                if(!self::database()->query("UPDATE `engines` SET `hits`=`hits` + ${newHits} WHERE `id`=${id};") ){
                                     Logger::LogWarning("Could not UPDATE engine hits while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
                                 //else echo "UPDATED_ENGINE!";
