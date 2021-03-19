@@ -11,12 +11,14 @@ use Kirby\Toolkit\Obj;
 use ErrorException;
 use Throwable;
 
-// This class retrieves analytics from the database
-/*
-function collectKeys($page) {
+// - - - - -
+// Time / Period conversions
 
-}
-*/
+// Time refers to timestamp int values
+// Periods refer to custom timespans, also having int values
+// Note: Periods have to be convertible to ints so math operations can be done on them. For example, ( future > now > past ) must always be true.
+
+// This class retrieves analytics from the database
 function getTimeFromMonthYear($monthyear) : int {
     $year=intval(substr(''.$monthyear, 0,4));
     $month=intval(substr(''.$monthyear, 4,2));
@@ -24,8 +26,29 @@ function getTimeFromMonthYear($monthyear) : int {
 }
 
 function getDateFromMonthYear($monthyear, $dateformat='M Y') : string {
-    return date( $dateformat, getTimeFromMonthYear($monthyear) ); // todo : strftime for multilang
+    return date( $dateformat, getTimeFromMonthYear($monthyear) );
 }
+
+// Converts a timestamp to period (monthyear)
+function getPeriodFromTime( $time = 0 ) : int {
+    if($time===0) $time = time();
+    return intval(date('Ym', $time), 10);
+}
+
+function incrementTime($time, $steps=1) : int {
+    //return $time + ((24*60*60) * $steps); // Quick method (unaware of dates)
+    // Slow but accurate method.
+    $month = date('m', $time)+$steps;
+    $year = intval( date('Y', $time) + floor( ($month-1) / 12 ), 10);
+    $month = intval((($month-1+abs($steps)*12)%12))+1; //
+    return mktime(0,0,0,$month,1,$year);
+}
+
+function incrementPeriod($period, $steps=1) : int {
+    return getPeriodFromTime( incrementTime( getTimeFromMonthYear($period), $steps=1 ) );
+}
+
+// - - - - -
 
 class Stats extends SimpleStatsDb {
 
@@ -179,7 +202,7 @@ class Stats extends SimpleStatsDb {
         if($devicesOverTime){
             $deviceMonths=[];
             foreach($devicesOverTime as $device){
-                $monthyear = intval($device->monthyear);
+                $monthyear = intval($device->monthyear, 10);
                 $name = $device->device;
                 //echo 'NAME=='.$name."\n";
 
@@ -197,6 +220,11 @@ class Stats extends SimpleStatsDb {
                 }
                 // value
                 $devicesOverTimeData[$name]['data'][$monthyear]=intval($device->hits);
+            }
+
+            // Add missing months from first date to now (happens when no data at all in a full period)
+            for($month=min($deviceMonths); $month <= getPeriodFromTime(time()); $month=incrementPeriod($month) ){
+                if( array_search($month, $deviceMonths) === false ) $deviceMonths[]=$month;
             }
 
             // Process data
@@ -324,6 +352,11 @@ class Stats extends SimpleStatsDb {
                 $referersByMediumOverTimeData[$name]['data'][$monthyear]=intval($medium->hits);
                 //$referersByMediumOverTimeData[$monthyear]['data']=[];
                 //$referersByMediumOverTimeData[$monthyear]['name']=$name;
+            }
+
+            // Add missing months from first date to now (happens when no data at all in a full period)
+            for($month=min($mediumMonths); $month <= getPeriodFromTime(time()); $month=incrementPeriod($month) ){
+                if( array_search($month, $mediumMonths) === false ) $mediumMonths[]=$month;
             }
 
             // Process data
@@ -509,11 +542,21 @@ class Stats extends SimpleStatsDb {
         // Compute visits over time (monthly)
         $visitsOverTime = self::database()->query("SELECT `monthyear`, SUM(`hits`) AS `hits` FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
         if($visitsOverTime){
-
+            $firstTimeFrame = 0;
             foreach($visitsOverTime as $timeFrame){
+                // Add timeframe from db
                 $visitsOverTimeData[]=[ getDateFromMonthYear($timeFrame->monthyear,'Y-m-d'), $timeFrame->hits ];
+                if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
                 //$visitsOverTimeLabels[]=date('M Y',$time);//"${month} - ${year}";
                 //$visitsOverTimeData[]=$timeFrame->hits;
+            }
+            // Add missing timeframes
+            if($firstTimeFrame!==0){
+                $visitsOverTimeMonths = array_column($visitsOverTimeData, 0);
+                for($timeFrame=getTimeFromMonthYear($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
+                    $timeFrameKey = date('Y-m-d', $timeFrame);
+                    if( array_search($timeFrameKey, $visitsOverTimeMonths) === false ) $visitsOverTimeData[]=[$timeFrameKey, 0];
+                }
             }
         }
         else Logger::LogWarning("pageStats(visitsOverTime) : db error =".self::database()->lastError()->getMessage() );
@@ -600,6 +643,7 @@ class Stats extends SimpleStatsDb {
                 }
             }
             else {
+                // There's no need for language stats on single lange kirby installs...
                 //$queryLangs .= ', SUM(`hits_en`) AS `en`';
                 //$kirbyLangs[] = 'en';
             }
@@ -608,13 +652,15 @@ class Stats extends SimpleStatsDb {
             $languagesOverTimeQ = self::database()->query("SELECT `monthyear` ${queryLangs} FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
             if($languagesOverTimeQ){
                 //$allLangMonths = [];
+                $firstTimeFrame = 0;
                 foreach($languagesOverTimeQ as $timeFrame){
-                    $monthyear = getDateFromMonthYear(intval($timeFrame->monthyear),'Y-m-d');
+                    $monthyear = getDateFromMonthYear(intval($timeFrame->monthyear, 10),'Y-m-d');
+                    if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
 
                     // Get hits for each lang on this period
                     foreach($kirbyLangs as $l){
                         // value
-                        $languagesOverTimeData[$l]['data'][$monthyear]=intval($timeFrame->$l);
+                        $languagesOverTimeData[$l]['data'][$monthyear]=intval($timeFrame->$l, 10);
 
                         // compute globals
                         $globalLanguagesData[$l][1] += $languagesOverTimeData[$l]['data'][$monthyear];
@@ -634,7 +680,19 @@ class Stats extends SimpleStatsDb {
                 //    }
                 //}
 
-                // Remove empty rows in $languagesOverTimeData
+                // Add missing timeframes from first date to now (happens when no data at all is recorder in a full period)
+                for($timeFrame=getTimeFromMonthYear($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
+                    $timeFrameKey = date('Y-m-d', $timeFrame);
+                    foreach($kirbyLangs as $l){
+                        if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) && array_key_exists($timeFrameKey, $languagesOverTimeData[$l]['data']) === false ){
+                            $languagesOverTimeData[$l]['data'][$timeFrameKey]=0;
+                        }
+                    }
+                    //var_dump($timeFrameKey);
+                }
+
+
+                // Remove empty rows in $languagesOverTimeData (unvisited languages are removed)
                 foreach($kirbyLangs as $l){
                    if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) ){
                        $total = 0;
