@@ -17,6 +17,48 @@ use Kirby\Cms\Dir;
 // todo : make it exception safe
 // $db->query() can throw errors !
 
+
+// - - - - -
+// Time / Period conversions
+
+// Time refers to timestamp int values
+// Periods refer to custom timespans, also having int values
+// Note: Periods have to be convertible to ints so math operations can be done on them. For example, ( future > now > past ) must always be true.
+
+// This class retrieves analytics from the database
+function getTimeFromPeriod($monthyear) : int {
+    $year=intval(substr(''.$monthyear, 0,4));
+    $month=intval(substr(''.$monthyear, 4,2));
+    return mktime(0,0,0,$month,1,$year);
+}
+
+function getDateFromPeriod($period, $dateformat='M Y') : string {
+    return date( $dateformat, getTimeFromPeriod($period) );
+}
+
+// Converts a timestamp to period (monthyear)
+function getPeriodFromTime( $time = 0 ) : int {
+    if($time===0) $time = time();
+    return intval(date('Ym', $time), 10);
+}
+
+
+function incrementTime($time, $steps=1) : int {
+    //return $time + ((24*60*60) * $steps); // Quick method (unaware of dates)
+    // Slow but accurate method.
+    $month = date('m', $time)+$steps;
+    $year = intval( date('Y', $time) + floor( ($month-1) / 12 ), 10);
+    $month = intval((($month-1+abs($steps)*12)%12))+1; //
+    return mktime(0,0,0,$month,1,$year);
+}
+
+function incrementPeriod($period, $steps=1) : int {
+    return getPeriodFromTime( incrementTime( getTimeFromPeriod($period), $steps=1 ) );
+}
+
+// - - - - -
+
+
 // This class is inspired from bnomei/pageviewcounter/classes/PageViewCounterSQLite.php
 class SimpleStatsDb
 {

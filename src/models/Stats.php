@@ -11,45 +11,6 @@ use Kirby\Toolkit\Obj;
 use ErrorException;
 use Throwable;
 
-// - - - - -
-// Time / Period conversions
-
-// Time refers to timestamp int values
-// Periods refer to custom timespans, also having int values
-// Note: Periods have to be convertible to ints so math operations can be done on them. For example, ( future > now > past ) must always be true.
-
-// This class retrieves analytics from the database
-function getTimeFromMonthYear($monthyear) : int {
-    $year=intval(substr(''.$monthyear, 0,4));
-    $month=intval(substr(''.$monthyear, 4,2));
-    return mktime(0,0,0,$month,1,$year);
-}
-
-function getDateFromMonthYear($monthyear, $dateformat='M Y') : string {
-    return date( $dateformat, getTimeFromMonthYear($monthyear) );
-}
-
-// Converts a timestamp to period (monthyear)
-function getPeriodFromTime( $time = 0 ) : int {
-    if($time===0) $time = time();
-    return intval(date('Ym', $time), 10);
-}
-
-function incrementTime($time, $steps=1) : int {
-    //return $time + ((24*60*60) * $steps); // Quick method (unaware of dates)
-    // Slow but accurate method.
-    $month = date('m', $time)+$steps;
-    $year = intval( date('Y', $time) + floor( ($month-1) / 12 ), 10);
-    $month = intval((($month-1+abs($steps)*12)%12))+1; //
-    return mktime(0,0,0,$month,1,$year);
-}
-
-function incrementPeriod($period, $steps=1) : int {
-    return getPeriodFromTime( incrementTime( getTimeFromMonthYear($period), $steps=1 ) );
-}
-
-// - - - - -
-
 class Stats extends SimpleStatsDb {
 
     // Like bnomei/pageviewcounter
@@ -241,7 +202,7 @@ class Stats extends SimpleStatsDb {
                 // Convert monthyear to date string
                 $devicesOverTimeData[$name]['data2']=[];
                 foreach($devicesOverTimeData[$name]['data'] as $my => $hits){
-                    $devicesOverTimeData[$name]['data2'][getDateFromMonthYear(intval($my),'Y-m-d')]=$hits;
+                    $devicesOverTimeData[$name]['data2'][getDateFromPeriod(intval($my),'Y-m-d')]=$hits;
                 }
                 $devicesOverTimeData[$name]['data']=$devicesOverTimeData[$name]['data2'];
                 unset($devicesOverTimeData[$name]['data2']);
@@ -373,8 +334,8 @@ class Stats extends SimpleStatsDb {
                 // Convert monthyear to date string
                 $referersByMediumOverTimeData[$name]['data2']=[];
                 foreach($referersByMediumOverTimeData[$name]['data'] as $my => $hits){
-                    //$referersByMediumOverTimeData[$name]['data2'][getDateFromMonthYear($my, 'Y-m-d')]=$hits;
-                    $referersByMediumOverTimeData[$name]['data2'][getDateFromMonthYear($my)]=$hits;
+                    //$referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my, 'Y-m-d')]=$hits;
+                    $referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my)]=$hits;
                 }
                 $referersByMediumOverTimeData[$name]['data']=$referersByMediumOverTimeData[$name]['data2'];
                 unset($referersByMediumOverTimeData[$name]['data2']);
@@ -436,7 +397,7 @@ class Stats extends SimpleStatsDb {
                     'medium'        => $referer->medium,
                     'hits'          => $referer->hits,
                     'hitspercent'   => round(($referer->hits/$max)*100),
-                    'timefrom'      => getDateFromMonthYear($referer->timefrom),
+                    'timefrom'      => getDateFromPeriod($referer->timefrom),
                 ];
             }
         }
@@ -511,8 +472,8 @@ class Stats extends SimpleStatsDb {
                         'title'         => $page->uid . ' (404)',
                         'hits'          => intval($page->hits, 10),
                         'hitspercent'   => round(($page->hits/$max)*100),
-                        'firstvisited'  => getDateFromMonthYear($page->firstvisited),
-                        'lastvisited'   => getDateFromMonthYear($page->lastvisited),
+                        'firstvisited'  => getDateFromPeriod($page->firstvisited),
+                        'lastvisited'   => getDateFromPeriod($page->lastvisited),
                     ];
                     continue;
                 }
@@ -524,8 +485,8 @@ class Stats extends SimpleStatsDb {
                     'title'         => $kirbyPage->title()->value(),
                     'hits'          => intval($page->hits, 10),
                     'hitspercent'   => round(($page->hits/$max)*100),
-                    'firstvisited'  => getDateFromMonthYear($page->firstvisited),
-                    'lastvisited'   => getDateFromMonthYear($page->lastvisited),
+                    'firstvisited'  => getDateFromPeriod($page->firstvisited),
+                    'lastvisited'   => getDateFromPeriod($page->lastvisited),
                 ];
 
                 // Inject language data
@@ -545,7 +506,7 @@ class Stats extends SimpleStatsDb {
             $firstTimeFrame = 0;
             foreach($visitsOverTime as $timeFrame){
                 // Add timeframe from db
-                $visitsOverTimeData[]=[ getDateFromMonthYear($timeFrame->monthyear,'Y-m-d'), $timeFrame->hits ];
+                $visitsOverTimeData[]=[ getDateFromPeriod($timeFrame->monthyear,'Y-m-d'), $timeFrame->hits ];
                 if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
                 //$visitsOverTimeLabels[]=date('M Y',$time);//"${month} - ${year}";
                 //$visitsOverTimeData[]=$timeFrame->hits;
@@ -553,7 +514,7 @@ class Stats extends SimpleStatsDb {
             // Add missing timeframes
             if($firstTimeFrame!==0){
                 $visitsOverTimeMonths = array_column($visitsOverTimeData, 0);
-                for($timeFrame=getTimeFromMonthYear($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
+                for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
                     $timeFrameKey = date('Y-m-d', $timeFrame);
                     if( array_search($timeFrameKey, $visitsOverTimeMonths) === false ) $visitsOverTimeData[]=[$timeFrameKey, 0];
                 }
@@ -601,7 +562,7 @@ class Stats extends SimpleStatsDb {
                 // Convert monthyear to date string
                 $pageVisitsOverTimeData[$name]['data2']=[];
                 foreach($pageVisitsOverTimeData[$name]['data'] as $my => $hits){
-                    $pageVisitsOverTimeData[$name]['data2'][getDateFromMonthYear($my, 'Y-m-d')]=$hits;
+                    $pageVisitsOverTimeData[$name]['data2'][getDateFromPeriod($my, 'Y-m-d')]=$hits;
                 }
                 $pageVisitsOverTimeData[$name]['data']=$pageVisitsOverTimeData[$name]['data2'];
                 unset($pageVisitsOverTimeData[$name]['data2']);
@@ -654,7 +615,7 @@ class Stats extends SimpleStatsDb {
                 //$allLangMonths = [];
                 $firstTimeFrame = 0;
                 foreach($languagesOverTimeQ as $timeFrame){
-                    $monthyear = getDateFromMonthYear(intval($timeFrame->monthyear, 10),'Y-m-d');
+                    $monthyear = getDateFromPeriod(intval($timeFrame->monthyear, 10),'Y-m-d');
                     if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
 
                     // Get hits for each lang on this period
@@ -681,7 +642,7 @@ class Stats extends SimpleStatsDb {
                 //}
 
                 // Add missing timeframes from first date to now (happens when no data at all is recorder in a full period)
-                for($timeFrame=getTimeFromMonthYear($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
+                for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
                     $timeFrameKey = date('Y-m-d', $timeFrame);
                     foreach($kirbyLangs as $l){
                         if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) && array_key_exists($timeFrameKey, $languagesOverTimeData[$l]['data']) === false ){
