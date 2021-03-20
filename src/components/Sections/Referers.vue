@@ -67,6 +67,12 @@
             <template slot="column-hitspercent" slot-scope="props">
               <p v-bind:style="[ !props.value ? { width: '0%' } : { width: props.value + '%' }]"></p>
             </template>
+             <!-- Timeframe date entryslot -->
+            <template slot="column-timefrom" slot-scope="props">
+              <p>
+                {{ new Date( props.value ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.value ).getFullYear() }}
+              </p>
+            </template>
           </tbl>
           <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
         </k-column>
@@ -106,6 +112,7 @@ export default {
 
       isLoading: false,
       error: "",
+      userLocale: 'en',
 
       timeOptions : {
         layout: {
@@ -157,6 +164,8 @@ export default {
 
           this.referersByMediumOverTimeData = response.referersbymediumovertimedata;
           //console.log( this.referersByMediumOverTimeData);
+
+          this.userLocale = this.$store.state.i18n.locale;
 /*
           Object.keys(this.referersByMediumOverTimeData).forEach(key => {
             //console.log(key, this.referersByMediumOverTimeData[key]);

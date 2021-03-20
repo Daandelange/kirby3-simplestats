@@ -35,7 +35,7 @@ class Stats extends SimpleStatsDb {
                 foreach($dbvQ as $v){
                     $dbArray[]=[
                         'version' => intval($v->version, 10),
-                        'date'    => $v->migrationdate,
+                        'date'    => date('Y-m-d', getTimeFromVersionDate($v->migrationdate)),
                     ];
                 }
             }
@@ -77,17 +77,24 @@ class Stats extends SimpleStatsDb {
             //var_dump(($result));
 
             // Get keys
-            $keys = [];
-            foreach($result as $visitor){
-                $keys = array_keys($visitor->toArray());
-                //var_dump(array_keys($visitor->toArray()));
-                break; // 1 iteration should be enough here
-            }
-
-            // Format keys
-            foreach($keys as $key => $value){
-                $keys[$key] = ['label'=>$value,'field'=>$value,'type'=>'text','sort'=>false,'search'=>false,'class'=>'myClass','width'=>'1fr'];
-            }
+//             $keys = [];
+//             foreach($result as $visitor){
+//                 $keys = array_keys($visitor->toArray());
+//                 //var_dump(array_keys($visitor->toArray()));
+//                 break; // 1 iteration should be enough here
+//             }
+//
+//             // Format keys
+//             foreach($keys as $key => $value){
+//                 $keys[$key] = ['label'=>$value,'field'=>$value, 'type'=>'text','sort'=>false,'search'=>false,'class'=>'myClass','width'=>'1fr'];
+//             }
+            $keys =[
+                [ 'label' => 'Visited Pages',   'field' => 'visitedpages',      'type' => 'text', 'sort' => false,  'search' => true,     'width' => '4fr' ],
+                [ 'label' => 'OS Family',       'field' => 'osfamily',          'type' => 'text', 'sort' => true,   'search' => true,     'width' => '1fr' ],
+                [ 'label' => 'Device Type',     'field' => 'devicetype',        'type' => 'text', 'sort' => true,   'search' => true,     'width' => '1fr' ],
+                [ 'label' => 'Browser Engine',  'field' => 'browserengine',     'type' => 'text', 'sort' => true,   'search' => true,     'width' => '1fr' ],
+                [ 'label' => 'Time Registered', 'field' => 'timeregistered',    'type' => 'text', 'sort' => true,   'search' => false,    'width' => '2fr' ],
+            ];
 
             $rows = $result->toArray();
             // Format rows
@@ -101,7 +108,7 @@ class Stats extends SimpleStatsDb {
 //                     $rows[$key][$k] = ['label'=>$v];
 //                 }
                 // convert date format
-                $rows[$key]['timeregistered'] = date('Y-m-d h:i', intval($rows[$key]['timeregistered']) );
+                $rows[$key]['timeregistered'] = date( SIMPLESTATS_PRECISE_DATE_FORMAT, intval($rows[$key]['timeregistered']) );
 
             }
 
@@ -161,9 +168,9 @@ class Stats extends SimpleStatsDb {
         $devicesOverTimeData=[];
         $devicesOverTime = self::database()->query("SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices` GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,1000");
         if($devicesOverTime){
-            $deviceMonths=[];
+            $devicePeriods=[];
             foreach($devicesOverTime as $device){
-                $monthyear = intval($device->monthyear, 10);
+                $devicePeriod = intval($device->monthyear, 10);
                 $name = $device->device;
                 //echo 'NAME=='.$name."\n";
 
@@ -176,16 +183,16 @@ class Stats extends SimpleStatsDb {
                 }
 
                 // Remember period
-                if(array_search($monthyear, $deviceMonths)===false){
-                    $deviceMonths[]=$monthyear;
+                if( array_search($devicePeriod, $devicePeriods)===false ){
+                    $devicePeriods[]=$devicePeriod;
                 }
                 // value
-                $devicesOverTimeData[$name]['data'][$monthyear]=intval($device->hits);
+                $devicesOverTimeData[$name]['data'][$devicePeriod]=intval($device->hits);
             }
 
-            // Add missing months from first date to now (happens when no data at all in a full period)
-            for($month=min($deviceMonths); $month <= getPeriodFromTime(time()); $month=incrementPeriod($month) ){
-                if( array_search($month, $deviceMonths) === false ) $deviceMonths[]=$month;
+            // Add missing periods from first date to now (happens when no data at all in a full period)
+            if( count($devicePeriods) > 0 ) for($period=min($devicePeriods); $period <= getPeriodFromTime(); $period=incrementPeriod($period) ){
+                if( array_search($period, $devicePeriods) === false ) $devicePeriods[]=$period;
             }
 
             // Process data
@@ -193,16 +200,16 @@ class Stats extends SimpleStatsDb {
             foreach($devicesOverTimeData as $name => $data){
 
                 // Add missing keys / zero values
-                foreach($deviceMonths as $month){
+                foreach($devicePeriods as $month){
                     if(!array_key_exists($month, $devicesOverTimeData[$name]['data'])){
                         $devicesOverTimeData[$name]['data'][$month]=0;
                     }
                 }
 
-                // Convert monthyear to date string
+                // Convert periods to date string
                 $devicesOverTimeData[$name]['data2']=[];
-                foreach($devicesOverTimeData[$name]['data'] as $my => $hits){
-                    $devicesOverTimeData[$name]['data2'][getDateFromPeriod(intval($my),'Y-m-d')]=$hits;
+                foreach($devicesOverTimeData[$name]['data'] as $period => $hits){
+                    $devicesOverTimeData[$name]['data2'][getDateFromPeriod(intval($period), SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
                 }
                 $devicesOverTimeData[$name]['data']=$devicesOverTimeData[$name]['data2'];
                 unset($devicesOverTimeData[$name]['data2']);
@@ -290,10 +297,10 @@ class Stats extends SimpleStatsDb {
         $mediumStatsOverTime = self::database()->query("SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers` GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,1000");
         if($mediumStatsOverTime){
             //$mediumNames=[];
-            $mediumMonths=[];
+            $mediumPeriods=[];
             //$num = 0;
             foreach($mediumStatsOverTime as $medium){
-                $monthyear = intval($medium->monthyear);
+                $mediumPeriod = intval($medium->monthyear, 10);
                 $name = $medium->medium;
                 //echo 'NAME=='.$name."\n";
 
@@ -306,18 +313,18 @@ class Stats extends SimpleStatsDb {
                 }
 
                 // Remember period
-                if(array_search($monthyear, $mediumMonths)===false){
-                    $mediumMonths[]=$monthyear;
+                if(array_search($mediumPeriod, $mediumPeriods)===false){
+                    $mediumPeriods[]=$mediumPeriod;
                 }
                 // value
-                $referersByMediumOverTimeData[$name]['data'][$monthyear]=intval($medium->hits);
-                //$referersByMediumOverTimeData[$monthyear]['data']=[];
-                //$referersByMediumOverTimeData[$monthyear]['name']=$name;
+                $referersByMediumOverTimeData[$name]['data'][$mediumPeriod]=intval($medium->hits);
+                //$referersByMediumOverTimeData[$mediumPeriod]['data']=[];
+                //$referersByMediumOverTimeData[$mediumPeriod]['name']=$name;
             }
 
-            // Add missing months from first date to now (happens when no data at all in a full period)
-            for($month=min($mediumMonths); $month <= getPeriodFromTime(time()); $month=incrementPeriod($month) ){
-                if( array_search($month, $mediumMonths) === false ) $mediumMonths[]=$month;
+            // Add missing periods from first date to now (happens when no data at all in a full period)
+            if( count($mediumPeriods) > 0 ) for($period=min($mediumPeriods); $period <= getPeriodFromTime(); $period=incrementPeriod($period) ){
+                if( array_search($period, $mediumPeriods) === false ) $mediumPeriods[]=$period;
             }
 
             // Process data
@@ -325,17 +332,17 @@ class Stats extends SimpleStatsDb {
             foreach($referersByMediumOverTimeData as $name => $data){
 
                 // Add missing keys / zero values
-                foreach($mediumMonths as $month){
-                    if(!array_key_exists($month, $referersByMediumOverTimeData[$name]['data'])){
-                        $referersByMediumOverTimeData[$name]['data'][$month]=0;
+                foreach($mediumPeriods as $period){
+                    if(!array_key_exists($period, $referersByMediumOverTimeData[$name]['data'])){
+                        $referersByMediumOverTimeData[$name]['data'][$period]=0;
                     }
                 }
 
                 // Convert monthyear to date string
                 $referersByMediumOverTimeData[$name]['data2']=[];
                 foreach($referersByMediumOverTimeData[$name]['data'] as $my => $hits){
-                    //$referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my, 'Y-m-d')]=$hits;
-                    $referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my)]=$hits;
+                    //$referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my, SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
+                    $referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my, SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
                 }
                 $referersByMediumOverTimeData[$name]['data']=$referersByMediumOverTimeData[$name]['data2'];
                 unset($referersByMediumOverTimeData[$name]['data2']);
@@ -353,8 +360,8 @@ class Stats extends SimpleStatsDb {
         }
 
         // Recent stats
-        $monthyear = date('Ym');
-        $domainRecentStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`=${monthyear} ) WHERE `monthyear`=${monthyear} GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000");
+        $todayPeriod = getPeriodFromTime();
+        $domainRecentStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`=${todayPeriod} ) WHERE `monthyear`=${todayPeriod} GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000");
         if($domainRecentStats){
 
             foreach($domainRecentStats as $referer){
@@ -378,8 +385,8 @@ class Stats extends SimpleStatsDb {
                 ['label'=>'Domain',     'field'=>'domain',      'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'3fr'],
                 ['label'=>'Medium',     'field'=>'medium',      'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'2fr'],
                 ['label'=>'Hits',       'field'=>'hits',        'type'=>'number',   'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'1fr'],
-                ['label'=>'Percentage', 'field'=>'hitspercent', 'type'=>'text',   'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
-                ['label'=>'Time From',  'field'=>'timefrom',    'type'=>'text', 'sort'=>true,  'search'=>false,   'class'=>'myClass', 'width'=>'2fr'],
+                ['label'=>'Popularity', 'field'=>'hitspercent', 'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
+                ['label'=>'First seen', 'field'=>'timefrom',    'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'myClass', 'width'=>'2fr'],
             ];
 
             // Get max for calc
@@ -397,7 +404,7 @@ class Stats extends SimpleStatsDb {
                     'medium'        => $referer->medium,
                     'hits'          => $referer->hits,
                     'hitspercent'   => round(($referer->hits/$max)*100),
-                    'timefrom'      => getDateFromPeriod($referer->timefrom),
+                    'timefrom'      => getDateFromPeriod($referer->timefrom, SIMPLESTATS_TABLE_DATE_FORMAT),
                 ];
             }
         }
@@ -442,10 +449,10 @@ class Stats extends SimpleStatsDb {
                 //['label'=>'URL',            'field'=>'url',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'4fr'],
                 ['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'4fr'],
                 ['label'=>'Title',          'field'=>'title',           'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'3fr'],
-                ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'1fr'],
+                ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'1fr'],
                 ['label'=>'Percentage',     'field'=>'hitspercent',     'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
-                ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'2fr'],
-                ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'2fr'],
+                ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'text',     'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'2fr'],
+                ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'text',     'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'2fr'],
             ];
 
             // Add language columns
@@ -472,8 +479,8 @@ class Stats extends SimpleStatsDb {
                         'title'         => $page->uid . ' (404)',
                         'hits'          => intval($page->hits, 10),
                         'hitspercent'   => round(($page->hits/$max)*100),
-                        'firstvisited'  => getDateFromPeriod($page->firstvisited),
-                        'lastvisited'   => getDateFromPeriod($page->lastvisited),
+                        'firstvisited'  => getDateFromPeriod($page->firstvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
+                        'lastvisited'   => getDateFromPeriod($page->lastvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
                     ];
                     continue;
                 }
@@ -485,8 +492,8 @@ class Stats extends SimpleStatsDb {
                     'title'         => $kirbyPage->title()->value(),
                     'hits'          => intval($page->hits, 10),
                     'hitspercent'   => round(($page->hits/$max)*100),
-                    'firstvisited'  => getDateFromPeriod($page->firstvisited),
-                    'lastvisited'   => getDateFromPeriod($page->lastvisited),
+                    'firstvisited'  => getDateFromPeriod($page->firstvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
+                    'lastvisited'   => getDateFromPeriod($page->lastvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
                 ];
 
                 // Inject language data
@@ -506,17 +513,17 @@ class Stats extends SimpleStatsDb {
             $firstTimeFrame = 0;
             foreach($visitsOverTime as $timeFrame){
                 // Add timeframe from db
-                $visitsOverTimeData[]=[ getDateFromPeriod($timeFrame->monthyear,'Y-m-d'), $timeFrame->hits ];
+                $visitsOverTimeData[]=[ getDateFromPeriod($timeFrame->monthyear, SIMPLESTATS_TIMELINE_DATE_FORMAT), $timeFrame->hits ];
                 if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
                 //$visitsOverTimeLabels[]=date('M Y',$time);//"${month} - ${year}";
                 //$visitsOverTimeData[]=$timeFrame->hits;
             }
             // Add missing timeframes
             if($firstTimeFrame!==0){
-                $visitsOverTimeMonths = array_column($visitsOverTimeData, 0);
+                $visitsOverTimePeriods = array_column($visitsOverTimeData, 0);
                 for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
                     $timeFrameKey = date('Y-m-d', $timeFrame);
-                    if( array_search($timeFrameKey, $visitsOverTimeMonths) === false ) $visitsOverTimeData[]=[$timeFrameKey, 0];
+                    if( array_search($timeFrameKey, $visitsOverTimePeriods) === false ) $visitsOverTimeData[]=[$timeFrameKey, 0];
                 }
             }
         }
@@ -527,9 +534,9 @@ class Stats extends SimpleStatsDb {
         $pageVisitsOverTimeData=[];
         $pageVisitsOverTime = self::database()->query("SELECT `uid`, SUM(`hits`) AS `hits`, `monthyear` FROM `pagevisits` GROUP BY `UID`, `monthyear` ORDER BY `monthyear` ASC, `uid` ASC LIMIT 0,1000");
         if($pageVisitsOverTime){
-            $pageMonths=[];
+            $pageTimeframes=[];
             foreach($pageVisitsOverTime as $page){
-                $monthyear = intval($page->monthyear);
+                $pagevisitPeriod = intval($page->monthyear, 10);
                 $name = $page->uid;
 
                 // Need to create the first entry ?
@@ -541,11 +548,11 @@ class Stats extends SimpleStatsDb {
                 }
 
                 // Remember period
-                if(array_search($monthyear, $pageMonths)===false){
-                    $pageMonths[]=$monthyear;
+                if(array_search($pagevisitPeriod, $pageTimeframes)===false){
+                    $pageTimeframes[]=$pagevisitPeriod;
                 }
                 // value
-                $pageVisitsOverTimeData[$name]['data'][$monthyear]=intval($page->hits);
+                $pageVisitsOverTimeData[$name]['data'][$pagevisitPeriod]=intval($page->hits);
             }
 
             // Process data
@@ -553,7 +560,7 @@ class Stats extends SimpleStatsDb {
             foreach($pageVisitsOverTimeData as $name => $data){
 
                 // Add missing keys / zero values
-                foreach($pageMonths as $month){
+                foreach($pageTimeframes as $month){
                     if(!array_key_exists($month, $pageVisitsOverTimeData[$name]['data'])){
                         $pageVisitsOverTimeData[$name]['data'][$month]=0;
                     }
@@ -562,7 +569,7 @@ class Stats extends SimpleStatsDb {
                 // Convert monthyear to date string
                 $pageVisitsOverTimeData[$name]['data2']=[];
                 foreach($pageVisitsOverTimeData[$name]['data'] as $my => $hits){
-                    $pageVisitsOverTimeData[$name]['data2'][getDateFromPeriod($my, 'Y-m-d')]=$hits;
+                    $pageVisitsOverTimeData[$name]['data2'][getDateFromPeriod($my, SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
                 }
                 $pageVisitsOverTimeData[$name]['data']=$pageVisitsOverTimeData[$name]['data2'];
                 unset($pageVisitsOverTimeData[$name]['data2']);
@@ -612,34 +619,20 @@ class Stats extends SimpleStatsDb {
             // Compute $languagesOverTime and $globalLanguagesData
             $languagesOverTimeQ = self::database()->query("SELECT `monthyear` ${queryLangs} FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
             if($languagesOverTimeQ){
-                //$allLangMonths = [];
                 $firstTimeFrame = 0;
                 foreach($languagesOverTimeQ as $timeFrame){
-                    $monthyear = getDateFromPeriod(intval($timeFrame->monthyear, 10),'Y-m-d');
+                    $langsPeriod = getDateFromPeriod(intval($timeFrame->monthyear, 10), SIMPLESTATS_TIMELINE_DATE_FORMAT);
                     if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
 
                     // Get hits for each lang on this period
                     foreach($kirbyLangs as $l){
                         // value
-                        $languagesOverTimeData[$l]['data'][$monthyear]=intval($timeFrame->$l, 10);
+                        $languagesOverTimeData[$l]['data'][$langsPeriod]=intval($timeFrame->$l, 10);
 
                         // compute globals
-                        $globalLanguagesData[$l][1] += $languagesOverTimeData[$l]['data'][$monthyear];
+                        $globalLanguagesData[$l][1] += $languagesOverTimeData[$l]['data'][$langsPeriod];
                     }
-
-                    // Remember this period, needed to consolidate data for charts
-                    //if(array_search($monthyear, $allLangMonths)===false){
-                    //    $allLangMonths[]=$monthyear;
-                    //}
                 }
-
-                // Check if all languages have values (add zero-values)
-                // Not needed here, commented if needed in the future
-                //foreach($allLangMonths as $m){
-                //    foreach($kirbyLangs as $l){
-                //        if( !array_key_exists($m, $languagesOverTimeData[$l]['data'])) $languagesOverTimeData[$l]['data'][$m]=0;
-                //    }
-                //}
 
                 // Add missing timeframes from first date to now (happens when no data at all is recorder in a full period)
                 for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
@@ -706,7 +699,7 @@ class Stats extends SimpleStatsDb {
 
         // init return variabes
         //$sitePages = [];
-        $newPageVisits = [];
+        $newPageVisits = []; // --> $newPageVisits[period][pageid][attr]
         $newDevices = [];
         $newEngines = [];
         $newSystems = [];
@@ -722,12 +715,12 @@ class Stats extends SimpleStatsDb {
             // process each one
             foreach($visitors as $visitor){
                 //var_dump($visitor);
-                $yearMonth = date('Ym', intval($visitor->timeregistered) );
+                $sincePeriod = getPeriodFromTime($visitor->timeregistered);
 
                 // Compute visited pages
                 if( $visitor->visitedpages && !empty( $visitor->visitedpages ) ){
                     // Create keys
-                    if( !array_key_exists($yearMonth, $newPageVisits) ) $newPageVisits[$yearMonth]=[];
+                    if( !array_key_exists($sincePeriod, $newPageVisits) ) $newPageVisits[$sincePeriod]=[];
 
                     $visitorPages = [];
                     foreach( explode(',', $visitor->visitedpages) as $page){
@@ -775,86 +768,85 @@ class Stats extends SimpleStatsDb {
                     foreach($visitorPages as $page => $pageInfo){
 
                         // Insert page ?
-                        $key = array_search($page, array_column($newPageVisits[$yearMonth], 'uid') );
+                        $key = array_search($page, array_column($newPageVisits[$sincePeriod], 'uid') );
                         if( $key === false ){
-                            //echo 'Created $newPageVisits['.$yearMonth.'][] --- as '.$page."\n";
-                            $newPageVisits[$yearMonth][]=[
+                            //echo 'Created $newPageVisits['.$sincePeriod.'][] --- as '.$page."\n";
+                            $newPageVisits[$sincePeriod][]=[
                                 'hits' => 1,//$pageInfo['hits'],
                                 'uid'  => $page,
-                                'yearmonth' => $yearMonth,
+                                'timeframe' => $sincePeriod,
                                 'langhits' => $pageInfo['langs'],
                             ];
                         }
                         // Increment existing page ?
                         else {
-                            //echo 'Incrementing $newPageVisits['.$yearMonth.']['.$key.'] '."\n";
+                            //echo 'Incrementing $newPageVisits['.$sincePeriod.']['.$key.'] '."\n";
 
                             // increment total hits
-                            $newPageVisits[$yearMonth][$key]['hits']++;// +=$pageInfo['hits'];
+                            $newPageVisits[$sincePeriod][$key]['hits']++;
 
                             // Append lang visits
-                            foreach( $newPageVisits[$yearMonth][$key]['langhits'] as $lang => $hits ){
-                                if( $hits > 0 ) $newPageVisits[$yearMonth][$key]['langhits'][$lang]++; // += $hits;
+                            foreach( $newPageVisits[$sincePeriod][$key]['langhits'] as $lang => $hits ){
+                                if( $hits > 0 ) $newPageVisits[$sincePeriod][$key]['langhits'][$lang]++;
                             }
-
                         }
                     }
                 }
 
                 // Compute Devices
                 if( $visitor->devicetype && !empty( $visitor->devicetype ) ){
-                    if(!array_key_exists($yearMonth, $newDevices)) $newDevices[$yearMonth] = [];
+                    if(!array_key_exists($sincePeriod, $newDevices)) $newDevices[$sincePeriod] = [];
 
                     // Insert device ?
-                    $key = array_search($visitor->devicetype, array_column($newDevices[$yearMonth], 'device') );
+                    $key = array_search($visitor->devicetype, array_column($newDevices[$sincePeriod], 'device') );
                     if( $key === false ){
-                        $newDevices[$yearMonth][]=[
+                        $newDevices[$sincePeriod][]=[
                             'hits' => 1,
                             'device'  => $visitor->devicetype,
-                            'yearmonth' => $yearMonth,
+                            'timeframe' => $sincePeriod,
                         ];
                     }
                     // Increment ?
                     else {
-                        $newDevices[$yearMonth][$key]['hits']++;
+                        $newDevices[$sincePeriod][$key]['hits']++;
                     }
                 }
 
                 // Compute Systems
                 if( $visitor->osfamily && !empty( $visitor->osfamily ) ){
-                    if(!array_key_exists($yearMonth, $newSystems)) $newSystems[$yearMonth] = [];
+                    if(!array_key_exists($sincePeriod, $newSystems)) $newSystems[$sincePeriod] = [];
 
                     // Insert system ?
-                    $key = array_search($visitor->osfamily, array_column($newSystems[$yearMonth], 'system') );
+                    $key = array_search($visitor->osfamily, array_column($newSystems[$sincePeriod], 'system') );
                     if( $key === false ){
-                        $newSystems[$yearMonth][]=[
+                        $newSystems[$sincePeriod][]=[
                             'hits' => 1,
                             'system'  => $visitor->osfamily,
-                            'yearmonth' => $yearMonth,
+                            'timeframe' => $sincePeriod,
                         ];
                     }
                     // Increment ?
                     else {
-                        $newSystems[$yearMonth][$key]['hits']++;
+                        $newSystems[$sincePeriod][$key]['hits']++;
                     }
                 }
 
                 // Compute Engines
                 if( $visitor->browserengine && !empty( $visitor->browserengine ) ){
-                    if(!array_key_exists($yearMonth, $newEngines)) $newEngines[$yearMonth] = [];
+                    if(!array_key_exists($sincePeriod, $newEngines)) $newEngines[$sincePeriod] = [];
 
                     // Insert system ?
-                    $key = array_search($visitor->browserengine, array_column($newEngines[$yearMonth], 'engine') );
+                    $key = array_search($visitor->browserengine, array_column($newEngines[$sincePeriod], 'engine') );
                     if( $key === false ){
-                        $newEngines[$yearMonth][]=[
+                        $newEngines[$sincePeriod][]=[
                             'hits' => 1,
                             'engine'  => $visitor->browserengine,
-                            'yearmonth' => $yearMonth,
+                            'timeframe' => $sincePeriod,
                         ];
                     }
                     // Increment ?
                     else {
-                        $newEngines[$yearMonth][$key]['hits']++;
+                        $newEngines[$sincePeriod][$key]['hits']++;
                     }
                 }
 
@@ -886,16 +878,16 @@ class Stats extends SimpleStatsDb {
                 }
 
                 // Loop dates
-                foreach( $newPageVisits as $monthYear => $monthlyPageVisits ){
+                foreach( $newPageVisits as $pagePeriod => $monthlyPageVisits ){
 
-                    //echo 'Updating page visits for '.$monthYear."\n"; continue;
-                    $existingPages = self::database()->query("SELECT `id`, `uid`, `hits`, ${queryLangs} FROM `pagevisits` WHERE `monthyear` = ${monthYear} LIMIT 0,1000;");
+                    //echo 'Updating page visits for '.$pagePeriod."\n"; continue;
+                    $existingPages = self::database()->query("SELECT `id`, `uid`, `hits`, ${queryLangs} FROM `pagevisits` WHERE `monthyear` = ${pagePeriod} LIMIT 0,1000;");
 
                     // Dirty security for if languages make the request fail
 /*
                     if( !$existingPages ){
                         // retry query without the language strings
-                        $existingPages = self::database()->query("SELECT `id`, `uid`, `hits` FROM `pagevisits` WHERE `monthyear` = ${monthYear} LIMIT 0,1000;");
+                        $existingPages = self::database()->query("SELECT `id`, `uid`, `hits` FROM `pagevisits` WHERE `monthyear` = ${pagePeriod} LIMIT 0,1000;");
                     }
 */
                     // Query ok ?
@@ -952,7 +944,7 @@ class Stats extends SimpleStatsDb {
                                 }
 
                                 // Save
-                                if(!self::database()->query("INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear` ${langKeys} ) VALUES ('${uid}', ${newHits}, ${monthYear} ${langValues})")){
+                                if(!self::database()->query("INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear` ${langKeys} ) VALUES ('${uid}', ${newHits}, ${pagePeriod} ${langValues})")){
                                     Logger::LogWarning("Could not INSERT pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1000,10 +992,10 @@ class Stats extends SimpleStatsDb {
             // Update Devices
             if( count($newDevices)>0 ){
 
-                // Loop months
-                foreach( $newDevices as $monthYear => $monthlyDevices ){
+                // Loop Periods
+                foreach( $newDevices as $devicesPeriod => $monthlyDevices ){
                     // Query existing db
-                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
+                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '${devicesPeriod}' LIMIT 0,1000;");
 
                     if($existingDevices){
                         //echo "EXISTING=";var_dump($existingPages->toArray());
@@ -1018,7 +1010,7 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ('".$newDeviceInfo['device']."', ${newHits}, ${monthYear})")){
+                                if(!self::database()->query("INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ('".$newDeviceInfo['device']."', ${newHits}, ${devicesPeriod})")){
                                     Logger::LogWarning("Could not INSERT new device while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1041,10 +1033,10 @@ class Stats extends SimpleStatsDb {
             // Update Systems
             if( count($newSystems)>0 ){
 
-                // Loop months
-                foreach( $newSystems as $monthYear => $monthlySystems ){
+                // Loop Periods
+                foreach( $newSystems as $systemsPeriod => $monthlySystems ){
                     // Query existing db
-                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
+                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '${systemsPeriod}' LIMIT 0,1000;");
 
                     if($existingSystems){
                         $existingSystemsA = $existingSystems->toArray();
@@ -1058,7 +1050,7 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ('".$newSystemInfo['system']."', ${newHits}, ${monthYear})")){
+                                if(!self::database()->query("INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ('".$newSystemInfo['system']."', ${newHits}, ${systemsPeriod})")){
                                     //echo 'DBFAIL [insert new system]'."\n";
                                     Logger::LogWarning("Could not INSERT systems while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
@@ -1082,10 +1074,10 @@ class Stats extends SimpleStatsDb {
             // Update Engines
             if( count($newEngines)>0 ){
 
-                // Loop months
-                foreach( $newEngines as $monthYear => $monthlyEngines ){
+                // Loop Periods
+                foreach( $newEngines as $enginesPeriod => $monthlyEngines ){
                     // Query existing db
-                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '${monthYear}' LIMIT 0,1000;");
+                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '${enginesPeriod}' LIMIT 0,1000;");
 
                     if($existingEngines){
                         $existingEnginesA = $existingEngines->toArray();
@@ -1099,7 +1091,7 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ('".$newEngineInfo['engine']."', ${newHits}, ${monthYear})")){
+                                if(!self::database()->query("INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ('".$newEngineInfo['engine']."', ${newHits}, ${enginesPeriod})")){
                                     Logger::LogWarning("Could not INSERT engines while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
                                 //else echo "INSERTED_ENGINE!";

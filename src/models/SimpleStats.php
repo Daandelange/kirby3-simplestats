@@ -73,7 +73,7 @@ class SimpleStats extends SimpleStatsDb {
             $visitedpages = '';
 
             // Get device info
-            // Note: Bot devices are always tracked, user devices as per settings
+            // Note: Bot devices are always tracked, user devices are per settings
             $info = SimpleStats::detectSystemFromUA();
             $userIsBot = ($info['system'] == 'bot');
 
@@ -134,11 +134,11 @@ class SimpleStats extends SimpleStatsDb {
             //$referer = '';
             if($refererInfo){
                 $refererUrl = $refererInfo['url'];
-                $yearmonth = date('Ym');
+                $referrerPeriod = getPeriodFromTime();
 
                 // Retrieve referer from db
                 $refererEntry = null;
-                $refererEntry = $db->query("SELECT `id` from `referers` WHERE `referer`='${refererUrl}' AND `monthyear`=${yearmonth} LIMIT 1");
+                $refererEntry = $db->query("SELECT `id` from `referers` WHERE `referer`='${refererUrl}' AND `monthyear`=${referrerPeriod} LIMIT 1");
                 // Referer already exists. Increment hits.
                 if( $refererEntry ){
                     if( $refererEntry->isNotEmpty() ){
@@ -153,8 +153,8 @@ class SimpleStats extends SimpleStatsDb {
                         // known medium hold name instead of domain
                         $domain = (!empty($refererInfo['source']))?$refererInfo['source']:$refererInfo['host'];
                         $medium = $refererInfo['medium'];
-                        //echo "INSERT INTO `referers` (referer, domain, monthyear, hits) VALUES ('${refererUrl}', '${domain}', ${yearmonth}, 1)";
-                        if(!$db->query("INSERT INTO `referers` (referer, domain, monthyear, hits, medium) VALUES ('${refererUrl}', '${domain}', ${yearmonth}, 1, '${medium}')")){
+                        //echo "INSERT INTO `referers` (referer, domain, monthyear, hits) VALUES ('${refererUrl}', '${domain}', ${referrerPeriod}, 1)";
+                        if(!$db->query("INSERT INTO `referers` (referer, domain, monthyear, hits, medium) VALUES ('${refererUrl}', '${domain}', ${referrerPeriod}, 1, '${medium}')")){
                             Logger::LogWarning("Failed to insert new referer : ${refererUrl}. Error=".$db->lastError()->getMessage());
                         }
                     }

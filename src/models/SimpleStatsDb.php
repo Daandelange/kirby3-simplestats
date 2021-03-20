@@ -25,6 +25,12 @@ use Kirby\Cms\Dir;
 // Periods refer to custom timespans, also having int values
 // Note: Periods have to be convertible to ints so math operations can be done on them. For example, ( future > now > past ) must always be true.
 
+// Changing these has not yet been tested
+define('SIMPLESTATS_VERSION_DATE_FORMAT', 'Ymd'); // For "simplestats" versionning table
+define('SIMPLESTATS_TABLE_DATE_FORMAT', 'Y-m-d');
+define('SIMPLESTATS_PRECISE_DATE_FORMAT', 'Y-m-d h:i');
+define('SIMPLESTATS_TIMELINE_DATE_FORMAT', 'Y-m-d');
+
 // This class retrieves analytics from the database
 function getTimeFromPeriod($monthyear) : int {
     $year=intval(substr(''.$monthyear, 0,4));
@@ -32,7 +38,7 @@ function getTimeFromPeriod($monthyear) : int {
     return mktime(0,0,0,$month,1,$year);
 }
 
-function getDateFromPeriod($period, $dateformat='M Y') : string {
+function getDateFromPeriod($period, $dateformat='Y-m-d h:i') : string {
     return date( $dateformat, getTimeFromPeriod($period) );
 }
 
@@ -41,7 +47,6 @@ function getPeriodFromTime( $time = 0 ) : int {
     if($time===0) $time = time();
     return intval(date('Ym', $time), 10);
 }
-
 
 function incrementTime($time, $steps=1) : int {
     //return $time + ((24*60*60) * $steps); // Quick method (unaware of dates)
@@ -55,6 +60,15 @@ function incrementTime($time, $steps=1) : int {
 function incrementPeriod($period, $steps=1) : int {
     return getPeriodFromTime( incrementTime( getTimeFromPeriod($period), $steps=1 ) );
 }
+
+// Parse version date
+function getTimeFromVersionDate($monthyearday) : int {
+    $year=intval(substr(''.$monthyearday, 0,4));
+    $month=intval(substr(''.$monthyearday, 4,2));
+    $day=intval(substr(''.$monthyearday, 6,2));
+    return mktime(0,0,0,$month,$day,$year);
+}
+
 
 // - - - - -
 
@@ -124,7 +138,7 @@ class SimpleStatsDb
             $db->exec("CREATE TABLE IF NOT EXISTS `engines` (`id` INTEGER primary key unique, `engine` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
             $db->exec("CREATE TABLE IF NOT EXISTS `systems` (`id` INTEGER primary key unique, `system` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
             $db->exec("CREATE TABLE IF NOT EXISTS `simplestats` (`id` INTEGER primary key unique, `version` INTEGER, `migrationdate` INTEGER)");
-            $db->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, ".self::engineDbVersion.", ".date('Ymd').")");
+            $db->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, ".self::engineDbVersion.", ".date(SIMPLESTATS_VERSION_DATE_FORMAT).")");
             $db->close();
 
 
@@ -205,7 +219,7 @@ class SimpleStatsDb
                         // Create simplestats version table (since v2)
                         if(
                             !$dbsql3->exec("CREATE TABLE IF NOT EXISTS `simplestats` (`id` INTEGER primary key unique, `version` INTEGER, `migrationdate` INTEGER)") ||
-                            !$dbsql3->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, 2, ".date('Ymd').")")
+                            !$dbsql3->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, 2, ".date(SIMPLESTATS_VERSION_DATE_FORMAT).")")
                         ){
                             Logger::LogWarning("UPGRADE from db v1 to v2+ FAILED creating the simplestats table. Error=".$dbsql3->lastErrorMsg() );
                             @$dbsql3->close();
@@ -368,7 +382,7 @@ class SimpleStatsDb
                                     }
                                 }
                                 // Select duplicates
-                            	$selectDuplicates = 'SELECT min(`id`) as "idtokeep", `uid`, COUNT(`id`)  as "numentries", `monthyear`, '.$hitsQueryPart.' FROM `pagevisits` GROUP BY  uid, monthyear HAVING COUNT(`id`) > 1 LIMIT 10000;';
+                            	$selectDuplicates = 'SELECT min(`id`) as "idtokeep", `uid`, COUNT(`id`)  as "numentries", `monthyear`, '.$hitsQueryPart.' FROM `pagevisits` GROUP BY  `uid`, `monthyear` HAVING COUNT(`id`) > 1 LIMIT 10000;';
 
                             	// For each duplicate, merge hits and only keep the one with the lowest ID.
                             	if($duplicatesResult = $db->query($selectDuplicates)){
@@ -436,7 +450,7 @@ class SimpleStatsDb
 
                                     // Update db version info
                                     if($changeToV3){
-                                        if(!$db->execute("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, 3, ".date('Ymd').")")){
+                                        if(!$db->execute("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, 3, ".date(SIMPLESTATS_VERSION_DATE_FORMAT).")")){
                                             Logger::LogWarning("Db Upgrade, could not change db version to v3! Error=".$db->lastError()->getMessage());
                                             $ret = false;
                                         }
@@ -448,7 +462,7 @@ class SimpleStatsDb
                             	}
 
                             	// Upgrade version
-                            	//$dbsql3->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, 3, ".date('Ymd').")")
+                            	//$dbsql3->exec("INSERT INTO `simplestats` (`id`, `version`, `migrationdate`) VALUES (NULL, 3, ".date(SIMPLESTATS_VERSION_DATE_FORMAT).")")
                             } // End v2 -> v3
                             //$ret=false;
                         }

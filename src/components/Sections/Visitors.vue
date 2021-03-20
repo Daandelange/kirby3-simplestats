@@ -1,34 +1,35 @@
 <template>
-  <div>
-    <p><br/></p>
-    <k-headline size="large">Visitors (current sessions)</k-headline>
-    <k-box theme="info" text="These are active user sessions, used to count unique visits every 24H. Then, they are computed/dissociated, only keeping the minimal information visible in other tabs. " />
+  <k-grid>
+    <k-column>
+      <p><br/></p>
+      <k-headline size="large">Visitors (current sessions)</k-headline>
 
+      <tbl
+        :rows="rows"
+        :columns="columns"
+        :ssstore="false"
+        :sssearch="false"
+        :options="{showSearch:true}"
+        :pppagination="false"
+        :isLoading="isLoading"
+        :search="true"
+      >
+        <!-- Custom headline: title
+        <template slot="headline">
+          <k-header>Simple Stats</k-header>
+        </template> -->
 
-    <tbl
-      :rows="rows"
-      :columns="columns"
-      :ssstore="false"
-      :sssearch="false"
-      :options="{showSearch:true}"
-      :pppagination="false"
-      :isLoading="isLoading"
-      :search="true"
-    >
-      <!-- Custom headline: title
-      <template slot="headline">
-        <k-header>Simple Stats</k-header>
-      </template> -->
+        <!-- Default entryslot -->
+        <template slot="column-$default" slot-scope="props">
+          <p>
+            {{ props.value }}
+          </p>
+        </template>
 
-      <!-- Default entryslot -->
-      <template slot="column-$default" slot-scope="props">
-        <p>
-          {{ props.value }}
-        </p>
-      </template>
-
-    </tbl>
-  </div>
+      </tbl>
+      <k-box theme="info" text="These are active user sessions, used to count unique visits every 24H. Then, they are computed/dissociated, only keeping the minimal information visible in other tabs. " />
+    </k-column>
+  </k-grid>
 </template>
 
 <script>

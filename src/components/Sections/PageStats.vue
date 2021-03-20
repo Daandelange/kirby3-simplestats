@@ -88,6 +88,18 @@
           <template slot="column-hitspercent" slot-scope="props">
             <p v-bind:style="[ !props.value ? { width: '0%' } : { width: props.value + '%' }]"></p>
           </template>
+          <!-- Timeframe date entryslot -->
+          <template slot="column-firstvisited" slot-scope="props">
+            <p>
+              {{ new Date( props.value ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.value ).getFullYear() }}
+            </p>
+          </template>
+          <!-- Timeframe date entryslot -->
+          <template slot="column-lastvisited" slot-scope="props">
+            <p>
+              {{ new Date( props.value ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.value ).getFullYear() }}
+            </p>
+          </template>
           <!-- UID is HTML format -->
           <template slot="column-uid" slot-scope="props">
             <p v-html="props.value"></p>
@@ -118,6 +130,7 @@ export default {
       languagesOverTimeData: [],
       globalLanguagesData: [],
       languagesAreEnabled: false,
+      userLocale: 'en',
 
       chartOptions: {
         scales: {
@@ -163,6 +176,7 @@ export default {
   },
   methods: {
     load(reload) {
+
       if (!reload) this.isLoading = true
 
       this.$api
@@ -180,7 +194,7 @@ export default {
           this.globalLanguagesData = response.globallanguagesdata
           this.languagesOverTimeData = response.languagesovertimedata
           this.languagesAreEnabled = response.languagesAreEnabled
-
+          this.userLocale = this.$store.state.i18n.locale;// );//this.$store.state.languages.all.find(el => el.code=='en') ).url;
           //console.warn(response);
           //console.log(response.data.rows);
           // replace default translations if needed
