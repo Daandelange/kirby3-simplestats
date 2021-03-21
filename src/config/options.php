@@ -19,6 +19,8 @@ return [
     // Tracking options
     'tracking' => [
         'database'      => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
+        'timeFrameUtility'  => new SimpleStatsTimeFrameUtilityMonthly(),
+
         // Respect DNT
         // pagecountermode : hits, uniquehitsUA, uniquehitsSession (not yet)
         // todo : 'trackUniqueHitsOnly'   => true, // set to false for hitcounter behaviour

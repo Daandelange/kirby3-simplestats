@@ -35,7 +35,7 @@ class Stats extends SimpleStatsDb {
                 foreach($dbvQ as $v){
                     $dbArray[]=[
                         'version' => intval($v->version, 10),
-                        'date'    => date('Y-m-d', getTimeFromVersionDate($v->migrationdate)),
+                        'date'    => date('Y-m-d', getTimeFromVersionDate(intval($v->migrationdate,10)) ),
                     ];
                 }
             }
@@ -470,7 +470,7 @@ class Stats extends SimpleStatsDb {
 
             // Set rows
             foreach($visitedPages as $page){
-                $kirbyPage = kirby()->page($page->uid);
+                $kirbyPage = kirby()->page($page->uid); // This is probably the slowest part to be optimized some day
 
                 // Pages that don't exist (anymore?)
                 if(!$kirbyPage){
@@ -492,8 +492,8 @@ class Stats extends SimpleStatsDb {
                     'title'         => $kirbyPage->title()->value(),
                     'hits'          => intval($page->hits, 10),
                     'hitspercent'   => round(($page->hits/$max)*100),
-                    'firstvisited'  => getDateFromPeriod($page->firstvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
-                    'lastvisited'   => getDateFromPeriod($page->lastvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
+                    'firstvisited'  => getDateFromPeriod(intval($page->firstvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                    'lastvisited'   => getDateFromPeriod(intval($page->lastvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
                 ];
 
                 // Inject language data
@@ -513,7 +513,7 @@ class Stats extends SimpleStatsDb {
             $firstTimeFrame = 0;
             foreach($visitsOverTime as $timeFrame){
                 // Add timeframe from db
-                $visitsOverTimeData[]=[ getDateFromPeriod($timeFrame->monthyear, SIMPLESTATS_TIMELINE_DATE_FORMAT), $timeFrame->hits ];
+                $visitsOverTimeData[]=[ getDateFromPeriod(intval($timeFrame->monthyear,10), SIMPLESTATS_TIMELINE_DATE_FORMAT), $timeFrame->hits ];
                 if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
                 //$visitsOverTimeLabels[]=date('M Y',$time);//"${month} - ${year}";
                 //$visitsOverTimeData[]=$timeFrame->hits;
@@ -627,7 +627,7 @@ class Stats extends SimpleStatsDb {
                     // Get hits for each lang on this period
                     foreach($kirbyLangs as $l){
                         // value
-                        $languagesOverTimeData[$l]['data'][$langsPeriod]=intval($timeFrame->$l, 10);
+                        $languagesOverTimeData[$l]['data'][$langsPeriod] = intval($timeFrame->$l, 10);
 
                         // compute globals
                         $globalLanguagesData[$l][1] += $languagesOverTimeData[$l]['data'][$langsPeriod];
@@ -636,7 +636,7 @@ class Stats extends SimpleStatsDb {
 
                 // Add missing timeframes from first date to now (happens when no data at all is recorder in a full period)
                 for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
-                    $timeFrameKey = date('Y-m-d', $timeFrame);
+                    $timeFrameKey = date( SIMPLESTATS_TIMELINE_DATE_FORMAT, $timeFrame);
                     foreach($kirbyLangs as $l){
                         if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) && array_key_exists($timeFrameKey, $languagesOverTimeData[$l]['data']) === false ){
                             $languagesOverTimeData[$l]['data'][$timeFrameKey]=0;

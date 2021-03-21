@@ -13,60 +13,47 @@ use Kirby\Toolkit\Collection;
 use Kirby\Toolkit\F;
 use Kirby\Toolkit\Obj;
 use Kirby\Cms\Dir;
+use Kirby\Cms\App;
 
 // todo : make it exception safe
 // $db->query() can throw errors !
 
 
 // - - - - -
-// Time / Period conversions
-
-// Time refers to timestamp int values
-// Periods refer to custom timespans, also having int values
-// Note: Periods have to be convertible to ints so math operations can be done on them. For example, ( future > now > past ) must always be true.
-
-// Changing these has not yet been tested
-define('SIMPLESTATS_VERSION_DATE_FORMAT', 'Ymd'); // For "simplestats" versionning table
-define('SIMPLESTATS_TABLE_DATE_FORMAT', 'Y-m-d');
-define('SIMPLESTATS_PRECISE_DATE_FORMAT', 'Y-m-d h:i');
-define('SIMPLESTATS_TIMELINE_DATE_FORMAT', 'Y-m-d');
+require_once( __DIR__ .'/TimeframeUtilities.php');
 
 // This class retrieves analytics from the database
-function getTimeFromPeriod($monthyear) : int {
-    $year=intval(substr(''.$monthyear, 0,4));
-    $month=intval(substr(''.$monthyear, 4,2));
-    return mktime(0,0,0,$month,1,$year);
+function getTimeFromPeriod(int $period) : int {
+    // Parametric
+    return getTimeFrameUtility()->getTimeFromPeriod($period);
 }
 
-function getDateFromPeriod($period, $dateformat='Y-m-d h:i') : string {
-    return date( $dateformat, getTimeFromPeriod($period) );
+function getDateFromPeriod(int $period, string $dateformat='Y-m-d') : string {
+    // Parametric
+    return getTimeFrameUtility()->getDateFromPeriod($period, $dateformat);
 }
 
 // Converts a timestamp to period (monthyear)
-function getPeriodFromTime( $time = 0 ) : int {
-    if($time===0) $time = time();
-    return intval(date('Ym', $time), 10);
+function getPeriodFromTime( int $time = -1 ) : int {
+    if($time < 0) $time = time();
+    // Parametric
+    return getTimeFrameUtility()->getPeriodFromTime($time);
 }
 
 function incrementTime($time, $steps=1) : int {
-    //return $time + ((24*60*60) * $steps); // Quick method (unaware of dates)
-    // Slow but accurate method.
-    $month = date('m', $time)+$steps;
-    $year = intval( date('Y', $time) + floor( ($month-1) / 12 ), 10);
-    $month = intval((($month-1+abs($steps)*12)%12))+1; //
-    return mktime(0,0,0,$month,1,$year);
+    // Parametric
+    return getTimeFrameUtility()->incrementTime($time, $steps);
 }
 
 function incrementPeriod($period, $steps=1) : int {
-    return getPeriodFromTime( incrementTime( getTimeFromPeriod($period), $steps=1 ) );
+    // Parametric
+    return getTimeFrameUtility()->incrementPeriod($period, $steps);
 }
 
 // Parse version date
-function getTimeFromVersionDate($monthyearday) : int {
-    $year=intval(substr(''.$monthyearday, 0,4));
-    $month=intval(substr(''.$monthyearday, 4,2));
-    $day=intval(substr(''.$monthyearday, 6,2));
-    return mktime(0,0,0,$month,$day,$year);
+function getTimeFromVersionDate(int $monthyearday) : int {
+    // Parametric
+    return getTimeFrameUtility()->getTimeFromVersionDate($monthyearday);
 }
 
 
