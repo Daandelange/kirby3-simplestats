@@ -18,39 +18,42 @@ return [
 
     // Tracking options
     'tracking' => [
-        'database'      => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
-        'timeFrameUtility'  => new SimpleStatsTimeFrameUtilityMonthly(),
-
-        // Respect DNT
-        // pagecountermode : hits, uniquehitsUA, uniquehitsSession (not yet)
-        // todo : 'trackUniqueHitsOnly'   => true, // set to false for hitcounter behaviour
-        'enableReferers'   => true, // Enables tracking of referers. Gives an insigt of who links your website.
-        'enableDevices'    => true, // Enables tracking of minimal hardware configurations (device information)
-        'enableVisits'     => true, // Enables tracking of page visits
-        'enableVisitLanguages' => true, // In multilanguage setups, separately count language hits with page counts
-        // Todo: option to exclude bots from hitcounter (still tracking the device)
-        'salt'             => 'CHANGEME', // Salt used to obfuscate unique user string.
-        'uniqueSeconds'    => 1*24*60*60, // Anonimised user data is deleted after this delay, don't touch for now.
-        // Dont change onLoad yet !!! (keep to true)
-        'onLoad'   => true, // Tracks when the page is served by the router (increases load time). If false, you need to add an image to all trackable templates (not yet available), you'll get better load performance, and "naturaly" exclude most bots.
-        // Set to false to track from an image, which can naturally prevent calls from most robots, and speed up page loads. (recommended: set to false)
-            // Track hits on page serve or using an image ?
-            // Delete by crontask or afterLoad ?
+        'database'              => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
+        'timeFrameUtility'      => new SimpleStatsTimeFrameUtilityMonthly(),
+        'enableReferers'        => true, // Enables tracking of referers. Gives an insigt of who links your website.
+        'enableDevices'         => true, // Enables tracking of minimal hardware configurations (device information)
+        'enableVisits'          => true, // Enables tracking of page visits
+        'enableVisitLanguages'  => true, // In multilanguage setups, separately count language hits with page counts
+        'salt'                  => 'CHANGEME', // Salt used to obfuscate unique user string.
+        'uniqueSeconds'         => 1*24*60*60, // Anonimised user data is deleted after this delay to become
 
         // Tracking blacklist
         'ignore' => [
             'roles' => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here (causes the plugin's translations to vanish from php)
-            'pages' => [], // Array of plain text page uris.
+            'pages' => [], // Array of plain text page ids.
+            // 'templates' => [], // todo : Exclude pages with these templates
         ],
+
+        // Dont change onLoad yet !!! (keep to true)
+        'onLoad'   => true, // Tracks when the page is served by the router (increases load time). If false, you need to add an image to all trackable templates (not yet available), you'll get better load performance, and "naturaly" exclude most bots.
+        // Set to false to track from an image, which can naturally prevent calls from most robots, and speed up page loads. (recommended: set to false)
+        // Track hits on page serve or using an image ?
     ],
 
     // Enable/Disable the admin panel and API
     'panel' => [
         'enable'            => true, // Only disables the API (for now...) makes the panel unusable.
         'dismissDisclaimer' => false,
-        'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics
+        'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics.
     ]
 
+
+    // IDEAS 4 LATER
+    // Respect DNT
+    // pagecountermode : hits, uniquehitsUA, uniquehitsSession (not yet)
+    // 'trackUniqueHitsOnly'   => true, // set to false for hitcounter behaviour
+    // Todo: option to exclude bots from hitcounter (still tracking the device)
+    // Todo : Sync daily stats by crontask or afterLoad ? (increases page load speed)
     // Todo: Add refferer tracking via pingback ? Webmentions ?
 
     // (Settings ideas from k2-stats)

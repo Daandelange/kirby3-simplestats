@@ -19,8 +19,8 @@ This data is kept for a very short amount of time to ensure only counting unique
 - After 24H, the collected data is processed and any user identifying data is deleted :
   - The visited pages' hit counts are incremented, globally and per language.
   - Device, Engine and OS Family are separately incremented.
-- Referrers are processed immediately and not bound to any user-related identifier.
-- For now, all data is summed up on a monthly basis; it only tracks the amount of visits per month. *Future releases might let you set a custom time span.*
+- Referrers are processed immediately and are not bound to any user-related identifier.
+- All data is summed up on a monthly basis by default. You can easily change this "timeframe" to weekly or anything else.
 
 
 ### Current state
@@ -35,14 +35,14 @@ Any contributions (discussions, reports, feedback and pull requests) are welcome
 ****
 
 
-## Installation
+## Setup
 
-#### Option 1 : Download
+### Installation
 
+- **Option 1** : Download
 Download and copy this repository to `/site/plugins/simplestats`.
 
-#### Option 2 : Git submodule
-
+- **Option 2** : Git submodule
 ```
 git submodule add https://github.com/daandelange/kirby3-simplestats.git site/plugins/simplestats
 ```
@@ -67,43 +67,55 @@ As the license states, there's no guarantee whatsoever.
 
 #### Options
 Like any Kirby plugin, options can be set in your `site/config/config.php`.
-Available options are listed and explained in `src/config/options.php`.
+All available options are listed and explained in `src/config/options.php`.
 Example :
 ````PHP
 // site/config/config.php
+require_once(__DIR__ . '/../plugins/d-simplestats/src/models/SimpleStatsDb.php');
 return [
   // [...] your options ...
 
   // Simplestats
   'daandelange.simplestats.panel.enable' => false, // Disable the panel view completely
   'daandelange.simplestats.tracking.enableReferers' => false, // Disable referer tracking
+  'daandelange.simplestats.tracking.timeFrameUtility' => new \daandelange\SimpleStats\SimpleStatsTimeFrameUtilityWeekly(),
+  //'daandelange.simplestats.tracking.timeFrameUtility' => 'weekly', // Alternative
 ];
 ````
 
+Here's a list with options that have been tested. (the `daandelange.simplestats` part has been stripped)
 
-| Option | Type | Default |Comment |
-|--------|------|---------|--------|
-| panel.dismissDisclaimer | Bool | false | Dismisses the panel disclaimer message. |
-| panel.enable | Bool | true | Enable/Disable viewing stats in the panel. |
-
+| Option | Type | Default | Description | Comment |
+|--------|------|---------|-------------|---------|
+| **TRACKING** | | | | |
+| `tracking.timeFrameUtility` | String \| SimpleStatsTimeFrameUtility | `new SimpleStatsTimeFrameUtilityMonthly()` | Set the class that handles time conversions to periods. Possible string values: `monthly`, `weekly`. |
+| `tracking.enableReferers` | Bool | true | Enables tracking referrers. Gives an insight of who links to your website. | |
+| `tracking.enableDevices` | Bool | true | Enables tracking of minimal hardware configurations (device information) | |
+| `tracking.enableVisits` | Bool | true | Enables tracking page visits (frequentation) | |
+| `tracking.enableVisitLanguages` | Bool | true | Enables a counter per language per page. | Only effective in multi-language Kirby installations and `enableVisits` enabled. |
+| `tracking.ignore.roles` | Array | `['admin']` | Ignore any tracking for connected users with these roles. | |
+| `tracking.ignore.pages` | Array | `[]` | Ignore tracking for these page ids. | Make sure to use the full id, not the slug. |
+| `tracking.salt` | String | `'CHANGEME'` | A unique hash, used to generate a unique user id from visitor data. | Ensures that user identifying information is hard to retrieve if you database leaks. |
+| **PANEL** | | | | |
+| `panel.dismissDisclaimer` | Bool | false | Dismisses the panel disclaimer message. | |
+| `panel.enable` | Bool | true | Enable/Disable viewing stats in the panel. | |
+| `panel.authorizedRoles` | Array | `['admin']` | User roles that are allowed to view statistics from the panel. | |
 
 ### Updating
-Before updating, make sure to **backup your database file**. If something goes wrong, you'll be able to retrieve your stats.
+Before updating, make sure to **backup your database file**. If something goes wrong, you'll be able to retrieve your stats by replacing the database file later.
 
 Depending on the installation method you used, proceed to the logical steps to update.
 
 After updating, review new options and configure as wished.
-Sometimes, a database upgrade is needed. If so, head to the panel's `Information` tab and follow instructions in the upgrade section.
-
+Sometimes, a database upgrade is needed. Head to the panel's `Information` tab and follow instructions in the upgrade section.
+It's also a good idea to check the log file for any errors.
 
 ****
 
 ## Panel Interface
 
-*WIP...*
-
 ### Charts
-Charts are interactive, you can hover them to have details, and click labels to toggle filtering. You can even download a chart as png.
+Charts are interactive, you can hover them to have details, and click labels to toggle filtering. You can even download timelines as png.
 
 ### Tables
 Tables are interactive and paginated. You can search data within and sort them by clicking on the column headers.
@@ -139,7 +151,7 @@ Development was started from [a standard Kirby PluginKit](https://github.com/get
 - [DistantNative/retour-for-kirby](https://github.com/distantnative/retour-for-kirby) : Manage redirects and track 404s right from the Panel.
 - [Bnomei/Pagecounter](https://github.com/bnomei/kirby3-pageviewcounter) : Count page hits and last visited date on your Kirby pages.
 - [SylvainJulé/kirby-matomo](https://github.com/sylvainjule/kirby-matomo) : A Matomo wrapper for Kirby.
-
+- [FabianSperrle/kirby-stats](https://github.com/FabianSperrle/kirby-stats) : Simple stats for Kirby 2.
 
 ## License
 

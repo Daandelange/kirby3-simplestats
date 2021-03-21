@@ -715,7 +715,7 @@ class Stats extends SimpleStatsDb {
             // process each one
             foreach($visitors as $visitor){
                 //var_dump($visitor);
-                $sincePeriod = getPeriodFromTime($visitor->timeregistered);
+                $sincePeriod = getPeriodFromTime(intval($visitor->timeregistered,10));
 
                 // Compute visited pages
                 if( $visitor->visitedpages && !empty( $visitor->visitedpages ) ){
