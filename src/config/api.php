@@ -14,7 +14,7 @@ return [
             'pattern' => 'simplestats/listvisitors',
             'method'  => 'GET',
             'action'  => function () {
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
                     return Stats::listvisitors();
                 }
                 else {
@@ -26,7 +26,7 @@ return [
             'pattern' => 'simplestats/devicestats',
             'method'  => 'GET',
             'action'  => function () {
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
                     return Stats::deviceStats();
                 }
                 else {
@@ -38,7 +38,7 @@ return [
             'pattern' => 'simplestats/refererstats',
             'method'  => 'GET',
             'action'  => function () {
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
                     return Stats::refererStats();
                 }
                 else {
@@ -50,7 +50,7 @@ return [
             'pattern' => 'simplestats/pagestats',
             'method'  => 'GET',
             'action'  => function () {
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
                     return Stats::pageStats();
                 }
                 else {
@@ -62,7 +62,7 @@ return [
             'pattern' => 'simplestats/listdbinfo',
             'method'  => 'GET',
             'action'  => function () {
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
                     try {
                         $stats = Stats::listDbInfo();
                         return $stats;//Stats::listDbInfo();
@@ -79,10 +79,65 @@ return [
             },
         ],
         [
+            'pattern' => 'simplestats/configinfo',
+            'method'  => 'GET',
+            'action'  => function () {
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
+                    // Precompute some data
+                    $salt = option('daandelange.simplestats.tracking.salt', '');
+                    $logLevels = [];
+                    if( option('daandelange.simplestats.log.tracking',false) ) $logLevels[] = 'Tracking';
+                    if( option('daandelange.simplestats.log.warnings',false) ) $logLevels[] = 'Warnings';
+                    if( option('daandelange.simplestats.log.verbose' ,false) ) $logLevels[] = 'Verbose';
+
+                    $dbFile = option('daandelange.simplestats.tracking.database');
+                    $dbSize = '?? Kb';
+                    if($dbFile){
+                        try {
+                            if( file_exists($dbFile) && $fileSize = filesize($dbFile) ){
+                                $dbSize = $fileSize.' Kb';
+                            }
+                        } catch (Exception $e){
+                            // ignore
+                        }
+                        // Use short path for display
+                        $dbFile = str_replace( kirby()->root(),'', $dbFile);
+                    }
+
+                    return [
+                        'saltIsSet'             => ( is_string($salt) && !empty($salt) && $salt!=='CHANGEME'),
+                        'trackingPeriodName'    => getTimeFrameUtility()->getPeriodAdjective(),
+                        'uniqueSeconds'         => option('daandelange.simplestats.tracking.uniqueSeconds', -1),
+                        'databaseLocation'      => $dbFile ?? '[undefined]',
+                        'databaseSize'          => $dbSize,
+                        'enableReferers'        => option('daandelange.simplestats.tracking.enableReferers', false),
+                        'enableDevices'         => option('daandelange.simplestats.tracking.enableDevices', false),
+                        'enableVisits'          => option('daandelange.simplestats.tracking.enableVisits', false),
+                        'enableVisitLanguages'  => kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages', false),
+                        'ignoredRoles'          => option('daandelange.simplestats.tracking.ignore.roles',[]),
+                        'ignoredPages'          => option('daandelange.simplestats.tracking.ignore.pages',[]),
+                        'logFile'               => str_replace( kirby()->root(),'', option('daandelange.simplestats.log.file',[]) ),
+                        'logLevels'             => $logLevels,
+                        'trackingSince'         => 'todo', // todo
+                    ];
+//                     try {
+//                         $stats = Stats::listDbInfo();
+//                     } catch (Throwable $e) {
+//                         Logger::logTracking('Could not fetch db info and requirements... Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
+//                         throw new Exception($e->getMessage());
+//                     }
+                }
+                else {
+                    throw new PermissionException('You are not authorised to view statistics.');
+                }
+                //return null;//['message'=>'Test'];
+            },
+        ],
+        [
             'pattern' => 'simplestats/checkrequirements',
             'method'  => 'GET',
             'action'  => function () {
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
                     try {
                         $reqs = [
                             'php' => kirby()->system()->php(),
@@ -134,8 +189,8 @@ return [
             'pattern' => 'simplestats/dbupgrade',
             'method'  => 'GET',
             'action'  => function () {
-                // Only allow admins
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), ['admin'] ) ){
+                // Only allow admins explicitly for upgrading the db
+                if( $this->user()->hasSimpleStatsPanelAccess() && in_array( $this->user()->role()->id(), ['admin'] ) ){
                     $result = Stats::checkUpgradeDatabase(false);
                     return [
                         'status'    => $result,
@@ -151,8 +206,7 @@ return [
             'pattern' => 'simplestats/mainview',
             'method'  => 'GET',
             'action'  => function () {
-                // Only allow admins
-                if( option('daandelange.simplestats.panel.enable', false)===true && $this->user()->isLoggedIn() && in_array( $this->user()->role()->id(), ['admin'] ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
                     return [
                         'dismissDisclaimer' => option('daandelange.simplestats.panel.dismissDisclaimer', false),
                         'translations' => [

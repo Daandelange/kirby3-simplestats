@@ -15,4 +15,5 @@ App::plugin('daandelange/simplestats', [
     'translations' => require 'src/config/translations.php',
     'pageMethods'  => require 'src/config/pagemethods.php',
     'routes'       => require 'src/config/routes.php',
+    'userMethods'  => require 'src/config/usermethods.php',
 ]);
