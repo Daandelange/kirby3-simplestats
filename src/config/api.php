@@ -90,26 +90,26 @@ return [
                     if( option('daandelange.simplestats.log.warnings',false) ) $logLevels[] = 'Warnings';
                     if( option('daandelange.simplestats.log.verbose' ,false) ) $logLevels[] = 'Verbose';
 
-                    $dbFile = option('daandelange.simplestats.tracking.database');
-                    $dbSize = '?? Kb';
-                    if($dbFile){
-                        try {
-                            if( file_exists($dbFile) && $fileSize = filesize($dbFile) ){
-                                $dbSize = $fileSize.' Kb';
-                            }
-                        } catch (Exception $e){
-                            // ignore
-                        }
-                        // Use short path for display
-                        $dbFile = str_replace( kirby()->root(),'', $dbFile);
-                    }
+//                     $dbFile = option('daandelange.simplestats.tracking.database');
+//                     $dbSize = '?? Kb';
+//                     if($dbFile){
+//                         try {
+//                             if( file_exists($dbFile) && $fileSize = filesize($dbFile) ){
+//                                 $dbSize = $fileSize.' Kb';
+//                             }
+//                         } catch (Exception $e){
+//                             // ignore
+//                         }
+//                         // Use short path for display
+//                         $dbFile = str_replace( kirby()->root(),'', $dbFile);
+//                     }
 
                     return [
                         'saltIsSet'             => ( is_string($salt) && !empty($salt) && $salt!=='CHANGEME'),
                         'trackingPeriodName'    => getTimeFrameUtility()->getPeriodAdjective(),
                         'uniqueSeconds'         => option('daandelange.simplestats.tracking.uniqueSeconds', -1),
-                        'databaseLocation'      => $dbFile ?? '[undefined]',
-                        'databaseSize'          => $dbSize,
+                        //'databaseLocation'      => $dbFile ?? '[undefined]',
+                        //'databaseSize'          => $dbSize,
                         'enableReferers'        => option('daandelange.simplestats.tracking.enableReferers', false),
                         'enableDevices'         => option('daandelange.simplestats.tracking.enableDevices', false),
                         'enableVisits'          => option('daandelange.simplestats.tracking.enableVisits', false),

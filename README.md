@@ -71,14 +71,14 @@ All available options are listed and explained in `src/config/options.php`.
 Example :
 ````PHP
 // site/config/config.php
-require_once(__DIR__ . '/../plugins/d-simplestats/src/models/SimpleStatsDb.php');
+require_once(__DIR__ . '/../plugins/simplestats/src/models/TimeframeUtilities.php');
 return [
   // [...] your options ...
 
   // Simplestats
   'daandelange.simplestats.panel.enable' => false, // Disable the panel view completely
   'daandelange.simplestats.tracking.enableReferers' => false, // Disable referer tracking
-  'daandelange.simplestats.tracking.timeFrameUtility' => new \daandelange\SimpleStats\SimpleStatsTimeFrameUtilityWeekly(),
+  'daandelange.simplestats.tracking.timeFrameUtility' => new \daandelange\SimpleStats\SimpleStatsTimeFrameUtilityWeekly(), // Here you can put your custom inherited class from SimpleStatsTimeFrameUtility
   //'daandelange.simplestats.tracking.timeFrameUtility' => 'weekly', // Alternative
 ];
 ````

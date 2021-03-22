@@ -45,9 +45,22 @@
     </div>
 
     <div v-else-if="tab == 'simplestats-tabs-info'">
-      <information />
+      <k-grid gutter="large">
+        <!-- CONFIGURATION -->
+        <k-column width="1/2">
+          <configuration />
+        </k-column>
 
-      <visitors />
+        <k-column width="1/2">
+          <!-- DB INFORMATION -->
+          <DbInformation />
+        </k-column>
+
+        <k-column>
+          <visitors />
+        </k-column>
+      </k-grid>
+
     </div>
 
     <div v-else>
@@ -64,7 +77,8 @@ import Visitors from "./Sections/Visitors.vue";
 import PageStats from "./Sections/PageStats.vue";
 import Devices from "./Sections/Devices.vue";
 import Referers from "./Sections/Referers.vue";
-import Information from "./Sections/Information.vue";
+import DbInformation from "./Sections/DbInformation.vue";
+import Configuration from "./Sections/Configuration.vue";
 
 export default {
   components: {
@@ -72,7 +86,8 @@ export default {
     PageStats,
     Devices,
     Referers,
-    Information,
+    DbInformation,
+    Configuration,
   },
   data() {
     return {

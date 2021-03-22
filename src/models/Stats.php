@@ -55,6 +55,21 @@ class Stats extends SimpleStatsDb {
             }
         }
 
+        // Get Db file information
+        $dbFile = option('daandelange.simplestats.tracking.database');
+        $dbSize = '?? Kb';
+        if($dbFile){
+            try {
+                if( file_exists($dbFile) && $fileSize = filesize($dbFile) ){
+                    $dbSize = $fileSize;
+                }
+            } catch (Exception $e){
+                // ignore
+            }
+            // Use short path for display
+            $dbFile = str_replace( kirby()->root(),'', $dbFile);
+        }
+
         return [
             'softwareDbVersion' => self::engineDbVersion,
             'dbVersion'         => $dbVersion,
@@ -64,6 +79,8 @@ class Stats extends SimpleStatsDb {
             ],
             'dbHistory'         => $dbArray,
             'upgradeRequired'   => self::engineDbVersion != $dbVersion,
+            'databaseLocation'  => $dbFile ?? '[undefined]',
+            'databaseSize'      => $dbSize,
         ];
     }
 
