@@ -125,7 +125,8 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
     public function getTimeFromPeriod(int $period) : int {
         $year = substr(''.$period, 0,4);
         $week = substr(''.$period, 4,2);
-        return strtotime($year.'W'.$week);
+        if($week && $year) return strtotime($year.'W'.$week)??0;
+        return 0;
     }
 
     public function getPeriodFromTime( int $time = -1 ) : int {

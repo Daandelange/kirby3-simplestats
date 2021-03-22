@@ -651,8 +651,8 @@ class Stats extends SimpleStatsDb {
                     }
                 }
 
-                // Add missing timeframes from first date to now (happens when no data at all is recorder in a full period)
-                for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
+                // Add missing timeframes from first date to now (happens when no data at all is recorded in a full period)
+                if($firstTimeFrame !== 0) for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
                     $timeFrameKey = date( SIMPLESTATS_TIMELINE_DATE_FORMAT, $timeFrame);
                     foreach($kirbyLangs as $l){
                         if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) && array_key_exists($timeFrameKey, $languagesOverTimeData[$l]['data']) === false ){
