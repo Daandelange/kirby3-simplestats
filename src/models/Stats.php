@@ -421,7 +421,7 @@ class Stats extends SimpleStatsDb {
                     'medium'        => $referer->medium,
                     'hits'          => $referer->hits,
                     'hitspercent'   => round(($referer->hits/$max)*100),
-                    'timefrom'      => getDateFromPeriod($referer->timefrom, SIMPLESTATS_TABLE_DATE_FORMAT),
+                    'timefrom'      => getDateFromPeriod(intval($referer->timefrom,10), SIMPLESTATS_TABLE_DATE_FORMAT),
                 ];
             }
         }

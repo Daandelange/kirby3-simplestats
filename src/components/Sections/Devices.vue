@@ -35,7 +35,7 @@
         <k-column width="1/1">
           <br>
           <br>
-          <k-headline align="center">Devices over time</k-headline>
+          <k-headline align="center">Device types over time</k-headline>
           <area-chart
             :data="devicesOverTimeData"
             :download="true"
@@ -43,7 +43,7 @@
             :diiiiscrete="true"
             label="Devices"
             xtitle="Time"
-            ytitle="Referer Hits by medium"
+            ytitle="Visits per device type"
             :stacked="true"
             :library="chartOptions"
             v-if="devicesOverTimeData.length > 0"

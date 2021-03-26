@@ -145,7 +145,7 @@ class SimpleStats extends SimpleStatsDb {
                         $id = intval( $refererEntry->first()->id );
 
                         if( !$db->query("UPDATE `referers` SET `hits` = `hits`+1 WHERE `id`='${id}'; ") ){
-                            Logger::LogWarning("Failed to update referer : ${refererUrl}. Error=".$db->lastError()->getMessage());
+                            Logger::LogWarning("Failed to update referrer : ${refererUrl}. Error=".$db->lastError()->getMessage());
                         }
                     }
                     // Insert new referer
@@ -155,7 +155,7 @@ class SimpleStats extends SimpleStatsDb {
                         $medium = $refererInfo['medium'];
                         //echo "INSERT INTO `referers` (referer, domain, monthyear, hits) VALUES ('${refererUrl}', '${domain}', ${referrerPeriod}, 1)";
                         if(!$db->query("INSERT INTO `referers` (referer, domain, monthyear, hits, medium) VALUES ('${refererUrl}', '${domain}', ${referrerPeriod}, 1, '${medium}')")){
-                            Logger::LogWarning("Failed to insert new referer : ${refererUrl}. Error=".$db->lastError()->getMessage());
+                            Logger::LogWarning("Failed to insert new referrer : ${refererUrl}. Error=".$db->lastError()->getMessage());
                         }
                     }
                 }
@@ -165,11 +165,10 @@ class SimpleStats extends SimpleStatsDb {
             }
             // Unable to parse referer ?
             else {
-                // Internal, Empty or incorrect referer, don't track anything.
-                if( isset($_SERVER['HTTP_REFERER']) && (stripos((isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'], $_SERVER['HTTP_REFERER']) !== 0 ) ){
+                // Internal, Empty or incorrect referrer, don't track anything.
+                if( isset($_SERVER['HTTP_REFERER']) && (stripos($_SERVER['HTTP_REFERER'], (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST']) !== 0 ) ){
                     Logger::LogVerbose("Referrer is set, but could not parse it : ".$_SERVER['HTTP_REFERER'].'.');
                 }
-
                 return true;
             }
 
