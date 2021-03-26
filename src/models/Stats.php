@@ -402,7 +402,7 @@ class Stats extends SimpleStatsDb {
                 ['label'=>'Domain',     'field'=>'domain',      'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'3fr'],
                 ['label'=>'Medium',     'field'=>'medium',      'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'2fr'],
                 ['label'=>'Hits',       'field'=>'hits',        'type'=>'number',   'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'1fr'],
-                ['label'=>'Popularity', 'field'=>'hitspercent', 'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
+                ['label'=>'Popularity', 'field'=>'hitspercent', 'type'=>'number',   'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
                 ['label'=>'First seen', 'field'=>'timefrom',    'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'myClass', 'width'=>'2fr'],
             ];
 
@@ -467,7 +467,7 @@ class Stats extends SimpleStatsDb {
                 ['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'4fr'],
                 ['label'=>'Title',          'field'=>'title',           'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'3fr'],
                 ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'1fr'],
-                ['label'=>'Percentage',     'field'=>'hitspercent',     'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
+                ['label'=>'Popularity',     'field'=>'hitspercent',     'type'=>'number',   'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr'],
                 ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'text',     'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'2fr'],
                 ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'text',     'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'2fr'],
             ];
@@ -496,8 +496,8 @@ class Stats extends SimpleStatsDb {
                         'title'         => $page->uid . ' (404)',
                         'hits'          => intval($page->hits, 10),
                         'hitspercent'   => round(($page->hits/$max)*100),
-                        'firstvisited'  => getDateFromPeriod($page->firstvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
-                        'lastvisited'   => getDateFromPeriod($page->lastvisited, SIMPLESTATS_TABLE_DATE_FORMAT),
+                        'firstvisited'  => getDateFromPeriod(intval($page->firstvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                        'lastvisited'   => getDateFromPeriod(intval($page->lastvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
                     ];
                     continue;
                 }
