@@ -14,6 +14,9 @@
 package-lock.json
 composer.lock
 
+# Ignore dev packages (only commit production files to github)
+/vendor/cweagans/*
+
 # files of Composer dependencies that are not needed for the plugin
 /vendor/**/.*
 /vendor/**/*.json

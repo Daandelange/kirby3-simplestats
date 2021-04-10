@@ -27,6 +27,16 @@
             "daandelange\\SimpleStats\\": "src/models/"
         }
     },
+    "require-dev": {
+        "cweagans/composer-patches": "^1.7"
+    },
+    "extra": {
+        "patches": {
+            "snowplow/referer-parser": {
+                "Replace referers database with an updated one. The php repo is slightly outdated.": "patches/php-referer-parser-update-database.diff"
+            }
+        }
+    },
     "config": {
         "optimize-autoloader": true
     }
