@@ -134,7 +134,10 @@ class ComposerStaticInitf245b8bf65b9cc5e10873a3691e33a16
         'WhichBrowser\\Model\\Using' => __DIR__ . '/..' . '/whichbrowser/parser/src/Model/Using.php',
         'WhichBrowser\\Model\\Version' => __DIR__ . '/..' . '/whichbrowser/parser/src/Model/Version.php',
         'WhichBrowser\\Parser' => __DIR__ . '/..' . '/whichbrowser/parser/src/Parser.php',
+        'daandelange\\SimpleStats\\Logger' => __DIR__ . '/../..' . '/src/models/Logger.php',
         'daandelange\\SimpleStats\\SimpleStats' => __DIR__ . '/../..' . '/src/models/SimpleStats.php',
+        'daandelange\\SimpleStats\\SimpleStatsDb' => __DIR__ . '/../..' . '/src/models/SimpleStatsDb.php',
+        'daandelange\\SimpleStats\\SimpleStatsTimeFrameUtility' => __DIR__ . '/../..' . '/src/models/SimpleStatsTimeFrameUtility.php',
         'daandelange\\SimpleStats\\Stats' => __DIR__ . '/../..' . '/src/models/Stats.php',
     );
 
