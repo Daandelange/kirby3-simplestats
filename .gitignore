@@ -10,6 +10,10 @@
 # Composer files
 #/vendor
 
+# Locks
+package-lock.json
+composer.lock
+
 # files of Composer dependencies that are not needed for the plugin
 /vendor/**/.*
 /vendor/**/*.json
