@@ -95,7 +95,7 @@ class SimpleStats extends SimpleStatsDb {
 
                 //echo "INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ('${userID}', ${timestamp}, '${osfamily}', '${devicetype}', '${browserengine}', '${visitedpages}')";
                 if( !$db->query("INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ('${userID}', ${timestamp}, '${osfamily}', '${devicetype}', '${browserengine}', '${visitedpages}')") ){
-                    Logger::LogWarning("Could not insert new visitor. Error=".$db->lastError()->getMessage());
+                    Logger::LogWarning("Could not insert new visitor : ${userID}. Error=".$db->lastError()->getMessage());
                 }
                 //echo $db->lastError();
                 //echo "User created !";
@@ -166,8 +166,12 @@ class SimpleStats extends SimpleStatsDb {
             // Unable to parse referer ?
             else {
                 // Internal, Empty or incorrect referrer, don't track anything.
-                if( isset($_SERVER['HTTP_REFERER']) && (stripos($_SERVER['HTTP_REFERER'], (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST']) !== 0 ) ){
-                    Logger::LogVerbose("Referrer is set, but could not parse it : ".$_SERVER['HTTP_REFERER'].'.');
+                if( isset($_SERVER['HTTP_REFERER']) ){
+                    $selfHostPos = stripos($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']);
+                    // check for pos 8 (after https://), or pos 7 (after http://)
+                    if( $selfHostPos !== 7 && $selfHostPos !== 8 ){
+                        Logger::LogVerbose("Referrer is set, but could not parse it : ".$_SERVER['HTTP_REFERER'].'. / '.((isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST']));
+                    }
                 }
                 return true;
             }
