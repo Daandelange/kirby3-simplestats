@@ -71,7 +71,7 @@ All available options are listed and explained in `src/config/options.php`.
 Example :
 ````PHP
 // site/config/config.php
-require_once(__DIR__ . '/../plugins/simplestats/src/models/TimeframeUtilities.php');
+require_once(__DIR__ . '/../plugins/simplestats/src/models/SimpleStatsTimeFrameUtility.php');
 return [
   // [...] your options ...
 
@@ -144,7 +144,7 @@ Development was started from [a standard Kirby PluginKit](https://github.com/get
 - Package managers and packers : NPM, Parcel, Composer, Yarn.
 - [Kirby CMS](https://getkirby.com) : Providing the plugin interface [[*licensed software*](https://getkirby.com/license)]
 - [WhichBrowser/Parser-PHP](https://github.com/WhichBrowser/Parser-PHP) : an accurate and performant php user-agent parser.  [*MIT*]
-- [Snowplow/referer-parser](https://github.com/snowplow-referer-parser/referer-parser) : a performant php referer parser. [*GNU GPL 3.0*]
+- [Snowplow/php-referer-parser](https://github.com/snowplow-referer-parser/php-referer-parser) : a performant php refer(r)er parser. [*MIT*]
 
 ## Alternatives / Similar
 

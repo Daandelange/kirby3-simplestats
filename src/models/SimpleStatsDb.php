@@ -20,7 +20,7 @@ use Kirby\Cms\App;
 
 
 // - - - - -
-require_once( __DIR__ .'/TimeframeUtilities.php');
+require_once( __DIR__ .'/SimpleStatsTimeFrameUtility.php');
 
 // This class retrieves analytics from the database
 function getTimeFromPeriod(int $period) : int {
