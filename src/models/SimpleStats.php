@@ -199,7 +199,7 @@ class SimpleStats extends SimpleStatsDb {
     // Combines the ip + user_agent to get a unique user string
     public static function getUserUniqueString(string $ua = ''): string {
         $ip = preg_replace("/[\.\:]+/", '_', preg_replace("/[^a-zA-Z0-9\.\:]+/", '', substr($_SERVER['REMOTE_ADDR'],0,128))); // $kirby->visitor()->ip()
-        $ua = preg_replace("/[^a-zA-Z0-9]+/", '', substr($_SERVER['HTTP_USER_AGENT'], 0, 256) ); // $kirby->visitor()->ip()->userAgent()
+        $ua = preg_replace("/[^a-zA-Z0-9]+/", '', substr(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:'UserAgentNotSet', 0, 256) ); // $kirby->visitor()->ip()->userAgent()
         $salt = option('daandelange.simplestats.tracking.salt');
         // Compute final string
     	$final = '';
@@ -363,10 +363,10 @@ class SimpleStats extends SimpleStatsDb {
             			$returnData['medium']=$referer->getMedium();
                         $returnData['source']=$referer->getSource();
 
-                        if( $urlParts = parse_url($refHeader) ){
+                        if( $urlParts = parse_url($refHeader) && isset($urlParts['host'])){
                             //var_dump($urlParts);
                             // Note: protocol and query strings are stripped
-                            $returnData['url']=$urlParts['host'].$urlParts['path'];//str_replace('www.','', $urlParts['host'].$urlParts['path'];
+                            $returnData['url']=$urlParts['host'].isset($urlParts['path'])?$urlParts['path']:'';//str_replace('www.','', $urlParts['host'].$urlParts['path'];
                             $returnData['host']=$urlParts['host'];
 
                             // Todo: protect url against sql injections via url ?
@@ -388,10 +388,10 @@ class SimpleStats extends SimpleStatsDb {
                 			//echo $referer->getSource(); // "Google"
                             $returnData['medium']='website';$referer->getMedium(); // unknown
                             $returnData['source']=''; // other ?
-                            if( $urlParts = parse_url($refHeader) ){
+                            if( $urlParts = parse_url($refHeader) && isset($urlParts['host']) ){
                                 //var_dump($urlParts);
                                 // Note: protocol and query strings are stripped
-                                $returnData['url']=$urlParts['host'].$urlParts['path'];
+                                $returnData['url']=$urlParts['host'].isset($urlParts['path'])?$urlParts['path']:'';
                                 $returnData['host']=$urlParts['host'];
 
                                 // Todo: protect url against sql injections via url ?
