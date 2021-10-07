@@ -109,7 +109,7 @@ export default {
     tab(incoming){
       //console.warn('watch.tab =',incoming);
       // changes tab value when dynamically loading page
-      this.tab = incoming,
+      this.tab = incoming;
     },
     // Not used anymore
 //     '$route'() {
