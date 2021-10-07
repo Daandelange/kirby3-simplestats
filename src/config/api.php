@@ -148,7 +148,7 @@ return [
 
                         $dbRequirements = "PHP=".($reqs['php']?'OK':'ERROR').', ';
                         $dbRequirements .= "SQLite3=".($reqs['sqlite3']?'OK':'ERROR').', ';
-                        $dbRequirements .= "Kirby=".($reqs['sqlite3']?'OK':'ERROR').' --- --- --- ';
+                        $dbRequirements .= "Kirby=".($reqs['kirby']?'OK':'ERROR').' --- --- --- ';
                         // Tmp: display lots of data, try to detect errors
                         $dbRequirements .= 'PHP Extensions='.implode(', ', get_loaded_extensions());
 //                         $dbRequirements .= " --- PHP=".($reqs['php']?'OK':'ERROR');
