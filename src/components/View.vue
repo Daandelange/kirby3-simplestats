@@ -1,4 +1,5 @@
 <template>
+  <k-inside>
   <k-view class="k-simplestats-view">
     <p><br/></p>
 <!--
@@ -24,7 +25,7 @@
     </k-grid>
 
     <k-tabs
-      ref="tabs-ref"
+      ref="tabsref"
       :tabs="tabs"
       :tab="tab"
       :key="tabsKey"
@@ -68,6 +69,7 @@
     </div>
 
   </k-view>
+  </k-inside>
 </template>
 
 <script>
@@ -92,38 +94,41 @@ export default {
   data() {
     return {
       // Set initial tab and load it
-      tab: this.$route.hash.replace('#', '')??'simplestats-tabs-visitedpages',
+      tab: 'simplestats-tabs-visitedpages',//this.tabsKey(),/* this.$route.hash.replace('#', '')?? *///'simplestats-tabs-visitedpages',
       tabs: [
-        {name:'simplestats-tabs-visitedpages', label:'Page visits', icon:'layers', columns: []},
-        {name:'simplestats-tabs-visitordevices', label:'Visitor Devices', icon:'users', columns: []},
-        {name:'simplestats-tabs-referers', label:'Referers', icon:'chart', columns: []},
-        {name:'simplestats-tabs-info', label:'Information', icon:'map', columns: []},
+        { name:'simplestats-tabs-visitedpages',   label:'Page visits',      icon:'layers',  columns: [], 'link':'simplestats?tab=simplestats-tabs-visitedpages'},
+        { name:'simplestats-tabs-visitordevices', label:'Visitor Devices',  icon:'users',   columns: [] , 'link':'simplestats?tab=simplestats-tabs-visitordevices' },
+        { name:'simplestats-tabs-referers',       label:'Referers',         icon:'chart',   columns: [], 'link':'simplestats?tab=simplestats-tabs-referers'},
+        { name:'simplestats-tabs-info',           label:'Information',      icon:'map',     columns: [], 'link':'simplestats?tab=simplestats-tabs-info'},
       ],
       dismissDisclaimer : false,
       isLoading : true,
     };
   },
   watch: {
-/*
     tab(incoming){
-      console.warn(incoming);
+      //console.warn('watch.tab =',incoming);
+      // changes tab value when dynamically loading page
+      this.tab = incoming,
     },
-*/
-    '$route'() {
-      //console.log('$route', this.tab);
-      this.tab = this.$route.hash.replace('#', '');
-    },
+    // Not used anymore
+//     '$route'() {
+//       console.log('$route', this.tab);
+//       this.tab = this.$route.hash.replace('#', '');
+//     },
   },
   computed: {
     tabsKey() {
-      //return "simplestats-tabs-"+this.tab;
-      //console.log('tabsKey()', this.tab);
-      if(this.tab=='') this.tab = 'simplestats-tabs-visitedpages';
+      const urlParams = new URLSearchParams(window.location.search);
+      const myParam = urlParams.get('tab');
+      if(myParam) this.tab=myParam;
+      if(!this.tab || this.tab=='') this.tab = 'simplestats-tabs-visitedpages';
       return this.tab;
     },
   },
   created() {
     this.load();
+    //console.log('created()', this.tab, this.tabsKey  );
   },
 
   methods: {
@@ -156,7 +161,7 @@ export default {
 
     // Bind tab changing
     onTab(tab) {
-      //console.log('onTab()', this.tab)
+      //console.log('onTab()', this.tab);
       this.tab = tab.name;
     },
   },

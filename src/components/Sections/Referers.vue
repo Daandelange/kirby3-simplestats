@@ -165,7 +165,7 @@ export default {
           this.referersByMediumOverTimeData = response.referersbymediumovertimedata;
           //console.log( this.referersByMediumOverTimeData);
 
-          this.userLocale = this.$store.state.i18n.locale;
+          this.userLocale = window.panel.$language ? window.panel.$language.code : "";//this.$store.state.i18n.locale;
 /*
           Object.keys(this.referersByMediumOverTimeData).forEach(key => {
             //console.log(key, this.referersByMediumOverTimeData[key]);
