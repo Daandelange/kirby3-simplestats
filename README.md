@@ -24,7 +24,7 @@ This data is kept for a very short amount of time to ensure only counting unique
 
 
 ### Current state
-This is very alpha state. I've tested it on a few online and online configurations. It's been reported to work on other websites too, while there are also reports of this plugin not working.
+Consider this plugin beta. Any feedback or bug reports are welcome. It's been successfully running on multiple production websites for about a year. The tracking part is almost done, when the panel interface will be more polished, I'll consider a first release.
 Please note that the database structure might evolve over time, until a more stable release is available.
 
 
@@ -36,6 +36,11 @@ Any contributions (discussions, reports, feedback and pull requests) are welcome
 
 
 ## Setup
+
+### Requirements
+ - Requires Kirby 3.6+ or later and support for SQLite3.
+ _For Kirby 3.4+, please use [the kirby-3.5 branch](https://github.com/Daandelange/kirby3-simplestats/tree/kirby-3.5)._
+ - For a detailed report, check the `Information` tab in the plugin's panel view.
 
 ### Installation
 
@@ -54,10 +59,10 @@ Eventually add `--depth 1` to discard the repo commit history. (saves disk space
 
 *Soon...*
 
-For now, check the comments in `options.php`, while it's not recommended to change the default behaviour yet.
+For now, check the comments in `options.php` for directions. It's not recommended to use a custom reporting period yet.
 
 #### Language setup
-Multilanguage websites are supported. For each page, there's a global counter, with an optional counter for each language.
+Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.
 Also, the panel view has not (yet?) been translated.
 
 #### Legal configuration
@@ -87,7 +92,7 @@ Here's a list with options that have been tested. (the `daandelange.simplestats`
 
 | Option | Type | Default | Description | Comment |
 |--------|------|---------|-------------|---------|
-| **TRACKING** | | | | |
+| **TRACKING** | <img width=50/> | <img width=80/> | <img width=200/> | <img width=200/> |
 | `tracking.timeFrameUtility` | String \| SimpleStatsTimeFrameUtility | `new SimpleStatsTimeFrameUtilityMonthly()` | Set the class that handles time conversions to periods. Possible string values: `monthly`, `weekly`. |
 | `tracking.enableReferers` | Bool | true | Enables tracking referrers. Gives an insight of who links to your website. | |
 | `tracking.enableDevices` | Bool | true | Enables tracking of minimal hardware configurations (device information) | |
@@ -95,7 +100,8 @@ Here's a list with options that have been tested. (the `daandelange.simplestats`
 | `tracking.enableVisitLanguages` | Bool | true | Enables a counter per language per page. | Only effective in multi-language Kirby installations and `enableVisits` enabled. |
 | `tracking.ignore.roles` | Array | `['admin']` | Ignore any tracking for connected users with these roles. | |
 | `tracking.ignore.pages` | Array | `[]` | Ignore tracking for these page ids. | Make sure to use the full id, not the slug. |
-| `tracking.salt` | String | `'CHANGEME'` | A unique hash, used to generate a unique user id from visitor data. | Ensures that user identifying information is hard to retrieve if you database leaks. |
+| `tracking.ignore.templates` | Array | `['error']` | Ignore tracking for pages which these templates. | Check against `template()` and `intendedTemplate()` |
+| `tracking.salt` | String | `'CHANGEME'` | A unique hash, used to generate a unique user id from visitor data. | Recommended to change, ensures that user identifying information is hard to retrieve if you database leaks. |
 | **PANEL** | | | | |
 | `panel.dismissDisclaimer` | Bool | false | Dismisses the panel disclaimer message. | |
 | `panel.enable` | Bool | true | Enable/Disable viewing stats in the panel. | |
@@ -115,7 +121,7 @@ It's also a good idea to check the log file for any errors.
 ## Panel Interface
 
 ### Charts
-Charts are interactive, you can hover them to have details, and click labels to toggle filtering. You can even download timelines as png.
+Charts are interactive, you can hover them to have details, and click labels to toggle filtering. You can even download timelines as PNGs.
 
 ### Tables
 Tables are interactive and paginated. You can search data within and sort them by clicking on the column headers.
@@ -128,11 +134,11 @@ Tables are interactive and paginated. You can search data within and sort them b
 Development was started from [a standard Kirby PluginKit](https://github.com/getkirby/pluginkit/tree/4-panel), see [their plugin guide](https://getkirby.com/docs/guide/plugins/plugin-setup-basic) for more details on using it.
 *These steps are optional, for building development versions.*
 
-- Npm requirements    : `npm install -g parcel-bundler`
-- Setup               : `cd /path/to/website/site/plugins/simplestats && npm install`
-- While developing    : `npm run dev`
-- Publish changes     : `npm run build`
-- Update dependencies : `npm update`
+- Npm requirements (optional) : `npm install -g parcel-bundler`
+- Setup                       : `cd /path/to/website/site/plugins/simplestats && npm install`
+- While developing            : `npm run dev`
+- Compile a production build  : `npm run build`
+- Update dependencies         : `npm update`
 
 
 ****
