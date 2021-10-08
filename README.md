@@ -90,22 +90,23 @@ return [
 
 Here's a list with options that have been tested. (the `daandelange.simplestats` part has been stripped)
 
-| Option | Type | Default | Description | Comment |
-|--------|------|---------|-------------|---------|
-| **TRACKING** | <img width=50/> | <img width=80/> | <img width=200/> | <img width=200/> |
-| `tracking.timeFrameUtility` | String \| SimpleStatsTimeFrameUtility | `new SimpleStatsTimeFrameUtilityMonthly()` | Set the class that handles time conversions to periods. Possible string values: `monthly`, `weekly`. |
-| `tracking.enableReferers` | Bool | true | Enables tracking referrers. Gives an insight of who links to your website. | |
-| `tracking.enableDevices` | Bool | true | Enables tracking of minimal hardware configurations (device information) | |
-| `tracking.enableVisits` | Bool | true | Enables tracking page visits (frequentation) | |
-| `tracking.enableVisitLanguages` | Bool | true | Enables a counter per language per page. | Only effective in multi-language Kirby installations and `enableVisits` enabled. |
-| `tracking.ignore.roles` | Array | `['admin']` | Ignore any tracking for connected users with these roles. | |
-| `tracking.ignore.pages` | Array | `[]` | Ignore tracking for these page ids. | Make sure to use the full id, not the slug. |
-| `tracking.ignore.templates` | Array | `['error']` | Ignore tracking for pages which these templates. | Check against `template()` and `intendedTemplate()` |
-| `tracking.salt` | String | `'CHANGEME'` | A unique hash, used to generate a unique user id from visitor data. | Recommended to change, ensures that user identifying information is hard to retrieve if you database leaks. |
-| **PANEL** | | | | |
-| `panel.dismissDisclaimer` | Bool | false | Dismisses the panel disclaimer message. | |
-| `panel.enable` | Bool | true | Enable/Disable viewing stats in the panel. | |
-| `panel.authorizedRoles` | Array | `['admin']` | User roles that are allowed to view statistics from the panel. | |
+| Option                          | Type                        | Default                                    | Description                                                                | Comment                                                                           |
+|---------------------------------|-----------------------------|--------------------------------------------|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| **TRACKING**                    |                             |                                            |                                                                            |                                                                                   |
+| `tracking.timeFrameUtility`     | String  \| \
+                                    SimpleStatsTimeFrameUtility | `new SimpleStatsTimeFrameUtilityMonthly()` | Set the class that handles time conversions to periods.                    | Possible string values: `monthly`, `weekly`.                                      |
+| `tracking.enableReferers`       | Bool                        | true                                       | Enables tracking referrers. Gives an insight of who links to your website. |                                                                                   |
+| `tracking.enableDevices`        | Bool                        | true                                       | Enables tracking of minimal hardware configurations (device information)   |                                                                                   |
+| `tracking.enableVisits`         | Bool                        | true                                       | Enables tracking page visits (frequentation)                               |                                                                                   |
+| `tracking.enableVisitLanguages` | Bool                        | true                                       | Enables a counter per language per page.                                   | Only effective in multi-language Kirby installations and `enableVisits` enabled.  |
+| `tracking.ignore.roles`         | Array                       | `['admin']`                                | Ignore any tracking for connected users with these roles.                  |                                                                                   |
+| `tracking.ignore.pages`         | Array                       | `[]`                                       | Ignore tracking for these page ids.                                        | Make sure to use the full id, not the slug.                                       |
+| `tracking.ignore.templates`     | Array                       | `['error']`                                | Ignore tracking for pages which these templates.                           | Check against `template()` and `intendedTemplate()`                               |
+| `tracking.salt`                 | String                      | `'CHANGEME'`                               | A unique hash, used to generate a unique user id from visitor data.        | Recommended to change, ensures that user identifying information is hard to retrieve if you database leaks. |
+| **PANEL**                       |                             |                                            |                                                                            |                                                                                   |
+| `panel.dismissDisclaimer`       | Bool                        | false                                      | Dismisses the panel disclaimer message.                                    |                                                                                   |
+| `panel.enable`                  | Bool                        | true                                       | Enable/Disable viewing stats in the panel.                                 |                                                                                   |
+| `panel.authorizedRoles`         | Array                       | `['admin']`                                | User roles that are allowed to view statistics from the panel.             |                                                                                   |
 
 ### Updating
 Before updating, make sure to **backup your database file**. If something goes wrong, you'll be able to retrieve your stats by replacing the database file later.
