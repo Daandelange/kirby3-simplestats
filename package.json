@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "chart.js": "^2.9.4",
-    "tbl-for-kirby": "^1.2.0",
     "vue": "^2.6.12",
     "vue-chartkick": "^0.6.1",
+    "vue-good-table": "^2.21.11",
     "vue-hot-reload-api": "^2.3.4"
   }
 }

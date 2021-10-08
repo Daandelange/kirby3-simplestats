@@ -66,45 +66,63 @@
       <br/>
 
       <k-column>
-        <tbl
-          :rows="rows"
-          :columns="columns"
-          :store="false"
-          :search="true"
-          :sort="true"
-          :pagination="{}"
-          :isLoading="isLoading"
-          :options="{add:false,reset:false}"
-          :headline="$t('simplestats.visitedpages')"
-          v-if="rows.length > 0"
-        >
-          <!-- Default entryslot -->
-          <template slot="column-$default" slot-scope="props">
-            <p>
-              {{ props.value }}
-            </p>
-          </template>
-          <!-- percentage entryslot -->
-          <template slot="column-hitspercent" slot-scope="props">
-            <p v-bind:style="[ !props.value ? { width: '0%' } : { width: props.value + '%' }]"></p>
-          </template>
-          <!-- Timeframe date entryslot -->
-          <template slot="column-firstvisited" slot-scope="props">
-            <p>
-              {{ new Date( props.value ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.value ).getFullYear() }}
-            </p>
-          </template>
-          <!-- Timeframe date entryslot -->
-          <template slot="column-lastvisited" slot-scope="props">
-            <p>
-              {{ new Date( props.value ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.value ).getFullYear() }}
-            </p>
-          </template>
-          <!-- UID is HTML format -->
-          <template slot="column-uid" slot-scope="props">
-            <p v-html="props.value"></p>
-          </template>
-        </tbl>
+        <div v-if="rows.length > 0">
+          <br />
+          <br />
+          <k-headline
+            size=""
+          >
+            {{ $t('simplestats.visitedpages') }}
+          </k-headline>
+          <vue-good-table
+            :columns="columns"
+            :rows="rows"
+            styleClass="vgt-table condensed"
+            max-height="500px"
+            :fixed-header="false"
+            compactMode
+            :search-options="{enabled: true, placeholder: 'Filter items...'}"
+            :pagination-options="{
+              enabled: true,
+              perPage: 20,
+              perPageDropdownEnabled: false,
+            }"
+          >
+            <div slot="emptystate">
+              <k-empty>
+                There is nothing to show...
+              </k-empty>
+            </div>
+
+            <template slot="table-row" slot-scope="props">
+              <span v-if="props.column.field == 'title'">
+                <a :href="props.row.url" :style="{paddingLeft: 12*props.row.depth + 'px'}">{{ props.row.title }}</a>
+              </span>
+              <span v-else-if="props.column.field == 'uid'">
+                <a :href="props.row.url" :style="{paddingLeft: 12*props.row.depth + 'px'}">{{ props.row.uid }}</a>
+              </span>
+              <span v-else-if="props.column.field == 'hitspercent'" class="row-percent">
+                <span class="visualiser" :style="{ width: props.row.hitspercent *100 + '%'}"></span>
+                <span class="number">{{ props.row.hitspercent * 100 + '%' }}</span>
+              </span>
+              <span v-else-if="props.column.field == 'firstvisited'">
+                <span>
+                  {{ props.formattedRow[props.column.field] }}
+<!-- (old way)                 {{ new Date( props.row.firstvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.firstvisited ).getFullYear() }} -->
+                </span>
+              </span>
+              <span v-else-if="props.column.field == 'lastvisited'">
+                <span>
+                  {{ props.formattedRow[props.column.field] }}
+<!-- (old way)                 {{ new Date( props.row.lastvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.lastvisited ).getFullYear() }} -->
+                </span>
+              </span>
+              <span v-else>
+                {{ props.formattedRow[props.column.field] }}
+              </span>
+            </template>
+          </vue-good-table>
+        </div>
         <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
       </k-column>
 
@@ -115,7 +133,8 @@
 <script>
 // import Vue from 'vue'
 
-import Tbl from 'tbl-for-kirby';
+// Good Table
+import { VueGoodTable } from 'vue-good-table';
 
 export default {
   extends: 'k-pages-section',
@@ -155,11 +174,12 @@ export default {
     }
   },
   components: {
-    Tbl,
+    VueGoodTable,
   },
-  use() {
+  //use() {
+  //
+  //},
 
-  },
   // see: https://forum.getkirby.com/t/can-i-use-vue-use-inside-my-plugin/17822
   // Also see https://github.com/getkirby/ideas/issues/219
   beforeCreate() {
@@ -172,7 +192,6 @@ export default {
   },
   mounted() {
     //debugger;
-
   },
   methods: {
     load(reload) {

@@ -9,25 +9,44 @@
     <k-text-field name="" :counter="false" :disabled="true" label="Your Database Version" :value="dbVersion" icon="bolt" />
     <k-text-field name="" :counter="false" :disabled="true" label="Software Database Version" :value="softwareDbVersion" icon="bolt" />
     <br />
+    <br />
 
     <!-- HISTORY -->
-    <tbl
-      :rows="dbHistory"
-      :columns="dbHistoryLabels"
-      :options="{add:false,reset:false}"
-      :pagination="false"
-      :isLoading="isLoading"
-      :search="false"
-      headline="Version History"
-      :actions="false"
-    >
-      <!-- Default entryslot -->
-      <template slot="column-$default" slot-scope="props">
-        <p>
-          {{ props.value }}
-        </p>
-      </template>
-    </tbl>
+    <k-headline>
+      Version History
+    </k-headline>
+    <vue-good-table
+        :rows="dbHistory"
+        :columns="dbHistoryLabels"
+        styleClass="vgt-table condensed nosearch"
+        max-height="500px"
+        :fixed-header="false"
+        compactMode
+        :search-options="{enabled: false}"
+        :pagination-options="{
+          enabled: true,
+          perPage: 5,
+          perPageDropdownEnabled: false,
+        }"
+      >
+        <div slot="emptystate">
+          <k-empty>
+            There is nothing to show...
+          </k-empty>
+        </div>
+
+        <template slot="table-row" slot-scope="props">
+          <span v-if="props.column.field == 'timefrom'">
+            <span>
+              {{ props.formattedRow[props.column.field] }}
+<!-- (old way)                 {{ new Date( props.row.firstvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.firstvisited ).getFullYear() }} -->
+            </span>
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
+        </template>
+      </vue-good-table>
 
     <k-line-field />
 
@@ -75,8 +94,10 @@
 </template>
 
 <script>
+
 // Todo: separate db and config into separate vue components, like visitor info
-import Tbl from 'tbl-for-kirby';
+
+import { VueGoodTable } from 'vue-good-table';
 
 export default {
   extends: 'k-pages-section',
@@ -102,7 +123,7 @@ export default {
     }
   },
   components: {
-    Tbl
+    VueGoodTable,
   },
 
   filters: {

@@ -82,6 +82,8 @@ import Referers from "./Sections/Referers.vue";
 import DbInformation from "./Sections/DbInformation.vue";
 import Configuration from "./Sections/Configuration.vue";
 
+import 'vue-good-table/dist/vue-good-table.css'
+
 export default {
   components: {
     Visitors,
@@ -172,21 +174,86 @@ export default {
 .row-percent {
   //background-color: #bbb;
 }
-.row-percent p {
-  background-color: rgba(46, 64, 87,1);
+.row-percent p, .row-percent span.visualiser {
+  float: left;
+  background-color: rgba(46, 64, 87,.4);// .8);
   color: white;
   display: inline-block;
-  height: 4px;
-  position: relative;
-}
-.row-percent p {
-  background-color: rgba(46, 64, 87,.8);
-  color: white;
-  //display: inline-block;
-  height: 20%;
-  position: relative;
+  height: 1em;
+  //position: relative;
   width: 0%; /* Default for unvalid values */
-  padding: 0em 0!important; /* overrides tbl default styling */
+  //padding: 0em 0!important; /* overrides tbl default styling */
+}
+
+.row-percent span.number {
+  display: inline-block;
+  //float: right;
+  //position: relative;
+  margin-left: -100%;
+}
+
+// Custom vue-good-table syles
+.vgt-global-search {
+  width: 50%;
+  float: right;
+  //margin-top: -100%;
+  padding: 5px 0 5px 5px;
+  background-color: transparent;
+  background-image: none;
+}
+.vgt-inner-wrap {
+  margin-top: -2em; // To place search box next-to headline. Will break layout without search box.
+  box-shadow: none;
+}
+table.vgt-table.nosearch {
+  margin-top: 2.5em; // to cancel the nagative margin for search box positioning
+}
+.vgt-input[type=text]{
+  background-color: transparent;
+  color: black;
+
+  &:active, &:focus {
+    background-color: white;
+  }
+}
+.vgt-wrap__footer {
+  border: none;
+  background: transparent;
+  font-size: 0.975rem;
+
+  .footer__navigation {
+    font-size: 0.975rem;
+  }
+
+  .footer__navigation__page-btn {
+    font-weight: normal;
+    span {
+      font-size: 0.975rem;
+    }
+  }
+}
+
+table.vgt-table {
+  background: transparent;
+  font-size: .875rem;
+  color: black;
+
+  thead th {
+    background: #d6d6d6;
+    color: #666;
+
+    & {
+      font-weight: normal;
+    }
+  }
+
+  tbody {
+    background-color: white;
+  }
+
+  td {
+    color: black;
+  }
 }
 
 .hover-to-help {

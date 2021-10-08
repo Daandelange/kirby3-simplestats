@@ -139,7 +139,7 @@ Development was started from [a standard Kirby PluginKit](https://github.com/get
 
 ## Powered by
 
-- [DistantNative/tbl-for-kirby](https://github.com/distantnative/tbl-for-kirby) : Table layout for the SimpleStats panel interface. [*MIT*]
+- [xaksis/vue-good-table](https://github.com/xaksis/vue-good-table) : Table component for the SimpleStats panel interface. [*MIT*]
 - [ChartKick](https://chartkick.com) using [Chart.js]() for displaying interactive charts. [*MIT*]
 - Package managers and packers : NPM, Parcel, Composer, Yarn.
 - [Kirby CMS](https://getkirby.com) : Providing the plugin interface [[*licensed software*](https://getkirby.com/license)]

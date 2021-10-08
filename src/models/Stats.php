@@ -74,8 +74,8 @@ class Stats extends SimpleStatsDb {
             'softwareDbVersion' => self::engineDbVersion,
             'dbVersion'         => $dbVersion,
             'dbHistoryLabels'   => [
-                ['label'=>'Db version', 'field'=>'version', 'type'=>'number',   'sort'=>true,  'search'=>true, 'width'=>'1fr'],
-                ['label'=>'Used since', 'field'=>'date',    'type'=>'text',     'sort'=>true,  'search'=>true, 'width'=>'3fr'],
+                ['label'=>'Db version', 'field'=>'version', 'type'=>'number',   'sortable'=>true,  'width'=>'34%'],
+                ['label'=>'Used since', 'field'=>'date',    'type'=>'date',     'sortable'=>true,  'width'=>'66%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'dd MMM yyyy'], // todo: Date display should be customized to custom timespans
             ],
             'dbHistory'         => $dbArray,
             'upgradeRequired'   => self::engineDbVersion != $dbVersion,
@@ -106,11 +106,11 @@ class Stats extends SimpleStatsDb {
 //                 $keys[$key] = ['label'=>$value,'field'=>$value, 'type'=>'text','sort'=>false,'search'=>false,'class'=>'myClass','width'=>'1fr'];
 //             }
             $keys =[
-                [ 'label' => 'Visited Pages',   'field' => 'visitedpages',      'type' => 'text', 'sort' => false,  'search' => true,     'width' => '4fr' ],
-                [ 'label' => 'OS Family',       'field' => 'osfamily',          'type' => 'text', 'sort' => true,   'search' => true,     'width' => '1fr' ],
-                [ 'label' => 'Device Type',     'field' => 'devicetype',        'type' => 'text', 'sort' => true,   'search' => true,     'width' => '1fr' ],
-                [ 'label' => 'Browser Engine',  'field' => 'browserengine',     'type' => 'text', 'sort' => true,   'search' => true,     'width' => '1fr' ],
-                [ 'label' => 'Time Registered', 'field' => 'timeregistered',    'type' => 'text', 'sort' => true,   'search' => false,    'width' => '2fr' ],
+                [ 'label' => 'Visited Pages',   'field' => 'visitedpages',      'type' => 'text', 'sortable' => false,  'width' => '50%' ],
+                [ 'label' => 'OS Family',       'field' => 'osfamily',          'type' => 'text', 'sortable' => true,   'width' => '15%' ],
+                [ 'label' => 'Device Type',     'field' => 'devicetype',        'type' => 'text', 'sortable' => true,   'width' => '10%' ],
+                [ 'label' => 'Browser Engine',  'field' => 'browserengine',     'type' => 'text', 'sortable' => true,   'width' => '10%' ],
+                [ 'label' => 'Time Registered', 'field' => 'timeregistered',    'type' => 'date', 'sortable' => true,   'width' => '15%', 'globalSearchDisabled'=>true, 'dateInputFormat'=>'yyyy-MM-dd HH:mm', 'dateOutputFormat'=>'d MMMM yyyy HH:mm'], // todo: Date display should be customized to custom timespans
             ];
 
             $rows = $result->toArray();
@@ -398,12 +398,13 @@ class Stats extends SimpleStatsDb {
             // Set column names
             $allReferersColumns = [
                 //['label'=>'ID','field'=>'id','type'=>'text','sort'=>false,'search'=>false,'class'=>'myClass','width'=>'1fr'],
-                ['label'=>'URL',        'field'=>'url',         'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'4fr'],
-                ['label'=>'Domain',     'field'=>'domain',      'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'3fr'],
-                ['label'=>'Medium',     'field'=>'medium',      'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'2fr'],
-                ['label'=>'Hits',       'field'=>'hits',        'type'=>'number',   'sort'=>true,  'search'=>true,    'class'=>'myClass', 'width'=>'1fr'],
-                ['label'=>'Popularity', 'field'=>'hitspercent', 'type'=>'number',   'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr', 'align'=>'left'],
-                ['label'=>'First seen', 'field'=>'timefrom',    'type'=>'text',     'sort'=>true,  'search'=>false,   'class'=>'myClass', 'width'=>'2fr'],
+                ['label'=>'URL',        'field'=>'url',         'type'=>'text',     'sortable'=>true,  'width'=>'35%'],
+                ['label'=>'Domain',     'field'=>'domain',      'type'=>'text',     'sortable'=>true,  'width'=>'20%'],
+                ['label'=>'Medium',     'field'=>'medium',      'type'=>'text',     'sortable'=>true,  'width'=>'15%'],
+                ['label'=>'Hits',       'field'=>'hits',        'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'5%'   ],
+                ['label'=>'Popularity', 'field'=>'hitspercent', 'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'15%'  ],
+                ['label'=>'First seen', 'field'=>'timefrom',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'15%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
+
             ];
 
             // Get max for calc
@@ -420,7 +421,7 @@ class Stats extends SimpleStatsDb {
                     'domain'        => $referer->domain,
                     'medium'        => $referer->medium,
                     'hits'          => $referer->hits,
-                    'hitspercent'   => round(($referer->hits/$max)*100),
+                    'hitspercent'   => round(($referer->hits/$max)*100)*0.01,
                     'timefrom'      => getDateFromPeriod(intval($referer->timefrom,10), SIMPLESTATS_TABLE_DATE_FORMAT),
                 ];
             }
@@ -463,19 +464,20 @@ class Stats extends SimpleStatsDb {
             // Set column names
             $pageStatsLabels = [
                 //['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'1fr'],
-                //['label'=>'URL',            'field'=>'url',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'4fr'],
-                ['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'4fr'],
-                ['label'=>'Title',          'field'=>'title',           'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'3fr'],
-                ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'1fr'],
-                ['label'=>'Popularity',     'field'=>'hitspercent',     'type'=>'number',   'sort'=>true,  'search'=>false,   'class'=>'percent', 'width'=>'2fr', 'align'=>'left'],
-                ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'text',     'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'2fr'],
-                ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'text',     'sort'=>true,  'search'=>false,    'class'=>'', 'width'=>'2fr'],
+                ['label'=>'URL',            'field'=>'url',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'0%', 'hidden'=>'true'],
+                ['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'35%'], // todo : add 'tooltip'
+                ['label'=>'Depth',          'field'=>'depth',           'type'=>'number',   'sortable'=>false, 'globalSearchDisabled'=>true,    'hidden'=>'true' ],
+                ['label'=>'Title',          'field'=>'title',           'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'20%'],
+                ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'class'=>'', 'width'=>'5%'],
+                ['label'=>'Popularity',     'field'=>'hitspercent',     'type'=>'percentage','sortable'=>true,  'globalSearchDisabled'=>true,   'class'=>'percent', 'width'=>'10%', 'align'=>'left'],
+                ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
+                ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'],
             ];
 
             // Add language columns
             if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
                 foreach( kirby()->languages() as $l ){
-                    $pageStatsLabels[] = ['label'=>$l->name(), 'field'=>'hits_'.$l->code(), 'type'=>'number', 'sort'=>true,   'search'=>false,   'class'=>'', 'width'=>'1fr'];
+                    $pageStatsLabels[] = ['label'=>$l->name(), 'field'=>'hits_'.$l->code(), 'type'=>'number', 'sort'=>true,   'search'=>false,   'class'=>'', 'width'=>'5%'];
                 }
             }
 
@@ -492,25 +494,28 @@ class Stats extends SimpleStatsDb {
                 // Pages that don't exist (anymore?)
                 if(!$kirbyPage){
                     $pageStatsData[] = [
-                        'uid'           => '<a href="#'.$page->uid.'">'.$page->uid.'</a>',
+                        'url'           => $page->uid,
+                        'uid'           => $page->uid,
                         'title'         => $page->uid . ' (404)',
                         'hits'          => intval($page->hits, 10),
                         'hitspercent'   => round(($page->hits/$max)*100),
                         'firstvisited'  => getDateFromPeriod(intval($page->firstvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
                         'lastvisited'   => getDateFromPeriod(intval($page->lastvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                        'depth'         => 0,
                     ];
                     continue;
                 }
 
                 $pageStatsData[] = [
                     //'uid'           => $page->uid,
-                    'uid'           => '<a href="'.$kirbyPage->url().'">'.$page->uid.'</a>',
-                    //'url'           => $kirbyPage->url(),
+                    'uid'           => $page->uid,
+                    'url'           => $kirbyPage->url(),
                     'title'         => $kirbyPage->title()->value(),
                     'hits'          => intval($page->hits, 10),
-                    'hitspercent'   => round(($page->hits/$max)*100),
+                    'hitspercent'   => round(($page->hits/$max)*100)*0.01,
                     'firstvisited'  => getDateFromPeriod(intval($page->firstvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
                     'lastvisited'   => getDateFromPeriod(intval($page->lastvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                    'depth'         => $kirbyPage->depth()-1,
                 ];
 
                 // Inject language data

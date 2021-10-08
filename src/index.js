@@ -34,9 +34,6 @@ Chartkick.options = {
 };
 Chartkick.use(Chart);
 
-// 3rd party assets
-import "tbl-for-kirby/index.css";
-
 // Register plugin @Kirby
 panel.plugin("daandelange/simplestats", {
   // K 3.5 and below
