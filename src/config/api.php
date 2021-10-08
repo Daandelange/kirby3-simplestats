@@ -116,6 +116,7 @@ return [
                         'enableVisitLanguages'  => kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages', false),
                         'ignoredRoles'          => option('daandelange.simplestats.tracking.ignore.roles',[]),
                         'ignoredPages'          => option('daandelange.simplestats.tracking.ignore.pages',[]),
+                        'ignoredTemplates'      => option('daandelange.simplestats.tracking.ignore.templates',[]),
                         'logFile'               => str_replace( kirby()->root(),'', option('daandelange.simplestats.log.file',[]) ),
                         'logLevels'             => $logLevels,
                         'trackingSince'         => 'todo', // todo

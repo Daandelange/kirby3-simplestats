@@ -13,6 +13,7 @@
     <k-toggle-field name="" :disabled="true" label="Track languages" :value="enableVisitLanguages" icon="globe" />-->
     <k-tags-field name="" :counter="false" :disabled="true" label="Ignored user roles (not tracked)" :value="ignoredRoles" icon="users" />
     <k-tags-field name="" :counter="false" :disabled="true" label="Ignored page IDs (not tracked)" :value="ignoredPages" icon="page" />
+    <k-tags-field name="" :counter="false" :disabled="true" label="Ignored page templatess (not tracked)" :value="ignoredTemplates" icon="page" />
     <br/>
     <k-headline class="rightColumnAlign">Logging</k-headline>
     <k-text-field name="" :counter="false" :disabled="true" label="Log File" :value="logFile" icon="file-code" />
@@ -40,6 +41,7 @@ export default {
       enableVisitLanguages : false,
       ignoredRoles : [],
       ignoredPages : [],
+      ignoredTemplates : [],
       logFile : '',
       logLevels : [],
     }
@@ -77,6 +79,7 @@ export default {
           this.ignoredPages = response.ignoredPages
           this.logFile = response.logFile
           this.logLevels = response.logLevels
+          this.ignoredTemplates = response.ignoredTemplates
         })
         .catch(error => {
           this.isLoading = false

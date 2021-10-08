@@ -31,7 +31,7 @@ return [
         'ignore' => [
             'roles' => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here (causes the plugin's translations to vanish from php)
             'pages' => [], // Array of plain text page ids.
-            // 'templates' => [], // todo : Exclude pages with these templates
+            'templates' => ['error'], // Array of plain template names not to track (use lowercase) (checked againt intendedTemplate and template)
         ],
 
         // Dont change onLoad yet !!! (keep to true)

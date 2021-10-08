@@ -44,8 +44,21 @@ class SimpleStats extends SimpleStatsDb {
             }
         }
 
-        // Todo: Kirby ignore user roles ?
-        // Todo: verify page uri
+        // Verify template exclulsions
+        $ignoredTemplates = option('daandelange.simplestats.tracking.ignore.templates');
+        if( is_array($ignoredTemplates) && count($ignoredTemplates) > 0 ){
+            // Try parse page object
+            $page = page($page_uri); // Slow... could be faster passing the page object instead of $page->id()
+            if($page){
+                if( in_array($page->intendedTemplate()->name(), $ignoredTemplates) === true ) return false;
+                if( in_array(        $page->template()->name(), $ignoredTemplates) === true ) return false;
+            }
+            else {
+                // continue (?), unknown page = unknown template, cannot verify template exclusion
+            }
+        }
+
+        // Todo: verify page uri ?
 
         // Get unique visitor id
         $userID = SimpleStats::getUserUniqueString();
