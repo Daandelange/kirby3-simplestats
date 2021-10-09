@@ -76,7 +76,7 @@
               <template slot="table-row" slot-scope="props">
                 <span v-if="props.column.field == 'hitspercent'" class="row-percent">
                   <span class="visualiser" :style="{ width: props.row.hitspercent *100 + '%'}"></span>
-                  <span class="number">{{ props.row.hitspercent * 100 + '%' }}</span>
+                  <span class="number">{{ (props.row.hitspercent * 100).toFixed(0) + '%' }}</span>
                 </span>
                 <span v-else-if="props.column.field == 'timefrom'">
                   <span>

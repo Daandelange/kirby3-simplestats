@@ -253,6 +253,7 @@ table.vgt-table {
 
   td {
     color: black;
+    word-break: break-word;
   }
 }
 

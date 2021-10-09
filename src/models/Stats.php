@@ -421,7 +421,7 @@ class Stats extends SimpleStatsDb {
                     'domain'        => $referer->domain,
                     'medium'        => $referer->medium,
                     'hits'          => $referer->hits,
-                    'hitspercent'   => round(($referer->hits/$max)*100)*0.01,
+                    'hitspercent'   => round(($referer->hits/$max),2),
                     'timefrom'      => getDateFromPeriod(intval($referer->timefrom,10), SIMPLESTATS_TABLE_DATE_FORMAT),
                 ];
             }
@@ -498,25 +498,27 @@ class Stats extends SimpleStatsDb {
                         'uid'           => $page->uid,
                         'title'         => $page->uid . ' (404)',
                         'hits'          => intval($page->hits, 10),
-                        'hitspercent'   => round(($page->hits/$max)*100),
+                        'hitspercent'   => round(($page->hits/$max),2),
                         'firstvisited'  => getDateFromPeriod(intval($page->firstvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
                         'lastvisited'   => getDateFromPeriod(intval($page->lastvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
                         'depth'         => 0,
                     ];
-                    continue;
+                    //continue;
                 }
 
-                $pageStatsData[] = [
-                    //'uid'           => $page->uid,
-                    'uid'           => $page->uid,
-                    'url'           => $kirbyPage->url(),
-                    'title'         => $kirbyPage->title()->value(),
-                    'hits'          => intval($page->hits, 10),
-                    'hitspercent'   => round(($page->hits/$max)*100)*0.01,
-                    'firstvisited'  => getDateFromPeriod(intval($page->firstvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
-                    'lastvisited'   => getDateFromPeriod(intval($page->lastvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
-                    'depth'         => $kirbyPage->depth()-1,
-                ];
+                else {
+                    $pageStatsData[] = [
+                        //'uid'           => $page->uid,
+                        'uid'           => $page->uid,
+                        'url'           => $kirbyPage->url(),
+                        'title'         => $kirbyPage->title()->value(),
+                        'hits'          => intval($page->hits, 10),
+                        'hitspercent'   => round(($page->hits/$max)*100)*0.01,
+                        'firstvisited'  => getDateFromPeriod(intval($page->firstvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                        'lastvisited'   => getDateFromPeriod(intval($page->lastvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                        'depth'         => $kirbyPage->depth()-1,
+                    ];
+                }
 
                 // Inject language data
                 if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
