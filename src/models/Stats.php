@@ -28,7 +28,7 @@ class Stats extends SimpleStatsDb {
     public static function listDbInfo(): array {
         $dbVersion = '';
         $dbArray = [];
-        $dbvQ = self::database()->query("SELECT `version`, `migrationdate` FROM `simplestats` ORDER BY `migrationdate` DESC LIMIT 0,100");
+        $dbvQ = self::database()->query("SELECT `version`, `migrationdate` FROM `simplestats` ORDER BY `migrationdate` DESC LIMIT 0,1000");
         if( $dbvQ ){
             if( $dbvQ->isNotEmpty() ){
                 $dbVersion = intval($dbvQ->first()->version, 10);
@@ -88,7 +88,7 @@ class Stats extends SimpleStatsDb {
         //$log  = new Log;
         //var_dump( self::singleton()->database() );
         //$db = self::database();
-        $result = self::database()->query("SELECT `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` LIMIT 0,1000");
+        $result = self::database()->query('SELECT `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($result){
             //var_dump(array_keys($result->get(0)->toArray()));
             //var_dump(($result));
@@ -149,7 +149,7 @@ class Stats extends SimpleStatsDb {
 
         // Get devices
         $allDevices = [];
-        $allDevicesResult = self::database()->query("SELECT `device`, `hits` FROM `devices` GROUP BY `device` ORDER BY `device` DESC LIMIT 0,1000");
+        $allDevicesResult = self::database()->query("SELECT `device`, `hits` FROM `devices` GROUP BY `device` ORDER BY `device` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allDevicesResult){
             // parse sql result, line by line
             foreach($allDevicesResult as $device){
@@ -160,7 +160,7 @@ class Stats extends SimpleStatsDb {
 
         // Get Systems
         $allSystems = [];
-        $allSystemsResult = self::database()->query("SELECT `system`, `hits` FROM `systems` GROUP BY `system` ORDER BY `system` DESC LIMIT 0,1000");
+        $allSystemsResult = self::database()->query("SELECT `system`, `hits` FROM `systems` GROUP BY `system` ORDER BY `system` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allSystemsResult){
             // parse sql result, line by line
             foreach($allSystemsResult as $system){
@@ -171,7 +171,7 @@ class Stats extends SimpleStatsDb {
 
         // Get Engines
         $allEngines = [];
-        $allEnginesResult = self::database()->query("SELECT `engine`, `hits` FROM `engines` GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,1000");
+        $allEnginesResult = self::database()->query("SELECT `engine`, `hits` FROM `engines` GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allEnginesResult){
             // parse sql result, line by line
             foreach($allEnginesResult as $engine){
@@ -183,7 +183,7 @@ class Stats extends SimpleStatsDb {
 
         // Get Devices over time
         $devicesOverTimeData=[];
-        $devicesOverTime = self::database()->query("SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices` GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,1000");
+        $devicesOverTime = self::database()->query("SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices` GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($devicesOverTime){
             $devicePeriods=[];
             foreach($devicesOverTime as $device){
@@ -272,7 +272,7 @@ class Stats extends SimpleStatsDb {
         //$db = self::database();
 
         //$globalStats = $db->query("SELECT `referer`, `domain`, SUM(`hits`) AS hits, `medium` from `referers`, MIN(`referers`.`monthyear`) AS firstseen, MAX(`monthyear`) AS lastseen GROUP BY `monthyear` ORDER BY `lastseen` DESC LIMIT 0,100");
-        $globalStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,1000");
+        $globalStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($globalStats){
             //echo 'RESULT=';
             //var_dump($globalStats->toArray());
@@ -291,7 +291,7 @@ class Stats extends SimpleStatsDb {
         }
 
 
-        $mediumStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `medium` ORDER BY `lastseen` DESC, `medium` ASC LIMIT 0,1000");
+        $mediumStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `medium` ORDER BY `lastseen` DESC, `medium` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
         if($mediumStats){
             //echo 'RESULT=';
@@ -311,7 +311,7 @@ class Stats extends SimpleStatsDb {
         }
 
         // Mediums over time
-        $mediumStatsOverTime = self::database()->query("SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers` GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,1000");
+        $mediumStatsOverTime = self::database()->query("SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers` GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($mediumStatsOverTime){
             //$mediumNames=[];
             $mediumPeriods=[];
@@ -378,7 +378,7 @@ class Stats extends SimpleStatsDb {
 
         // Recent stats
         $todayPeriod = getPeriodFromTime();
-        $domainRecentStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`=${todayPeriod} ) WHERE `monthyear`=${todayPeriod} GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000");
+        $domainRecentStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`=${todayPeriod} ) WHERE `monthyear`=${todayPeriod} GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($domainRecentStats){
 
             foreach($domainRecentStats as $referer){
@@ -392,7 +392,7 @@ class Stats extends SimpleStatsDb {
         }
 
 
-        $AllDomainStats = self::database()->query("SELECT `id`, `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `timefrom`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,1000;");
+        $AllDomainStats = self::database()->query("SELECT `id`, `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `timefrom`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($AllDomainStats){
 
             // Set column names
@@ -459,7 +459,7 @@ class Stats extends SimpleStatsDb {
             }
         }
 
-        $visitedPages = self::database()->query("SELECT `uid`, MIN(`monthyear`) AS `firstvisited`, MAX(`monthyear`) AS `lastvisited`, SUM(`hits`) AS `hits` ${langQuery} FROM `pagevisits` GROUP BY `uid` ORDER BY `uid` ASC, `monthyear` DESC LIMIT 0,1000;");
+        $visitedPages = self::database()->query("SELECT `uid`, MIN(`monthyear`) AS `firstvisited`, MAX(`monthyear`) AS `lastvisited`, SUM(`hits`) AS `hits` ${langQuery} FROM `pagevisits` GROUP BY `uid` ORDER BY `uid` ASC, `monthyear` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($visitedPages){
             // Set column names
             $pageStatsLabels = [
@@ -532,7 +532,7 @@ class Stats extends SimpleStatsDb {
         }
 
         // Compute visits over time (monthly)
-        $visitsOverTime = self::database()->query("SELECT `monthyear`, SUM(`hits`) AS `hits` FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
+        $visitsOverTime = self::database()->query("SELECT `monthyear`, SUM(`hits`) AS `hits` FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($visitsOverTime){
             $firstTimeFrame = 0;
             foreach($visitsOverTime as $timeFrame){
@@ -556,7 +556,7 @@ class Stats extends SimpleStatsDb {
         // Get pages over time
         // Todo: Add total and remove visitsOverTimeData, see https://stackoverflow.com/a/39374290/58565
         $pageVisitsOverTimeData=[];
-        $pageVisitsOverTime = self::database()->query("SELECT `uid`, SUM(`hits`) AS `hits`, `monthyear` FROM `pagevisits` GROUP BY `UID`, `monthyear` ORDER BY `monthyear` ASC, `uid` ASC LIMIT 0,1000");
+        $pageVisitsOverTime = self::database()->query("SELECT `uid`, SUM(`hits`) AS `hits`, `monthyear` FROM `pagevisits` GROUP BY `UID`, `monthyear` ORDER BY `monthyear` ASC, `uid` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if($pageVisitsOverTime){
             $pageTimeframes=[];
             foreach($pageVisitsOverTime as $page){
@@ -641,7 +641,7 @@ class Stats extends SimpleStatsDb {
             }
 
             // Compute $languagesOverTime and $globalLanguagesData
-            $languagesOverTimeQ = self::database()->query("SELECT `monthyear` ${queryLangs} FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,1000;");
+            $languagesOverTimeQ = self::database()->query("SELECT `monthyear` ${queryLangs} FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
             if($languagesOverTimeQ){
                 $firstTimeFrame = 0;
                 foreach($languagesOverTimeQ as $timeFrame){
@@ -730,7 +730,7 @@ class Stats extends SimpleStatsDb {
 
         // Get visitors older then 1 day
         $yesterday = time() - option('daandelange.simplestats.tracking.uniqueSeconds', 24*60*60);
-        $visitors = self::database()->query("SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,1000;");
+        $visitors = self::database()->query("SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
         if($visitors){
             //echo 'RESULT='."SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,1000;";
@@ -905,7 +905,7 @@ class Stats extends SimpleStatsDb {
                 foreach( $newPageVisits as $pagePeriod => $monthlyPageVisits ){
 
                     //echo 'Updating page visits for '.$pagePeriod."\n"; continue;
-                    $existingPages = self::database()->query("SELECT `id`, `uid`, `hits`, ${queryLangs} FROM `pagevisits` WHERE `monthyear` = ${pagePeriod} LIMIT 0,1000;");
+                    $existingPages = self::database()->query("SELECT `id`, `uid`, `hits`, ${queryLangs} FROM `pagevisits` WHERE `monthyear` = ${pagePeriod} LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     // Dirty security for if languages make the request fail
 /*
@@ -1019,7 +1019,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newDevices as $devicesPeriod => $monthlyDevices ){
                     // Query existing db
-                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '${devicesPeriod}' LIMIT 0,1000;");
+                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '${devicesPeriod}' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingDevices){
                         //echo "EXISTING=";var_dump($existingPages->toArray());
@@ -1060,7 +1060,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newSystems as $systemsPeriod => $monthlySystems ){
                     // Query existing db
-                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '${systemsPeriod}' LIMIT 0,1000;");
+                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '${systemsPeriod}' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingSystems){
                         $existingSystemsA = $existingSystems->toArray();
@@ -1101,7 +1101,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newEngines as $enginesPeriod => $monthlyEngines ){
                     // Query existing db
-                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '${enginesPeriod}' LIMIT 0,1000;");
+                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '${enginesPeriod}' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingEngines){
                         $existingEnginesA = $existingEngines->toArray();

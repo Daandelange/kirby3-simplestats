@@ -369,7 +369,7 @@ class SimpleStatsDb
                                     }
                                 }
                                 // Select duplicates
-                            	$selectDuplicates = 'SELECT min(`id`) as "idtokeep", `uid`, COUNT(`id`)  as "numentries", `monthyear`, '.$hitsQueryPart.' FROM `pagevisits` GROUP BY  `uid`, `monthyear` HAVING COUNT(`id`) > 1 LIMIT 10000;';
+                            	$selectDuplicates = 'SELECT min(`id`) as "idtokeep", `uid`, COUNT(`id`)  as "numentries", `monthyear`, '.$hitsQueryPart.' FROM `pagevisits` GROUP BY  `uid`, `monthyear` HAVING COUNT(`id`) > 1 LIMIT '.SIMPLESTATS_DUMMY_DB_LIMIT.';';
 
                             	// For each duplicate, merge hits and only keep the one with the lowest ID.
                             	if($duplicatesResult = $db->query($selectDuplicates)){

@@ -8,6 +8,8 @@ namespace daandelange\SimpleStats;
 // - Maybe : Add .htaccess rules for .sqlite and .log/.txt files, prevent direct access.
 // - With simplestats as analytics engine, you are hosting sensitive user data. Read getkirby.com/guides/secure for optimal privacy recomendations.
 
+define('SIMPLESTATS_DUMMY_DB_LIMIT', 1000000); // Use great number if you have a big DB. Tip while db upgrading : use an incredibly huge number.
+
 return [
     'log' => [
         'tracking'  => true, // Enable tracking errors.
