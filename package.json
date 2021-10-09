@@ -1,6 +1,6 @@
 {
   "name": "SimpleStats",
-  "version": "0.0.1",
+  "version": "0.3.1-beta",
   "description": "Simple analytics for your kirby website.",
   "main": "index.js",
   "author": "Daan de Lange <your@email.com>",
@@ -17,7 +17,8 @@
     "@vue/component-compiler-utils": "^3.2.0",
     "cssnano": "^4.1.10",
     "sass": "^1.32.8",
-    "vue-template-compiler": "^2.6.12"
+    "vue-template-compiler": "^2.6.12",
+    "parcel-bundler": "^1"
   },
   "dependencies": {
     "chart.js": "^2.9.4",
