@@ -54,6 +54,9 @@ git submodule add https://github.com/daandelange/kirby3-simplestats.git site/plu
 ```
 Eventually add `--depth 1` to discard the repo commit history. (saves disk space)
 
+- **Option 3** : Composer
+`composer require daandelange/simplestats` (update with `composer update`)
+
 ****
 
 ### Configuration
