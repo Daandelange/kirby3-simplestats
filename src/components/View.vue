@@ -255,6 +255,12 @@ table.vgt-table {
     color: black;
     word-break: break-word;
   }
+
+  .k-icon {
+    display: inline-block;
+    margin-right: .5rem;
+    vertical-align: middle;
+  }
 }
 
 .hover-to-help {

@@ -99,7 +99,7 @@
                 <a :href="props.row.url" :style="{paddingLeft: 12*props.row.depth + 'px'}">{{ props.row.title }}</a>
               </span>
               <span v-else-if="props.column.field == 'uid'">
-                <a :href="props.row.url" :style="{paddingLeft: 12*props.row.depth + 'px'}">{{ props.row.uid }}</a>
+                <a :href="props.row.url" :style="{paddingLeft: 12*props.row.depth + 'px'}"><k-icon :type="props.row.icon"/>{{ props.row.uid }}</a>
               </span>
               <span v-else-if="props.column.field == 'hitspercent'" class="row-percent">
                 <span class="visualiser" :style="{ width: props.row.hitspercent *100 + '%'}"></span>

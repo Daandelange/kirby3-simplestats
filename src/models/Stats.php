@@ -472,6 +472,7 @@ class Stats extends SimpleStatsDb {
                 ['label'=>'Popularity',     'field'=>'hitspercent',     'type'=>'percentage','sortable'=>true,  'globalSearchDisabled'=>true,   'class'=>'percent', 'width'=>'10%', 'align'=>'left'],
                 ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
                 ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'],
+                ['label'=>'Icon',           'field'=>'icon',            'type'=>'text',     'sortable'=>false, 'globalSearchDisabled'=>true,    'hidden'=>'true' ],
             ];
 
             // Add language columns
@@ -502,6 +503,7 @@ class Stats extends SimpleStatsDb {
                         'firstvisited'  => getDateFromPeriod(intval($page->firstvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
                         'lastvisited'   => getDateFromPeriod(intval($page->lastvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
                         'depth'         => 0,
+                        'icon'          => 'page',
                     ];
                     //continue;
                 }
@@ -517,6 +519,7 @@ class Stats extends SimpleStatsDb {
                         'firstvisited'  => getDateFromPeriod(intval($page->firstvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
                         'lastvisited'   => getDateFromPeriod(intval($page->lastvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
                         'depth'         => $kirbyPage->depth()-1,
+                        'icon'          => $kirbyPage->blueprint()->icon(),//'page',//$kirbyPage->panelIcon()?$kirbyPage->panelIcon()['type']:'page',
                     ];
                 }
 
