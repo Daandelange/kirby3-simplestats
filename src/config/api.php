@@ -5,6 +5,7 @@ namespace daandelange\SimpleStats;
 use Kirby\Exception\PermissionException;
 use Kirby\Exception\Exception;
 use Throwable;
+use I18n;
 
 return [
 
@@ -86,9 +87,9 @@ return [
                     // Precompute some data
                     $salt = option('daandelange.simplestats.tracking.salt', '');
                     $logLevels = [];
-                    if( option('daandelange.simplestats.log.tracking',false) ) $logLevels[] = 'Tracking';
-                    if( option('daandelange.simplestats.log.warnings',false) ) $logLevels[] = 'Warnings';
-                    if( option('daandelange.simplestats.log.verbose' ,false) ) $logLevels[] = 'Verbose';
+                    if( option('daandelange.simplestats.log.tracking',false) ) $logLevels[] = I18n::translate('simplestats.info.config.log.level.tracking', 'Tracking');
+                    if( option('daandelange.simplestats.log.warnings',false) ) $logLevels[] = I18n::translate('simplestats.info.config.log.level.warnings', 'Warnings');
+                    if( option('daandelange.simplestats.log.verbose' ,false) ) $logLevels[] = I18n::translate('simplestats.info.config.log.level.verbose', 'Verbose');
 
 //                     $dbFile = option('daandelange.simplestats.tracking.database');
 //                     $dbSize = '?? Kb';

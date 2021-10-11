@@ -86,10 +86,10 @@ function getTimeFrameUtility() : SimpleStatsTimeFrameUtility {
 // Monthly timespan handler
 class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
     public function getPeriodName(bool $plural=false) : string {
-        return $plural?'months':'month';
+        return $plural?t('simplestats.timeframe.week.plural','months'):t('simplestats.timeframe.week.singular','month');
     }
     public function getPeriodAdjective() : string {
-        return 'monthly';
+        return t('simplestats.timeframe.week.name', 'Monthly');
     }
     public function getTimeFromPeriod(int $period) : int {
         // Monthly version
@@ -117,10 +117,10 @@ class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
 // Weekly timespan handler
 class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
     public function getPeriodName(bool $plural=false) : string {
-        return $plural?'week':'weeks';
+        return $plural?t('simplestats.timeframe.week.plural', 'weeks'):t('simplestats.timeframe.week.singular', 'week');
     }
     public function getPeriodAdjective() : string {
-        return 'weekly';
+        return t('simplestats.timeframe.week.name','Weekly');
     }
     public function getTimeFromPeriod(int $period) : int {
         $year = substr(''.$period, 0,4);

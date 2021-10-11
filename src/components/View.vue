@@ -65,7 +65,7 @@
     </div>
 
     <div v-else>
-      <k-empty>Something is wrong with tab handling...</k-empty>
+      <k-empty>{{ $t('simplestats.taberror') }}</k-empty>
     </div>
 
   </k-view>
