@@ -4,7 +4,7 @@
 
     <k-headline class="rightColumnAlign">{{ $t('simplestats.info.config.tracking') }}</k-headline>
     <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.config.tracking.periodname')" :value="trackingPeriodName" icon="clock"/>
-    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.config.tracking.periodseconds')" :value="uniqueSeconds" :after="$t('simplestats.charts.seconds')" icon="clock"/>
+    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.config.tracking.periodsecs')" :value="uniqueSeconds" :after="$t('simplestats.charts.seconds')" icon="clock"/>
     <k-toggle-field name="" :disabled="true" :label="$t('simplestats.info.config.tracking.salted')" :value="saltIsSet" icon="key" />
     <k-tags-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.config.tracking.features')" :value="trackingFeatures" icon="globe" />
     <k-tags-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.config.tracking.ignore.roles')" :value="ignoredRoles" icon="users" />

@@ -11,7 +11,7 @@
         max-height="500px"
         :fixed-header="false"
         compactMode
-        :search-options="{enabled: true, placeholder: 'Filter items...'}"
+        :search-options="{enabled: true, placeholder: $t('simplestats.table.filter', 'Filter items...')}"
         :pagination-options="{
           enabled: true,
           perPage: 20,
@@ -20,7 +20,7 @@
       >
         <div slot="emptystate">
           <k-empty>
-            There is nothing to show...
+            {{ $t('simplestats.nodatayet') }}
           </k-empty>
         </div>
 

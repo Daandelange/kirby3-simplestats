@@ -41,17 +41,17 @@ class Stats extends SimpleStatsDb {
             }
             // No version but table exists = weird !
             else {
-                $dbVersion = 'None!';
+                $dbVersion = t('simplestats.info.db.noversion', 'None!');
             }
         }
         else {
             $error = self::database()->lastError()->getMessage();
             // v1 didn't have the simplestats table (only way to detect)
             if( stripos($error, 'no such table:') !== false && stripos($error, 'simplestats') !== false ){
-                $dbVersion = '1 (versionless)';
+                $dbVersion = '1 ('.t('simplestats.info.db.versionless','versionless').')';
             }
             else {
-                $dbVersion = 'Unable to query! '.$error;
+                $dbVersion = t('simplestats.info.db.versionerror', 'Unable to query : ');//.$error;
             }
         }
 
@@ -74,8 +74,8 @@ class Stats extends SimpleStatsDb {
             'softwareDbVersion' => self::engineDbVersion,
             'dbVersion'         => $dbVersion,
             'dbHistoryLabels'   => [
-                ['label'=>'Db version', 'field'=>'version', 'type'=>'number',   'sortable'=>true,  'width'=>'34%'],
-                ['label'=>'Used since', 'field'=>'date',    'type'=>'date',     'sortable'=>true,  'width'=>'66%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'dd MMM yyyy'], // todo: Date display should be customized to custom timespans
+                ['label'=>t('simplestats.info.db.table.dbversion'), 'field'=>'version', 'type'=>'number',   'sortable'=>true,  'width'=>'34%'],
+                ['label'=>t('simplestats.info.db.table.usedsince'), 'field'=>'date',    'type'=>'date',     'sortable'=>true,  'width'=>'66%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'dd MMM yyyy'], // todo: Date display should be customized to custom timespans
             ],
             'dbHistory'         => $dbArray,
             'upgradeRequired'   => self::engineDbVersion != $dbVersion,
@@ -154,7 +154,7 @@ class Stats extends SimpleStatsDb {
             // parse sql result, line by line
             foreach($allDevicesResult as $device){
                 //var_dump($device->toArray());
-                $allDevices[] = [$device->device,$device->hits];
+                $allDevices[] = [self::translateDeviceType($device->device),$device->hits];
             }
         }
 
@@ -194,7 +194,7 @@ class Stats extends SimpleStatsDb {
                 // Need to create the first entry ?
                 if(!array_key_exists($name, $devicesOverTimeData)){
                     $devicesOverTimeData[$name]=[
-                        'name' => $name,
+                        'name' => self::translateDeviceType($name),
                         'data' => [],
                     ];
                 }
@@ -251,6 +251,14 @@ class Stats extends SimpleStatsDb {
             'devicesovertime'   => $devicesOverTimeData,
             //'engineslabels' => $enginesLabels,
         ];
+    }
+
+    public static function translateDeviceType( string $key ) : string {
+        if($translation = t('simplestats.devices.names.'.$key)){
+            return $translation;
+        }
+
+        return $key;
     }
 
     public static function refererStats(): ?array {
@@ -464,15 +472,15 @@ class Stats extends SimpleStatsDb {
             // Set column names
             $pageStatsLabels = [
                 //['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'1fr'],
-                ['label'=>'URL',            'field'=>'url',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'0%', 'hidden'=>'true'],
-                ['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'35%'], // todo : add 'tooltip'
-                ['label'=>'Depth',          'field'=>'depth',           'type'=>'number',   'sortable'=>false, 'globalSearchDisabled'=>true,    'hidden'=>'true' ],
-                ['label'=>'Title',          'field'=>'title',           'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'20%'],
-                ['label'=>'Hits',           'field'=>'hits',            'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'class'=>'', 'width'=>'5%'],
-                ['label'=>'Popularity',     'field'=>'hitspercent',     'type'=>'percentage','sortable'=>true,  'globalSearchDisabled'=>true,   'class'=>'percent', 'width'=>'10%', 'align'=>'left'],
-                ['label'=>'First Visited',  'field'=>'firstvisited',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
-                ['label'=>'Last Visited',   'field'=>'lastvisited',     'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,    'class'=>'', 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'],
-                ['label'=>'Icon',           'field'=>'icon',            'type'=>'text',     'sortable'=>false, 'globalSearchDisabled'=>true,    'hidden'=>'true' ],
+                ['label'=>'URL',                                                'field'=>'url',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'0%',  'hidden'=>'true'],
+                ['label'=>t('simplestats.table.uid','UID'),                     'field'=>'uid',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'35%'], // todo : add 'tooltip'
+                ['label'=>'Depth',                                              'field'=>'depth',           'type'=>'number',   'sortable'=>false, 'globalSearchDisabled'=>true,    'width'=>'0%',  'hidden'=>'true' ],
+                ['label'=>t('simplestats.table.pagetitle', 'Title'),            'field'=>'title',           'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'20%'],
+                ['label'=>t('simplestats.table.hits','Hits'),                   'field'=>'hits',            'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'5%'],
+                ['label'=>t('simplestats.table.popularity','Popularity'),       'field'=>'hitspercent',     'type'=>'percentage','sortable'=>true, 'globalSearchDisabled'=>true,    'width'=>'10%', 'align'=>'left'],
+                ['label'=>t('simplestats.table.firstvisited','First Visited'),  'field'=>'firstvisited',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
+                ['label'=>t('simplestats.table.lastvisited','Last Visited'),    'field'=>'lastvisited',     'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'],
+                ['label'=>'Icon',                                               'field'=>'icon',            'type'=>'text',     'sortable'=>false, 'globalSearchDisabled'=>true,    'width'=>'0%',  'hidden'=>'true' ],
             ];
 
             // Add language columns

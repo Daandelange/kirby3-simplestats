@@ -4,29 +4,27 @@
 
     <k-grid style="margin: 0 1em;">
       <k-column>
-        <k-headline size="medium">{{ $t('simplestats.visitsovertime') }}</k-headline>
+        <k-headline size="medium">{{ $t('simplestats.visits.visitsovertime', 'Visits over time') }}</k-headline>
         <br/>
 <!--      <histogram :dataset="[visitsOverTimeData]" :labels="visitsOverTimeLabels" /> -->
         <area-chart
           :data="visitsOverTimeData"
           :download="true"
-          download="Site_PageVisits.png"
-          label="Unique visits"
-          :xtitle="$t('simplestats.charts.time')"
-          :ytitle="$t('simplestats.charts.visits')"
+          download="Site_Visits.png"
+          :xtitle="$t('simplestats.charts.time', 'Time')"
+          :ytitle="$t('simplestats.charts.visits', 'Visits')"
           height="150px"
         ></area-chart>
       </k-column>
 
 
       <k-column>
-        <k-headline size="medium">{{ $t('simplestats.pagevisitsovertime') }}</k-headline>
+        <k-headline size="medium">{{ $t('simplestats.visits.pagevisitsovertime') }}</k-headline>
         <br/>
         <column-chart
           :data="pageVisitsOverTimeData"
           :download="true"
           download="Site_PageVisits.png"
-          label="Unique visits"
           :xtitle="$t('simplestats.charts.time')"
           :ytitle="$t('simplestats.charts.visits')"
           height="300px"
@@ -38,12 +36,11 @@
       </k-column>
 
       <k-column width="3/4" v-if="languagesAreEnabled">
-        <k-headline size="medium">{{ $t('simplestats.languagesovertime') }}</k-headline>
+        <k-headline size="medium">{{ $t('simplestats.visits.languagesovertime') }}</k-headline>
         <area-chart
           :data="languagesOverTimeData"
           :download="true"
           download="Site_GlobalLanguages.png"
-          label="Language visits (any page)"
           :xtitle="$t('simplestats.charts.time')"
           :ytitle="$t('simplestats.charts.visits')"
           height="250px"
@@ -55,7 +52,7 @@
       </k-column>
 
       <k-column width="1/4" v-if="languagesAreEnabled">
-        <k-headline>{{ $t('simplestats.globallanguages') }}</k-headline>
+        <k-headline>{{ $t('simplestats.visits.globallanguages') }}</k-headline>
         <pie-chart
           :data="globalLanguagesData"
           v-if="globalLanguagesData.length > 0"
@@ -72,7 +69,7 @@
           <k-headline
             size=""
           >
-            {{ $t('simplestats.visitedpages') }}
+            {{ $t('simplestats.visits.visitedpages') }}
           </k-headline>
           <vue-good-table
             :columns="columns"
@@ -81,7 +78,7 @@
             max-height="500px"
             :fixed-header="false"
             compactMode
-            :search-options="{enabled: true, placeholder: 'Filter items...'}"
+            :search-options="{enabled: true, placeholder: $t('simplestats.table.filter', 'Filter items...')}"
             :pagination-options="{
               enabled: true,
               perPage: 20,
@@ -90,7 +87,7 @@
           >
             <div slot="emptystate">
               <k-empty>
-                There is nothing to show...
+                {{ $t('simplestats.nodatayet') }}
               </k-empty>
             </div>
 
@@ -123,7 +120,7 @@
             </template>
           </vue-good-table>
         </div>
-        <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+        <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
       </k-column>
 
     </k-grid>
