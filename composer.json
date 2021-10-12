@@ -18,7 +18,7 @@
     ],
     "require": {
         "getkirby/composer-installer": "^1.1",
-        "whichbrowser/parser": "^2.0",
+        "whichbrowser/parser": "^2.1.2",
         "snowplow/referer-parser": "^0.2.0"
     },
     "autoload": {
@@ -26,15 +26,8 @@
             "daandelange\\SimpleStats\\": "src/models/"
         }
     },
-    "require-dev": {
-        "cweagans/composer-patches": "^1.7"
-    },
-    "extra": {
-        "patches": {
-            "snowplow/referer-parser": {
-                "Replace referers database with an updated one. The php repo is slightly outdated.": "patches/php-referer-parser-update-database.diff"
-            }
-        }
+    "scripts": {
+        "post-update-cmd": "curl -s https://s3-eu-west-1.amazonaws.com/snowplow-hosted-assets/third-party/referer-parser/referers-latest.yaml --output `composer config vendor-dir --absolute`/snowplow/referer-parser/php/data/referers.yml"
     },
     "config": {
         "optimize-autoloader": true

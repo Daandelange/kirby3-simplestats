@@ -14,8 +14,8 @@ class InstalledVersions
 private static $installed = array (
   'root' => 
   array (
-    'pretty_version' => '2.3.2',
-    'version' => '2.3.2.0',
+    'pretty_version' => '0.4.0-beta',
+    'version' => '0.4.0.0-beta',
     'aliases' => 
     array (
     ),
@@ -26,8 +26,8 @@ private static $installed = array (
   array (
     'daandelange/simplestats' => 
     array (
-      'pretty_version' => '2.3.2',
-      'version' => '2.3.2.0',
+      'pretty_version' => '0.4.0-beta',
+      'version' => '0.4.0.0-beta',
       'aliases' => 
       array (
       ),
@@ -62,12 +62,12 @@ private static $installed = array (
     ),
     'whichbrowser/parser' => 
     array (
-      'pretty_version' => 'v2.1.1',
-      'version' => '2.1.1.0',
+      'pretty_version' => 'v2.1.2',
+      'version' => '2.1.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'da24adc4f4f26002673d236e69b91a10f2fd594c',
+      'reference' => 'bcf642a1891032de16a5ab976fd352753dd7f9a0',
     ),
   ),
 );
