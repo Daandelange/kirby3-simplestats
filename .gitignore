@@ -50,7 +50,7 @@ composer.lock
 !/vendor/**/LICENSE.md
 !/vendor/**/LICENSE.txt
 
-# browserpasrer
+# browserparser
 !/vendor/whichbrowser/parser/src/Data/*
 !/vendor/whichbrowser/parser/data/*
 
@@ -59,6 +59,7 @@ composer.lock
 !/vendor/snowplow/referer-parser/php/src/Snowplow/RefererParser/*
 !/vendor/snowplow/referer-parser/php/*
 !/vendor/snowplow/referer-parser/php/*/*.php
+!/vendor/snowplow/referer-parser/php/data/*
 /vendor/snowplow/referer-parser/php/*.DS_Store
 /vendor/snowplow/referer-parser/php/**/*.DS_Store
 /vendor/snowplow/referer-parser/php/*.dist

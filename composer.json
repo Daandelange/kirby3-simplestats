@@ -27,7 +27,10 @@
         }
     },
     "scripts": {
-        "post-update-cmd": "curl -s https://s3-eu-west-1.amazonaws.com/snowplow-hosted-assets/third-party/referer-parser/referers-latest.yaml --output `composer config vendor-dir --absolute`/snowplow/referer-parser/php/data/referers.yml"
+        "post-update-cmd": [
+            "curl -s https://s3-eu-west-1.amazonaws.com/snowplow-hosted-assets/third-party/referer-parser/referers-latest.yaml --output `composer config vendor-dir --absolute`/snowplow/referer-parser/php/data/referers.yml",
+            "curl -s https://s3-eu-west-1.amazonaws.com/snowplow-hosted-assets/third-party/referer-parser/referers-latest.json --output `composer config vendor-dir --absolute`/snowplow/referer-parser/php/data/referers.json"
+        ]
     },
     "config": {
         "optimize-autoloader": true
