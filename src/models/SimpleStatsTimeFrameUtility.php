@@ -37,6 +37,12 @@ abstract class SimpleStatsTimeFrameUtility {
         return date( $dateformat, getTimeFromPeriod($period) );
     }
 
+    // For displaying period-names in tables mostly (first seen, last seen, ...)
+    // Date format is in date-fns format : https://date-fns.org/v2.17.0/docs/parse
+    public function getPanelPeriodFormat() : string{
+        return 'dd MMM yyyy'; // 26 Dec 2021
+    }
+
     // Parse version date
     final public function getTimeFromVersionDate(int $monthyearday) : int {
         $stringPeriod = ''.$monthyearday;
@@ -105,7 +111,7 @@ class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
         // Monthly version
         return intval(date('Ym', $time), 10);
     }
-    function incrementTime($time, $steps=1) : int {
+    public function incrementTime($time, $steps=1) : int {
         // Monthly version
         //return $time + ((24*60*60) * $steps); // Quick method (unaware of dates)
         // Slow but accurate method.
@@ -113,6 +119,9 @@ class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
         $year = intval( date('Y', $time) + floor( ($month-1) / 12 ), 10);
         $month = intval((($month-1+abs($steps)*12)%12))+1; //
         return mktime(0,0,0,$month,1,$year);
+    }
+    public function getPanelPeriodFormat() : string{
+        return 'MMM yyyy'; // Oct 2021
     }
 }
 
@@ -135,9 +144,13 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
         if($time < 0) $time = time();
         return intval(date('oW', $time ), 10);
     }
-    function incrementTime($time, $steps=1) : int {
+    public function incrementTime($time, $steps=1) : int {
         //$week = intval(date('W', $time),10)+$steps;
         //$year = intval( date('o', $time) + floor( ($week-1) / 53 ), 10);
         return getTimeFromPeriod(getPeriodFromTime($time+(7*24*3600)*$steps));
+    }
+    public function getPanelPeriodFormat() : string{
+        //return 'dd MMM yyyy'; // 26 Dec 2021
+        return 'yyyy-w (MMM)'; // 2021-51 (Dec)
     }
 }

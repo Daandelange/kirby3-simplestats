@@ -56,6 +56,12 @@ function getTimeFromVersionDate(int $monthyearday) : int {
     return getTimeFrameUtility()->getTimeFromVersionDate($monthyearday);
 }
 
+function getPanelPeriodFormat() : string {
+    // Parametric
+    return getTimeFrameUtility()->getPanelPeriodFormat();
+}
+
+
 
 // - - - - -
 

@@ -478,8 +478,8 @@ class Stats extends SimpleStatsDb {
                 ['label'=>t('simplestats.table.pagetitle', 'Title'),            'field'=>'title',           'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'20%'],
                 ['label'=>t('simplestats.table.hits','Hits'),                   'field'=>'hits',            'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'5%'],
                 ['label'=>t('simplestats.table.popularity','Popularity'),       'field'=>'hitspercent',     'type'=>'percentage','sortable'=>true, 'globalSearchDisabled'=>true,    'width'=>'10%', 'align'=>'left'],
-                ['label'=>t('simplestats.table.firstvisited','First Visited'),  'field'=>'firstvisited',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
-                ['label'=>t('simplestats.table.lastvisited','Last Visited'),    'field'=>'lastvisited',     'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'],
+                ['label'=>t('simplestats.table.firstvisited','First Visited'),  'field'=>'firstvisited',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()], // todo: Date display should be customized to custom timespans
+                ['label'=>t('simplestats.table.lastvisited','Last Visited'),    'field'=>'lastvisited',     'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()],
                 ['label'=>'Icon',                                               'field'=>'icon',            'type'=>'text',     'sortable'=>false, 'globalSearchDisabled'=>true,    'width'=>'0%',  'hidden'=>'true' ],
             ];
 
