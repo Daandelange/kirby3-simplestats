@@ -252,9 +252,10 @@ class SimpleStats extends SimpleStatsDb {
 
         // Parser
         $headers = getallheaders();
-        $headers['HTTP_USER_AGENT']=$ua;
+        $headers['HTTP_USER_AGENT']=$ua; // override UA
+        unset($headers['x-requested-with']); // $headers['x-requested-with'] = 'xmlhttprequest' interferes and makes all requests mobile devices
         $clientData = new BrowserParser();//$headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>false,'features'=>false ]);
-    	$clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>false,'features'=>false ]);
+    	$clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>true,'features'=>false ]); // Note: Useragent must be false for detection to work
     	// Todo: set engine to true above ???
         //echo $clientData->os->name.' :: '.$clientData->engine->name.' :: '.$clientData->device->type."<br>\n";
 
@@ -376,10 +377,11 @@ class SimpleStats extends SimpleStatsDb {
             			$returnData['medium']=$referer->getMedium();
                         $returnData['source']=$referer->getSource();
 
-                        if( $urlParts = parse_url($refHeader) && isset($urlParts['host'])){
+                        $urlParts = parse_url($refHeader);
+                        if( $urlParts && isset($urlParts['host'])){
                             //var_dump($urlParts);
                             // Note: protocol and query strings are stripped
-                            $returnData['url']=$urlParts['host'].isset($urlParts['path'])?$urlParts['path']:'';//str_replace('www.','', $urlParts['host'].$urlParts['path'];
+                            $returnData['url']=$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');//str_replace('www.','', $urlParts['host'].$urlParts['path'];
                             $returnData['host']=$urlParts['host'];
 
                             // Todo: protect url against sql injections via url ?
@@ -399,12 +401,12 @@ class SimpleStats extends SimpleStatsDb {
             				//echo $referer->getMedium(); // "Search"
                 			//echo ' - ';
                 			//echo $referer->getSource(); // "Google"
-                            $returnData['medium']='website';$referer->getMedium(); // unknown
+                            $returnData['medium']='website';//$referer->getMedium(); // Note: All unknown referrers are considered websites.
                             $returnData['source']=''; // other ?
-                            if( $urlParts = parse_url($refHeader) && isset($urlParts['host']) ){
-                                //var_dump($urlParts);
+                            $urlParts = parse_url($refHeader);
+                            if( $urlParts && isset($urlParts['host']) ){
                                 // Note: protocol and query strings are stripped
-                                $returnData['url']=$urlParts['host'].isset($urlParts['path'])?$urlParts['path']:'';
+                                $returnData['url'] =$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');
                                 $returnData['host']=$urlParts['host'];
 
                                 // Todo: protect url against sql injections via url ?
