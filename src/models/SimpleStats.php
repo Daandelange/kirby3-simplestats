@@ -230,9 +230,9 @@ class SimpleStats extends SimpleStatsDb {
     }
 
     // Returns an array with detected user hardware setup
-    public static function detectSystemFromUA( $ua = '' ): array {
+    public static function detectSystemFromUA( $ua = null ): array {
         // Kirby method : $kirby->visitor()->ip()->userAgent()
-    	if(empty($ua)) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
+    	if($ua===null) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
 
         $data = [
             'engine' 	=> 'undefined',
@@ -250,10 +250,13 @@ class SimpleStats extends SimpleStatsDb {
 
     	// Todo : Handle opt.out ?
 
-        // Parser
+        // Get Headers with replaced ua
         $headers = getallheaders();
-        $headers['HTTP_USER_AGENT']=$ua; // override UA
+        if(isset($headers['HTTP_USER_AGENT'])) $headers['HTTP_USER_AGENT']=$ua;
+        $headers['User-Agent']=$ua;
         unset($headers['x-requested-with']); // $headers['x-requested-with'] = 'xmlhttprequest' interferes and makes all requests mobile devices
+
+        // Parser
         $clientData = new BrowserParser();//$headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>false,'features'=>false ]);
     	$clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>true,'features'=>false ]); // Note: Useragent must be false for detection to work
     	// Todo: set engine to true above ???
@@ -358,7 +361,8 @@ class SimpleStats extends SimpleStatsDb {
     }
 
     // Referer retrieval
-    public static function getRefererInfo(): ?array {
+    public static function getRefererInfo( string $refHeader = null): ?array {
+        if(empty($refHeader) && isset($_SERVER['HTTP_REFERER'])) $refHeader = substr($_SERVER['HTTP_REFERER'], 0, 256);
         $returnData = [
             'url'       => '', // Full url
             'medium'    => '', // ex: social / search / website / other (unknown)
@@ -366,11 +370,10 @@ class SimpleStats extends SimpleStatsDb {
             'host'      => '', // domain name (with subdomain)
         ];
 
-        if( isset($_SERVER['HTTP_REFERER']) ){
-            $refHeader = $_SERVER['HTTP_REFERER'];
+        if( !empty($refHeader) ){
             	$parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
             	$referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
-            	//echo "Got referer! == ".$_SERVER['HTTP_REFERER']."\n";
+            	//echo "Got referer! == ".$refHeader."\n";
             	//echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
             	if( $referer->isValid() ){
             		if ($referer->isKnown()) {
@@ -401,25 +404,25 @@ class SimpleStats extends SimpleStatsDb {
             				//echo $referer->getMedium(); // "Search"
                 			//echo ' - ';
                 			//echo $referer->getSource(); // "Google"
-                            $returnData['medium']='website';//$referer->getMedium(); // Note: All unknown referrers are considered websites.
-                            $returnData['source']=''; // other ?
-                            $urlParts = parse_url($refHeader);
-                            if( $urlParts && isset($urlParts['host']) ){
-                                // Note: protocol and query strings are stripped
-                                $returnData['url'] =$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');
-                                $returnData['host']=$urlParts['host'];
+                        $returnData['medium']='website';//$referer->getMedium(); // Note: All unknown referrers are considered websites.
+                        $returnData['source']=''; // other ?
+                        $urlParts = parse_url($refHeader);
+                        if( $urlParts && isset($urlParts['host']) ){
+                            // Note: protocol and query strings are stripped
+                            $returnData['url'] =$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');
+                            $returnData['host']=$urlParts['host'];
 
-                                // Todo: protect url against sql injections via url ?
+                            // Todo: protect url against sql injections via url ?
 
-                                //var_dump($returnData);
-                                return $returnData;
-                            }
-                            else {
-                                // No valid URL
-                                return null;
-                            }
+                            return $returnData;
+                        }
+                        else {
+                            //echo 'Invalid URL!  ....';//var_dump(parse_url($refHeader));
+                            // No valid URL
+                            return null;
+                        }
 
-                            //var_dump($returnData);
+                        //var_dump($returnData);
             			}
             			//var_dump($referer);
             			//echo $referer->getMedium();

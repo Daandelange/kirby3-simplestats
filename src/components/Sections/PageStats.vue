@@ -83,6 +83,9 @@
               enabled: true,
               perPage: 20,
               perPageDropdownEnabled: false,
+              nextLabel: $t('simplestats.table.pages.next', 'Next'),
+              prevLabel: $t('simplestats.table.pages.prev', 'Previous'),
+              ofLabel: $t('simplestats.table.pages.of', 'of'),
             }"
           >
             <div slot="emptystate">

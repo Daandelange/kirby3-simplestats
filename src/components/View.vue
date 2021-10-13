@@ -50,6 +50,8 @@
         <!-- CONFIGURATION -->
         <k-column width="1/2">
           <configuration />
+          <k-line-field/>
+          <tracking-tester />
         </k-column>
 
         <k-column width="1/2">
@@ -81,6 +83,7 @@ import Devices from "./Sections/Devices.vue";
 import Referers from "./Sections/Referers.vue";
 import DbInformation from "./Sections/DbInformation.vue";
 import Configuration from "./Sections/Configuration.vue";
+import TrackingTester from "./Sections/TrackingTester.vue";
 
 import 'vue-good-table/dist/vue-good-table.css'
 
@@ -92,6 +95,7 @@ export default {
     Referers,
     DbInformation,
     Configuration,
+    TrackingTester
   },
   data() {
     return {

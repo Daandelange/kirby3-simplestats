@@ -14,13 +14,21 @@ return [
     'simplestats.tabs.information'      => 'Information',
 
     // Tables
-    'simplestats.table.filter'      => 'Filter items...',
-    'simplestats.table.uid'          => 'UID',
-    'simplestats.table.pagetitle'          => 'Title',
-    'simplestats.table.hits'          => 'Hits',
-    'simplestats.table.popularity'          => 'Popularity',
-    'simplestats.table.firstvisited'        => 'First Visited',
-    'simplestats.table.lastvisited'         => 'Last Visited',
+    'simplestats.table.filter'          => 'Filter items...',
+    'simplestats.table.pages.prev'      => 'Previous',
+    'simplestats.table.pages.next'      => 'Next',
+    'simplestats.table.pages.of'        => 'of',
+    'simplestats.table.uid'             => 'UID',
+    'simplestats.table.pagetitle'       => 'Title',
+    'simplestats.table.hits'            => 'Hits',
+    'simplestats.table.popularity'      => 'Popularity',
+    'simplestats.table.firstvisited'    => 'First Visited',
+    'simplestats.table.lastvisited'     => 'Last Visited',
+    'simplestats.table.visitedpages'    => 'Visited Pages',
+    'simplestats.table.osfamily'        => 'OS Family',
+    'simplestats.table.devicetype'      => 'Device Type',
+    'simplestats.table.browserengine'   => 'Browser Engine',
+    'simplestats.table.timeregistered'  => 'Time Registered',
 
     // Disclaimer
     'simplestats.disclaimer.title'      => 'Disclaimer - Collecting Data',
@@ -34,11 +42,9 @@ return [
     // Page Visits
     'simplestats.visits.visitsovertime'     => 'Visits over time',
     'simplestats.visits.pagevisitsovertime' => 'Page visits over time',
-    'simplestats.visits.languagesovertime'     => 'Languages over time',
-    'simplestats.visits.globallanguages'       => 'Global languages',
-    'simplestats.visits.visitedpages'          => 'Visited Pages',
-
-
+    'simplestats.visits.languagesovertime'  => 'Languages over time',
+    'simplestats.visits.globallanguages'    => 'Global languages',
+    'simplestats.visits.visitedpages'       => 'Visited Pages',
 
     // Charts
     'simplestats.charts.time'       => 'Time',
@@ -130,4 +136,20 @@ return [
     'simplestats.info.config.log.level.warnings'        => 'Warnings',
     'simplestats.info.config.log.level.verbose'         => 'Verbose',
     'simplestats.info.config.log.level.tracking'        => 'Tracking',
+    'simplestats.info.config.currentusers.title'        => 'Visitors (current sessions)',
+    'simplestats.info.config.currentusers.info'         => 'These are active user sessions, used to count unique visits every 24H. Then, they are computed/dissociated, only keeping the minimal information visible in other tabs.',
+    'simplestats.info.tester.title'                     => 'Tracking Tester',
+    'simplestats.info.tester.device'                    => 'Device Tester',
+    'simplestats.info.tester.device.currentua'          => 'Your user agent',
+    'simplestats.info.tester.device.currentdetected'    => 'Detected device info',
+    'simplestats.info.tester.device.customua'           => 'Custom user agent',
+    'simplestats.info.tester.device.customdetected'     => 'Detected device info',
+    'simplestats.info.tester.device.note'               => 'Note: Sometimes, the detected device information  might be different because detection tool also uses other http header information.',
+    'simplestats.info.tester.referrer'                  => 'Referrer Tester',
+    'simplestats.info.tester.referrer.field'            => 'Referrer to test',
+    'simplestats.info.tester.referrer.response'         => 'Detected referrer',
+    'simplestats.info.tester.referrer.response.host'    => 'Detected Host',
+    'simplestats.info.tester.referrer.response.source'  => 'Identified Source',
+    'simplestats.info.tester.referrer.response.medium'  => 'Type',
+    'simplestats.info.tester.referrer.response.url'     => 'Detected url',
 ];

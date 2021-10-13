@@ -18,6 +18,8 @@ define('SIMPLESTATS_TABLE_DATE_FORMAT', 'Y-m-d');
 define('SIMPLESTATS_PRECISE_DATE_FORMAT', 'Y-m-d H:i');
 define('SIMPLESTATS_TIMELINE_DATE_FORMAT', 'Y-m-d');
 
+// todo: Date display should be customized to custom timespans
+
 // The base class that handles the precision of time frames
 abstract class SimpleStatsTimeFrameUtility {
     // Abstract functions

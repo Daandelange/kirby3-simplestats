@@ -2,7 +2,7 @@
   <k-grid>
     <k-column>
       <p><br/></p>
-      <k-headline size="large">Visitors (current sessions)</k-headline>
+      <k-headline size="large">{{ $t('simplestats.info.config.currentusers.title', 'Visitors (current sessions)') }}</k-headline>
 
       <vue-good-table
         :rows="rows"
@@ -16,6 +16,9 @@
           enabled: true,
           perPage: 20,
           perPageDropdownEnabled: false,
+          nextLabel: $t('simplestats.table.pages.next', 'Next'),
+          prevLabel: $t('simplestats.table.pages.prev', 'Previous'),
+          ofLabel: $t('simplestats.table.pages.of', 'of'),
         }"
       >
         <div slot="emptystate">
@@ -36,7 +39,7 @@
           </span>
         </template>
       </vue-good-table>
-      <k-box theme="info" text="These are active user sessions, used to count unique visits every 24H. Then, they are computed/dissociated, only keeping the minimal information visible in other tabs. " />
+      <k-box theme="info" :text="$t('simplestats.info.config.currentusers.info')" />
     </k-column>
   </k-grid>
 </template>

@@ -10,7 +10,7 @@ use I18n;
 return [
 
     // Routes for the stats api in the panel
-    'routes' => [
+    'routes' => function($kirby){ return [
         [
             'pattern' => 'simplestats/listvisitors',
             'method'  => 'GET',
@@ -136,6 +136,59 @@ return [
             },
         ],
         [
+            'pattern' => 'simplestats/trackingtester',
+            'method'  => 'GET',
+            'action'  => function () {
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
+                    $device = SimpleStats::detectSystemFromUA();
+                    // Translate device
+                    if(isset($device['device'])) $device['device'] = Stats::translateDeviceType($device['device']);
+                    return [
+                        //'referrer' => SimpleStats::getRefererInfo(),
+                        'currentUserAgent'  => substr($_SERVER['HTTP_USER_AGENT'], 0, 256),
+                        'currentDeviceInfo' => $device,
+                    ];
+                }
+                else {
+                    throw new PermissionException('You are not authorised to view statistics.');
+                }
+            }
+        ],
+        [
+            'pattern' => 'simplestats/trackingtester/referrer',
+            'method'  => 'GET',
+            'action'  => function () use ($kirby) {
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
+                    $str = @$kirby->request()->query()->data()['referrer']??substr(@$_SERVER['HTTP_REFERRER'], 0, 256);
+                    //var_dump($str, SimpleStats::getRefererInfo($str));exit;//$kirby->request()->query());
+                    //$refererInfo = SimpleStats::getRefererInfo($str);
+                    return [
+                        'referrerInfo' => SimpleStats::getRefererInfo($str)??'Invalid referrer !',
+                    ];
+                }
+                else {
+                    throw new PermissionException('You are not authorised to view statistics.');
+                }
+            }
+        ],
+        [
+            'pattern' => 'simplestats/trackingtester/ua',
+            'method'  => 'GET',
+            'action'  => function () use ($kirby) {
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
+                    $str = @$kirby->request()->query()->data()['ua']??'';//??substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
+                    //if(empty($str)) $str='';
+                    //var_dump($str);
+                    $uainfo = SimpleStats::detectSystemFromUA($str);
+                    if($uainfo && isset($uainfo['device'])) $uainfo['device'] = Stats::translateDeviceType($uainfo['device']);
+                    return $uainfo??'Invalid referrer url!';
+                }
+                else {
+                    throw new PermissionException('You are not authorised to view statistics.');
+                }
+            }
+        ],
+        [
             'pattern' => 'simplestats/checkrequirements',
             'method'  => 'GET',
             'action'  => function () {
@@ -226,6 +279,6 @@ return [
                 }
             },
         ],
-    ],
+    ];},
 
 ];

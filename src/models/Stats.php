@@ -106,11 +106,11 @@ class Stats extends SimpleStatsDb {
 //                 $keys[$key] = ['label'=>$value,'field'=>$value, 'type'=>'text','sort'=>false,'search'=>false,'class'=>'myClass','width'=>'1fr'];
 //             }
             $keys =[
-                [ 'label' => 'Visited Pages',   'field' => 'visitedpages',      'type' => 'text', 'sortable' => false,  'width' => '50%' ],
-                [ 'label' => 'OS Family',       'field' => 'osfamily',          'type' => 'text', 'sortable' => true,   'width' => '15%' ],
-                [ 'label' => 'Device Type',     'field' => 'devicetype',        'type' => 'text', 'sortable' => true,   'width' => '10%' ],
-                [ 'label' => 'Browser Engine',  'field' => 'browserengine',     'type' => 'text', 'sortable' => true,   'width' => '10%' ],
-                [ 'label' => 'Time Registered', 'field' => 'timeregistered',    'type' => 'date', 'sortable' => true,   'width' => '15%', 'globalSearchDisabled'=>true, 'dateInputFormat'=>'yyyy-MM-dd HH:mm', 'dateOutputFormat'=>'d MMMM yyyy HH:mm'], // todo: Date display should be customized to custom timespans
+                [ 'label' => t('simplestats.table.visitedpages',    'Visited Pages'),   'field' => 'visitedpages',      'type' => 'text', 'sortable' => false,  'width' => '50%' ],
+                [ 'label' => t('simplestats.table.osfamily',        'OS Family'),       'field' => 'osfamily',          'type' => 'text', 'sortable' => true,   'width' => '15%' ],
+                [ 'label' => t('simplestats.table.devicetype',      'Device Type'),     'field' => 'devicetype',        'type' => 'text', 'sortable' => true,   'width' => '10%' ],
+                [ 'label' => t('simplestats.table.browserengine',   'Browser Engine'),  'field' => 'browserengine',     'type' => 'text', 'sortable' => true,   'width' => '10%' ],
+                [ 'label' => t('simplestats.table.timeregistered',  'Time Registered'), 'field' => 'timeregistered',    'type' => 'date', 'sortable' => true,   'width' => '15%', 'globalSearchDisabled'=>true, 'dateInputFormat'=>'yyyy-MM-dd HH:mm', 'dateOutputFormat'=>'d MMMM yyyy HH:mm'],
             ];
 
             $rows = $result->toArray();
