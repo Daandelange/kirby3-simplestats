@@ -2,7 +2,7 @@
     "name": "daandelange/simplestats",
     "description": "Very minimal visitor analytics for your kirby3 website.",
     "type": "kirby-plugin",
-    "version": "0.4.1-beta",
+    "version": "0.4.2-beta",
     "license": "MIT",
     "authors": [
         {
