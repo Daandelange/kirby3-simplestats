@@ -456,7 +456,7 @@ class Stats extends SimpleStatsDb {
         $globalLanguagesData  =[];
         $languagesOverTimeData=[];
 
-        // SYNC (todo: make this an option?)
+        // SYNC inline (todo: allow syncing in multiple ways [callback, crontab, inline..] )
         self::syncDayStats(); // tmp
 
         //$db = selfdatabase();
@@ -727,7 +727,7 @@ class Stats extends SimpleStatsDb {
     }
 
     // Collect garbage, synthetize it and anonymously store it in permanent db
-    public static function syncDayStats(): bool {
+    public static function syncDayStats(int $time=null): bool {
 
         // init db
         //$db = self::database();
@@ -739,8 +739,10 @@ class Stats extends SimpleStatsDb {
         $newEngines = [];
         $newSystems = [];
 
+        if(!$time) $time = time();
+
         // Get visitors older then 1 day
-        $yesterday = time() - option('daandelange.simplestats.tracking.uniqueSeconds', 24*60*60);
+        $yesterday = $time - option('daandelange.simplestats.tracking.uniqueSeconds', 24*60*60);
         $visitors = self::database()->query("SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
         if($visitors){

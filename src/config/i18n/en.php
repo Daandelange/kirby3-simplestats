@@ -152,4 +152,10 @@ return [
     'simplestats.info.tester.referrer.response.source'  => 'Identified Source',
     'simplestats.info.tester.referrer.response.medium'  => 'Type',
     'simplestats.info.tester.referrer.response.url'     => 'Detected url',
+    'simplestats.info.tester.generator'                 => 'Stats Generator',
+    'simplestats.info.tester.generator.unlockgenerator' => 'Allow generating fake stats in my database file',
+    'simplestats.info.tester.generator.mode'            => 'Generator mode',
+    'simplestats.info.tester.generator.datefrom'        => 'From date',
+    'simplestats.info.tester.generator.dateto'          => 'To Date',
+
 ];

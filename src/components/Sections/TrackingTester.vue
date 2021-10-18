@@ -23,23 +23,60 @@
       <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.medium')" :value="formattedReferrerMedium" icon="globe"/>
       <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.url')" :value="formattedReferrerUrl" icon="globe"/>
     </k-form>
+    <br />
+
+    <k-headline class="rightColumnAlign">{{ $t('simplestats.info.tester.generator') }}</k-headline>
+    <k-form @submit="generateStats">
+      <k-select-field v-model="generatorMode" :label="$t('simplestats.info.tester.generator.generatorMode')" :options="[
+        { value: 'all',           text: 'Static : all pages' },
+        { value: 'randomsingle',  text: 'Single random page' },
+        { value: 'randommulti',   text: 'Multiple random pages' }
+      ]"/>
+      <k-date-field v-model="generatorFrom" :label="$t('simplestats.info.tester.generator.datefrom')" :time="false" />
+      <k-date-field v-model="generatorTo"   :label="$t('simplestats.info.tester.generator.dateto')"   :time="false" />
+      <k-field :translate="false" :label="$t('simplestats.info.tester.generator.unlockgenerator')">
+        <k-checkbox-input @input="acceptGenerate" :value="unlockGenerator" :style="{padding:'.5em'}" theme="field" :novalidate="true" />
+        <k-button @click="generateStats" class="" :style="{border:'1px solid black', padding: '0 1em', 'borderRadius': '3px'}">Go!</k-button>
+      </k-field>
+
+      <k-field :translate="false" label="Result" v-if="generatorResponse && generatorResponse.data">
+        <list-viewer :array-data="generatorResponse.data" data-theme="field" class="k-input" :style="{padding:'1em'}" />
+      </k-field>
+      <k-textarea-field v-model="generatorResponse.error"  v-if="generatorResponse && generatorResponse.error" label="Error!" :buttons="false" :disabled="true" />
+
+    </k-form>
   </div>
 </template>
 
 <script>
 
+//import format from 'date-fns/format';
+import ListViewer from "./ListViewer.vue";
+
 export default {
-  extends: 'k-pages-section',
+  name: 'TrackingTester',
+  //extends: 'k-pages-section',
+  components: {
+    ListViewer
+  },
   data() {
+    let now = new Date();
+    let before = new Date();
+    before.setDate(now.getDate()-30);
     return {
-      isLoading: true,
-      error: "",
-      currentDevice: "",
+      isLoading:        true,
+      error:            "",
+      currentDevice:    "",
       currentUserAgent: this.currentUserAgentJS,
-      customDevice: "",
-      customUserAgent: "",
-      referrerField: "",
+      customDevice:     "",
+      customUserAgent:  "",
+      referrerField:    "",
       referrerResponse: null,
+      unlockGenerator:  false,
+      generatorMode:    'randommulti',
+      generatorTo:      now.toString(),
+      generatorFrom:    before.toString(),
+      generatorResponse:null,
     }
   },
   created() {
@@ -163,7 +200,21 @@ export default {
           else this.customDevice = 'Loading Error !';
         });
 
-    }
+    },
+    acceptGenerate(v){
+      this.unlockGenerator=v;
+    },
+    generateStats() {
+      this.$api
+        .get("simplestats/trackingtester/generatestats?proceed="+(this.unlockGenerator?'yes':'no')+"&from="+new Date(this.generatorFrom).getTime()*0.001+"&to="+new Date(this.generatorTo).getTime()*0.001+"&mode="+this.generatorMode )
+        .then(response => {
+          this.generatorResponse = response;
+        })
+        .catch(error => {
+          this.generatorResponse = {'status':'false', 'error': 'Loading Error = '+error.message};
+        });
+
+    },
   }
 };
 </script>

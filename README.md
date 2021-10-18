@@ -63,7 +63,7 @@ Eventually add `--depth 1` to discard the repo commit history. (saves disk space
 
 *Soon...*
 
-For now, check the comments in `options.php` for directions. It's not recommended to use a custom reporting period yet.
+For now, check the comments in `options.php` for directions.
 
 #### Language setup
 Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.
@@ -73,6 +73,9 @@ Also, the panel view has not (yet?) been translated.
 Depending on your local laws, you might need to sit down and define how personal visitor data is handled.
 You might want to inspect the source code to know what's going on in details.
 As the license states, there's no guarantee whatsoever.
+
+#### Stats Generator
+If you'd like to populate the database with some fake stats (useful for testing or developing SimpleStats), you can use the panel interface to generate some in the "Information" tab.
 
 #### Options
 Like any Kirby plugin, options can be set in your `site/config/config.php`.

@@ -89,4 +89,5 @@ return array(
     'daandelange\\SimpleStats\\SimpleStatsDb' => $baseDir . '/src/models/SimpleStatsDb.php',
     'daandelange\\SimpleStats\\SimpleStatsTimeFrameUtility' => $baseDir . '/src/models/SimpleStatsTimeFrameUtility.php',
     'daandelange\\SimpleStats\\Stats' => $baseDir . '/src/models/Stats.php',
+    'daandelange\\SimpleStats\\StatsGenerator' => $baseDir . '/src/models/StatsGenerator.php',
 );

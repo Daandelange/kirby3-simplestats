@@ -189,6 +189,59 @@ return [
             }
         ],
         [
+            'pattern' => 'simplestats/trackingtester/generatestats',
+            'method'  => 'GET',
+            'action'  => function () use ($kirby) {
+                if( $this->user()->hasSimpleStatsPanelAccess() ){
+
+                    // Get time range info
+                    $from = @$kirby->request()->query()->data()['from'];
+                    $to = @$kirby->request()->query()->data()['to'];
+                    if($from && $to){
+                        // Parse range as date ? dd-mm-yyyy
+                        if( strpos($from, '-')===2 && strpos($to, '-')===2 ){
+                            $day=intval(substr($from, 0,2), 10);
+                            $month=intval(substr($from, 3,2), 10);
+                            $year=intval(substr($from, 6,4), 10);
+                            $from = mktime(0,0,0,$month,$day,$year);
+                            $day=intval(substr($to, 0,2), 10);
+                            $month=intval(substr($to, 3,2), 10);
+                            $year=intval(substr($to, 6,4), 10);
+                            $to = mktime(0,0,0,$month,$day,$year);
+                        }
+                        // Parse as timestamp
+                        else {
+                            $from = intval($from, 10);
+                            $to = intval($to, 10);
+                        }
+
+                        // Parse mode
+                        $mode = @$kirby->request()->query()->data()['mode']??null;
+
+                        // Confirm ?
+                        $proceed = @$kirby->request()->query()->data()['proceed']??'';
+                        if($proceed !== 'yes'){
+                            return ['status'=>false, 'error'=>'Please confirm that the date ranges from '.date('d-M-Y', $from).' to '.date('d-M-Y', $to).'. (check that box!)'];//, adding &proceed=yes to the query param.'];
+                        }
+
+                        // go !
+                        return StatsGenerator::GenerateVisits($from, $to, $mode);
+
+                        //$uainfo = SimpleStats::detectSystemFromUA($str);
+                        //    if($uainfo && isset($uainfo['device'])) $uainfo['device'] = Stats::translateDeviceType($uainfo['device']);
+                        //    return $uainfo??'Invalid referrer url!';
+
+                        //return ['status'=>false,'message'=>'ok ?'];
+                    }
+
+                    return ['status'=>false,'error'=>'No range !'];
+                }
+                else {
+                    throw new PermissionException('You are not authorised to view statistics.');
+                }
+            }
+        ],
+        [
             'pattern' => 'simplestats/checkrequirements',
             'method'  => 'GET',
             'action'  => function () {

@@ -22,23 +22,28 @@ use WhichBrowser\Constants\BrowserType;
 class SimpleStats extends SimpleStatsDb {
 
     // Trigger track function
-    // Note : the uri should be an id, the Kirby uri is translateable.
-    public static function track( string $page_uri = '' ): bool {
+    // Note : the uri should be $page->id(), the Kirby uri is translateable.
+    // Additional params are not recommended to use; mainly for testing purposes.
+    public static function track( string $page_uri = '', int $time = null, \Kirby\Cms\User $user = null, string $forceLang = null  ): bool {
 
         // skip ignored paths
         if( empty($page_uri) || in_array($page_uri, option('daandelange.simplestats.tracking.ignore.pages')) === true) {
             return false;
         }
 
+        // Format time
+        if(!$time) $time = time();
+
         // tmp : Sync daystats
-        Stats::syncDayStats();
+        Stats::syncDayStats($time);
 
         // Skip ignored roles
         if( count(option('daandelange.simplestats.tracking.ignore.roles')) > 0){
-            $curUser = kirby()->user();
+            // Fetch user
+            if(!$user) $user = kirby()->user();
             $ignores = option('daandelange.simplestats.tracking.ignore.roles');
-            if($curUser && $curUser->isLoggedIn()){
-                foreach($curUser->roles() as $role){
+            if($user && $user->isLoggedIn()){
+                foreach($user->roles() as $role){
                     if( in_array($role, $ignores)) return false;
                 }
             }
@@ -74,6 +79,7 @@ class SimpleStats extends SimpleStatsDb {
         }
 
         $userEntry = $userResult->first();
+        //var_dump('$userEntry', $userEntry);
 
         // Bot detection / ignore
         $userIsBot = false;
@@ -81,7 +87,7 @@ class SimpleStats extends SimpleStatsDb {
         // New user ?
         if($userEntry===null){
             // Default values
-            $timestamp = time();
+            $timestamp = $time;
             $osfamily = $devicetype = $browserengine = '';
             $visitedpages = '';
 
@@ -95,7 +101,7 @@ class SimpleStats extends SimpleStatsDb {
 
                 // Populate visited pages
                 if( option('daandelange.simplestats.tracking.enableVisits') === true ){
-                    $visitedpages = self::getPageIDWithLang($page_uri);
+                    $visitedpages = self::getPageIDWithLang($page_uri, $forceLang);
                 }
 
                 // Populate device info ?
@@ -121,7 +127,7 @@ class SimpleStats extends SimpleStatsDb {
             // Append  visited pages (except bots)
             // Note: Bot visits are not tracked. Todo: Make this an option
             if( !$userIsBot && option('daandelange.simplestats.tracking.enableVisits') === true ){
-                $page_uri = self::getPageIDWithLang($page_uri);
+                $page_uri = self::getPageIDWithLang($page_uri, $forceLang);
 
                 // Check if the page was already visited.
                 if( !in_array($page_uri, explode(',', $userEntry->visitedpages) )){
@@ -194,11 +200,11 @@ class SimpleStats extends SimpleStatsDb {
         return true;
     }
 
-    public static function getPageIDWithLang($page_uri): string {
+    public static function getPageIDWithLang($page_uri, string $forceLang = null): string {
 
         // With language ?
         if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ) {
-            $curLang = kirby()->language();
+            $curLang = kirby()->language($forceLang)??kirby()->language();
             if(!$curLang) $curLang = 'none';
             else $curLang = $curLang->code();
             return $page_uri .'::'. $curLang;
