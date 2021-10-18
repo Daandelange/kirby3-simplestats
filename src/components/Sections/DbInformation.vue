@@ -58,7 +58,7 @@
       <k-info-field theme="positive" :text="$t('simplestats.info.dbreqs.positive')"></k-info-field>
     </div>
     <div v-else>
-      <k-info-field theme="negative" :text="$t('simplestats.info.dbreqs.nagative')"></k-info-field>
+      <k-info-field theme="negative" :text="$t('simplestats.info.dbreqs.negative')"></k-info-field>
       <hr />
       {{ dbRequirements }}
     </div>

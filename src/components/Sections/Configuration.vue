@@ -15,7 +15,7 @@
     <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.config.log.file')" :value="logFile" icon="file-code" />
     <k-tags-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.config.log.level')" :value="logLevels" icon="bug"  />
     <br/>
-    <k-info-field v-if="!isLoading && !saltIsSet" :label="$t('simplestats.info.config.tracking.unsalted')" theme="negative" :text="$t('simplestats.info.config.tracking.unseltedwarn')" />
+    <k-info-field v-if="!isLoading && !saltIsSet" :label="$t('simplestats.info.config.tracking.unsalted')" theme="negative" :text="$t('simplestats.info.config.tracking.unsaltedwarn')" />
   </div>
 </template>
 
