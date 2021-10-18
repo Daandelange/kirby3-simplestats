@@ -34,11 +34,9 @@ Chartkick.options = {
 };
 Chartkick.use(Chart);
 
-// 3rd party assets
-import "tbl-for-kirby/index.css";
-
 // Register plugin @Kirby
 panel.plugin("daandelange/simplestats", {
+  // K 3.5 and below
   views: {
     simplestats: {
       component: View,
@@ -46,6 +44,32 @@ panel.plugin("daandelange/simplestats", {
       label: "SimpleStats",
     }
   },
+  // K3.6+
+  components: {
+    'simplestats': View,
+//     simplestats: {
+//       component: View,
+//       icon: "chart",
+//       label: "SimpleStats",
+//       menu: true
+//     },
+//     'k-simplestats-view': {
+// 			template: `
+// 				<k-inside>
+// 					<k-view class="k-simplestats-view">
+// 						<iframe v-if="sharedLink" plausible-embed v-bind:src="sharedLink" scrolling="no" frameborder="0" loading="lazy" style="width: 1px; min-width: 100%; height: 1600px;"></iframe>
+// 						<div style="margin-top: 30px; text-align: center;" v-else>
+// 							<code>You need to set floriankarsten.plausible.sharedLink in config.php</code>
+// 						</div>
+// 					</k-view>
+// 				</k-inside>
+// 			`,
+// 			props: ["sharedLink"]
+// 		},
+  },
+//   sections: {
+//     simplestats: View
+//   },
   use: {
     Chartkick,
   },

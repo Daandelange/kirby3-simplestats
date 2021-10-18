@@ -139,6 +139,7 @@ class ComposerStaticInitf245b8bf65b9cc5e10873a3691e33a16
         'daandelange\\SimpleStats\\SimpleStatsDb' => __DIR__ . '/../..' . '/src/models/SimpleStatsDb.php',
         'daandelange\\SimpleStats\\SimpleStatsTimeFrameUtility' => __DIR__ . '/../..' . '/src/models/SimpleStatsTimeFrameUtility.php',
         'daandelange\\SimpleStats\\Stats' => __DIR__ . '/../..' . '/src/models/Stats.php',
+        'daandelange\\SimpleStats\\StatsGenerator' => __DIR__ . '/../..' . '/src/models/StatsGenerator.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

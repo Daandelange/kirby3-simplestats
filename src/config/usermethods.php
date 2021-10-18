@@ -3,7 +3,7 @@
 namespace daandelange\SimpleStats;
 
 return [
-    'hasSimpleStatsPanelAccess' => function () : bool {
+    'hasSimpleStatsPanelAccess' => function (bool $forSpecialAdminAccess = false) : bool {
         $user = kirby()->user();
         return
             // Panel is active
@@ -14,6 +14,7 @@ return [
             &&
             // user is authorized to view statistics
             in_array( $user->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) )
-            ;
+            &&
+            ( !$forSpecialAdminAccess || $user->isAdmin() );
     }
 ];

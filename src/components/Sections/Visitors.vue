@@ -2,38 +2,50 @@
   <k-grid>
     <k-column>
       <p><br/></p>
-      <k-headline size="large">Visitors (current sessions)</k-headline>
+      <k-headline size="large">{{ $t('simplestats.info.config.currentusers.title', 'Visitors (current sessions)') }}</k-headline>
 
-      <tbl
+      <vue-good-table
         :rows="rows"
         :columns="columns"
-        :ssstore="false"
-        :sssearch="false"
-        :options="{showSearch:true}"
-        :pppagination="false"
-        :isLoading="isLoading"
-        :search="true"
+        styleClass="vgt-table condensed"
+        max-height="500px"
+        :fixed-header="false"
+        compactMode
+        :search-options="{enabled: true, placeholder: $t('simplestats.table.filter', 'Filter items...')}"
+        :pagination-options="{
+          enabled: true,
+          perPage: 20,
+          perPageDropdownEnabled: false,
+          nextLabel: $t('simplestats.table.pages.next', 'Next'),
+          prevLabel: $t('simplestats.table.pages.prev', 'Previous'),
+          ofLabel: $t('simplestats.table.pages.of', 'of'),
+        }"
       >
-        <!-- Custom headline: title
-        <template slot="headline">
-          <k-header>Simple Stats</k-header>
-        </template> -->
+        <div slot="emptystate">
+          <k-empty>
+            {{ $t('simplestats.nodatayet') }}
+          </k-empty>
+        </div>
 
-        <!-- Default entryslot -->
-        <template slot="column-$default" slot-scope="props">
-          <p>
-            {{ props.value }}
-          </p>
+        <template slot="table-row" slot-scope="props">
+          <span v-if="props.column.field == 'timefrom'">
+            <span>
+              {{ props.formattedRow[props.column.field] }}
+<!-- (old way)                 {{ new Date( props.row.firstvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.firstvisited ).getFullYear() }} -->
+            </span>
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
         </template>
-
-      </tbl>
-      <k-box theme="info" text="These are active user sessions, used to count unique visits every 24H. Then, they are computed/dissociated, only keeping the minimal information visible in other tabs. " />
+      </vue-good-table>
+      <k-box theme="info" :text="$t('simplestats.info.config.currentusers.info')" />
     </k-column>
   </k-grid>
 </template>
 
 <script>
-import Tbl from 'tbl-for-kirby';
+import { VueGoodTable } from 'vue-good-table';
 
 export default {
   extends: 'k-pages-section',
@@ -46,7 +58,7 @@ export default {
     }
   },
   components: {
-    Tbl
+    VueGoodTable,
   },
   created() {
     this.load();

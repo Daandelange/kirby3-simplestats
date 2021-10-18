@@ -8,6 +8,8 @@ namespace daandelange\SimpleStats;
 // - Maybe : Add .htaccess rules for .sqlite and .log/.txt files, prevent direct access.
 // - With simplestats as analytics engine, you are hosting sensitive user data. Read getkirby.com/guides/secure for optimal privacy recomendations.
 
+define('SIMPLESTATS_DUMMY_DB_LIMIT', 1000000); // Use great number if you have a big DB. Tip while db upgrading : use an incredibly huge number.
+
 return [
     'log' => [
         'tracking'  => true, // Enable tracking errors.
@@ -19,19 +21,19 @@ return [
     // Tracking options
     'tracking' => [
         'database'              => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
-        'timeFrameUtility'      => new SimpleStatsTimeFrameUtilityMonthly(),
+        'timeFrameUtility'      => new SimpleStatsTimeFrameUtilityMonthly(), // 'weekly' or 'monthly' or any instance of SimpleStatsTimeFrameUtility
         'enableReferers'        => true, // Enables tracking of referers. Gives an insigt of who links your website.
         'enableDevices'         => true, // Enables tracking of minimal hardware configurations (device information)
         'enableVisits'          => true, // Enables tracking of page visits
         'enableVisitLanguages'  => true, // In multilanguage setups, separately count language hits with page counts
         'salt'                  => 'CHANGEME', // Salt used to obfuscate unique user string.
-        'uniqueSeconds'         => 1*24*60*60, // Anonimised user data is deleted after this delay to become
+        'uniqueSeconds'         => 1*24*60*60, // Anonimised user data is deleted after this delay to become obfuscated
 
         // Tracking blacklist
         'ignore' => [
             'roles' => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here (causes the plugin's translations to vanish from php)
             'pages' => [], // Array of plain text page ids.
-            // 'templates' => [], // todo : Exclude pages with these templates
+            'templates' => ['error'], // Array of plain template names not to track (use lowercase) (checked againt intendedTemplate and template)
         ],
 
         // Dont change onLoad yet !!! (keep to true)
@@ -42,7 +44,7 @@ return [
 
     // Enable/Disable the admin panel and API
     'panel' => [
-        'enable'            => true, // Only disables the API (for now...) makes the panel unusable.
+        'enable'            => true, // Only disables the API (for now...) = makes the panel unusable.
         'dismissDisclaimer' => false,
         'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics.
     ]

@@ -1,82 +1,104 @@
 <template>
   <div class="dbinformation">
 
-    <k-headline size="large">Database</k-headline>
+    <k-headline size="large">{{ $t('simplestats.info.title') }}</k-headline>
 
-    <k-headline>Information</k-headline>
-    <k-text-field name="" :counter="false" :disabled="true" label="Database File" :value="databaseLocation" icon="file-zip" />
-    <k-text-field name="" :counter="false" :disabled="true" label="Database Size" :value="databaseSize | prettyBytes" icon="download" />
-    <k-text-field name="" :counter="false" :disabled="true" label="Your Database Version" :value="dbVersion" icon="bolt" />
-    <k-text-field name="" :counter="false" :disabled="true" label="Software Database Version" :value="softwareDbVersion" icon="bolt" />
+    <k-headline>{{ $t('simplestats.info.db.title') }}</k-headline>
+    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.file')" :value="databaseLocation" icon="file-zip" />
+    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.size')" :value="databaseSize | prettyBytes" icon="download" />
+    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.dbversion')" :value="dbVersion" icon="bolt" />
+    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.softwareversion')" :value="softwareDbVersion" icon="bolt" />
+    <br />
     <br />
 
     <!-- HISTORY -->
-    <tbl
-      :rows="dbHistory"
-      :columns="dbHistoryLabels"
-      :options="{add:false,reset:false}"
-      :pagination="false"
-      :isLoading="isLoading"
-      :search="false"
-      headline="Version History"
-      :actions="false"
-    >
-      <!-- Default entryslot -->
-      <template slot="column-$default" slot-scope="props">
-        <p>
-          {{ props.value }}
-        </p>
-      </template>
-    </tbl>
+    <k-headline>
+      {{ $t('simplestats.info.db.versionhistory') }}
+    </k-headline>
+    <vue-good-table
+        :rows="dbHistory"
+        :columns="dbHistoryLabels"
+        styleClass="vgt-table condensed nosearch"
+        max-height="500px"
+        :fixed-header="false"
+        compactMode
+        :search-options="{enabled: false}"
+        :pagination-options="{
+          enabled: true,
+          perPage: 5,
+          perPageDropdownEnabled: false,
+          nextLabel: $t('simplestats.table.pages.next', 'Next'),
+          prevLabel: $t('simplestats.table.pages.prev', 'Previous'),
+          ofLabel: $t('simplestats.table.pages.of', 'of'),
+        }"
+      >
+        <div slot="emptystate">
+          <k-empty>
+            {{ $t('simplestats.nodatayet') }}
+          </k-empty>
+        </div>
+
+        <template slot="table-row" slot-scope="props">
+          <span v-if="props.column.field == 'timefrom'">
+            <span>
+              {{ props.formattedRow[props.column.field] }}
+<!-- (old way)                 {{ new Date( props.row.firstvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.firstvisited ).getFullYear() }} -->
+            </span>
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
+        </template>
+      </vue-good-table>
 
     <k-line-field />
 
-    <k-headline>Database Requirements</k-headline>
+    <k-headline>{{ $t('simplestats.info.dbreqs.title') }}</k-headline>
     <div v-if="dbRequirementsPassed">
-      <k-info-field theme="positive" text="It looks like SimpleStats should run on your server. :) "></k-info-field>
+      <k-info-field theme="positive" :text="$t('simplestats.info.dbreqs.positive')"></k-info-field>
     </div>
     <div v-else>
-      <k-info-field theme="negative" text="Ouch ! Your server doesn't meet the requirements to run SimpleStats..."></k-info-field>
+      <k-info-field theme="negative" :text="$t('simplestats.info.dbreqs.negative')"></k-info-field>
       <hr />
-      {{dbRequirements}}
+      {{ dbRequirements }}
     </div>
     <br/>
 
 
     <!-- UPGRADE -->
     <div class="upgrade">
-
-
-
       <br/>
       <br/>
       <div v-if="upgradeRequired">
         <div v-if="!updateMessage">
-          <k-info-field label="Upgrade required" theme="negative" text="Your database needs to be upgraded.<br/>SimpleStats will not work until you've done this.<br/>" />
+          <k-info-field :label="$t('simplestats.info.dbupdate.required')" theme="negative" :text="$t('simplestats.info.dbupdate.requiredmsg')" />
           <br/>
-          <k-checkbox-input @input="acceptUpgrade" :value="unlockUpgrade" label="I have backed up my database, or I don't care about backups." />
+          <k-checkbox-input @input="acceptUpgrade" :value="unlockUpgrade" :label="$t('simplestats.info.dbupdate.isbackedup')" />
           <br/>
-          <k-button icon="bolt" @click="requestUpgrade">Upgrade database</k-button> <k-label v-if="isUpdatingDb">Loading...</k-label>
+          <k-button icon="bolt" @click="requestUpgrade">{{ $t('simplestats.info.dbupdate.go') }}</k-button>
+          <k-label v-if="isUpdatingDb">{{ $t('simplestats.loading') }}</k-label>
         </div>
 
         <div v-else>
-          <k-info-field label="Upgrade Result" :text="updateMessage" :theme="updateMessageTheme" />
-          <k-button @click="load" theme="neutral">Refresh db info</k-button>
+          <k-info-field :label="$t('simplestats.info.dbupdate.result')" :text="updateMessage" :theme="updateMessageTheme" />
+          <k-button @click="load" theme="neutral">{{ $t('simplestats.info.dbupdate.refresh') }}</k-button>
         </div>
       </div>
       <div v-else-if="updateMessage==null">
-        <k-info-field label="Database Upgrades" text="Your database is up to date. &nbsp; :) " theme="positive" />
+        <k-info-field :label="$t('simplestats.info.dbupdate.title')" :text="$t('simplestats.info.dbupdate.isuptodate')" theme="positive" />
       </div>
       <div v-else-if="updateMessage!==null">
-        <k-info-field label="Load Error" :text="updateMessage" theme="negative" />
+        <k-info-field :label="$t('simplestats.loaderror')" :text="updateMessage" theme="negative" />
       </div>
     </div>
   </div>
 </template>
 
 <script>
+
 // Todo: separate db and config into separate vue components, like visitor info
-import Tbl from 'tbl-for-kirby';
+
+import { VueGoodTable } from 'vue-good-table';
 
 export default {
   extends: 'k-pages-section',
@@ -102,7 +124,7 @@ export default {
     }
   },
   components: {
-    Tbl
+    VueGoodTable,
   },
 
   filters: {

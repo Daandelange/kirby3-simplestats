@@ -4,30 +4,30 @@
 
       <k-grid gutter="medium">
         <k-column width="1/3">
-          <k-headline align="center">Devices</k-headline>
+          <k-headline align="center">{{ $t('simplestats.devices.graph.devices') }}</k-headline>
           <pie-chart
             :data="devicesData"
             v-if="devicesData.length > 0"
           />
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+          <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
         </k-column>
 
         <k-column width="1/3">
-        <k-headline align="center">Browser Engines</k-headline>
+        <k-headline align="center">{{ $t('simplestats.devices.graph.engines') }}</k-headline>
           <pie-chart
             :data="browsersData"
             v-if="browsersData.length > 0"
           />
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+          <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
         </k-column>
 
         <k-column width="1/3">
-          <k-headline align="center">Operating Systems</k-headline>
+          <k-headline align="center">{{ $t('simplestats.devices.graph.oses') }}</k-headline>
           <pie-chart
             :data="systemsData"
             v-if="systemsData.length > 0"
           />
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+          <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
         </k-column>
       </k-grid>
 
@@ -35,20 +35,19 @@
         <k-column width="1/1">
           <br>
           <br>
-          <k-headline align="center">Device types over time</k-headline>
+          <k-headline align="center">{{ $t('simplestats.devices.graph.devicehistory') }}</k-headline>
           <area-chart
             :data="devicesOverTimeData"
             :download="true"
             download="Site_DevicesEvolution.png"
-            :diiiiscrete="true"
             label="Devices"
-            xtitle="Time"
-            ytitle="Visits per device type"
+            :xtitle="$t('simplestats.charts.time')"
+            :ytitle="$t('simplestats.devices.graph.devicehistory.y')"
             :stacked="true"
             :library="chartOptions"
             v-if="devicesOverTimeData.length > 0"
           ></area-chart>
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
+          <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
         </k-column>
 
     </k-view>

@@ -18,6 +18,8 @@ define('SIMPLESTATS_TABLE_DATE_FORMAT', 'Y-m-d');
 define('SIMPLESTATS_PRECISE_DATE_FORMAT', 'Y-m-d H:i');
 define('SIMPLESTATS_TIMELINE_DATE_FORMAT', 'Y-m-d');
 
+// todo: Date display should be customized to custom timespans
+
 // The base class that handles the precision of time frames
 abstract class SimpleStatsTimeFrameUtility {
     // Abstract functions
@@ -33,6 +35,12 @@ abstract class SimpleStatsTimeFrameUtility {
     }
     public function getDateFromPeriod(int $period, string $dateformat='Y-m-d') : string {
         return date( $dateformat, getTimeFromPeriod($period) );
+    }
+
+    // For displaying period-names in tables mostly (first seen, last seen, ...)
+    // Date format is in date-fns format : https://date-fns.org/v2.17.0/docs/parse
+    public function getPanelPeriodFormat() : string{
+        return 'dd MMM yyyy'; // 26 Dec 2021
     }
 
     // Parse version date
@@ -86,10 +94,10 @@ function getTimeFrameUtility() : SimpleStatsTimeFrameUtility {
 // Monthly timespan handler
 class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
     public function getPeriodName(bool $plural=false) : string {
-        return $plural?'months':'month';
+        return $plural?t('simplestats.timeframe.week.plural','months'):t('simplestats.timeframe.week.singular','month');
     }
     public function getPeriodAdjective() : string {
-        return 'monthly';
+        return t('simplestats.timeframe.week.name', 'Monthly');
     }
     public function getTimeFromPeriod(int $period) : int {
         // Monthly version
@@ -103,7 +111,7 @@ class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
         // Monthly version
         return intval(date('Ym', $time), 10);
     }
-    function incrementTime($time, $steps=1) : int {
+    public function incrementTime($time, $steps=1) : int {
         // Monthly version
         //return $time + ((24*60*60) * $steps); // Quick method (unaware of dates)
         // Slow but accurate method.
@@ -112,15 +120,18 @@ class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
         $month = intval((($month-1+abs($steps)*12)%12))+1; //
         return mktime(0,0,0,$month,1,$year);
     }
+    public function getPanelPeriodFormat() : string{
+        return 'MMM yyyy'; // Oct 2021
+    }
 }
 
 // Weekly timespan handler
 class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
     public function getPeriodName(bool $plural=false) : string {
-        return $plural?'week':'weeks';
+        return $plural?t('simplestats.timeframe.week.plural', 'weeks'):t('simplestats.timeframe.week.singular', 'week');
     }
     public function getPeriodAdjective() : string {
-        return 'weekly';
+        return t('simplestats.timeframe.week.name','Weekly');
     }
     public function getTimeFromPeriod(int $period) : int {
         $year = substr(''.$period, 0,4);
@@ -133,9 +144,13 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
         if($time < 0) $time = time();
         return intval(date('oW', $time ), 10);
     }
-    function incrementTime($time, $steps=1) : int {
+    public function incrementTime($time, $steps=1) : int {
         //$week = intval(date('W', $time),10)+$steps;
         //$year = intval( date('o', $time) + floor( ($week-1) / 53 ), 10);
         return getTimeFromPeriod(getPeriodFromTime($time+(7*24*3600)*$steps));
+    }
+    public function getPanelPeriodFormat() : string{
+        //return 'dd MMM yyyy'; // 26 Dec 2021
+        return 'yyyy-w (MMM)'; // 2021-51 (Dec)
     }
 }

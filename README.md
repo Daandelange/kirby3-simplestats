@@ -24,7 +24,7 @@ This data is kept for a very short amount of time to ensure only counting unique
 
 
 ### Current state
-This is very alpha state. I've tested it on a few online and online configurations. It's been reported to work on other websites too, while there are also reports of this plugin not working.
+Consider this plugin beta. Any feedback or bug reports are welcome. It's been successfully running on multiple production websites for about a year. The tracking part is almost done, when the panel interface will be more polished, I'll consider a first release.
 Please note that the database structure might evolve over time, until a more stable release is available.
 
 
@@ -37,6 +37,12 @@ Any contributions (discussions, reports, feedback and pull requests) are welcome
 
 ## Setup
 
+### Requirements
+ - Requires Kirby 3.6+ or later and support for SQLite3.
+ _For Kirby 3.4+, please use [the kirby-3.5 branch](https://github.com/Daandelange/kirby3-simplestats/tree/kirby-3.5)._
+ - For a detailed report, check the `Information` tab in the plugin's panel view.
+ ![Simplestats Information Tab](k3-simplestats-infotab.png)
+
 ### Installation
 
 - **Option 1** : Download
@@ -48,22 +54,28 @@ git submodule add https://github.com/daandelange/kirby3-simplestats.git site/plu
 ```
 Eventually add `--depth 1` to discard the repo commit history. (saves disk space)
 
+- **Option 3** : Composer
+`composer require daandelange/simplestats` (update with `composer update`)
+
 ****
 
 ### Configuration
 
 *Soon...*
 
-For now, check the comments in `options.php`, while it's not recommended to change the default behaviour yet.
+For now, check the comments in `options.php` for directions.
 
 #### Language setup
-Multilanguage websites are supported. For each page, there's a global counter, with an optional counter for each language.
+Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.
 Also, the panel view has not (yet?) been translated.
 
 #### Legal configuration
 Depending on your local laws, you might need to sit down and define how personal visitor data is handled.
 You might want to inspect the source code to know what's going on in details.
 As the license states, there's no guarantee whatsoever.
+
+#### Stats Generator
+If you'd like to populate the database with some fake stats (useful for testing or developing SimpleStats), you can use the panel interface to generate some in the "Information" tab.
 
 #### Options
 Like any Kirby plugin, options can be set in your `site/config/config.php`.
@@ -85,21 +97,22 @@ return [
 
 Here's a list with options that have been tested. (the `daandelange.simplestats` part has been stripped)
 
-| Option | Type | Default | Description | Comment |
-|--------|------|---------|-------------|---------|
-| **TRACKING** | | | | |
-| `tracking.timeFrameUtility` | String \| SimpleStatsTimeFrameUtility | `new SimpleStatsTimeFrameUtilityMonthly()` | Set the class that handles time conversions to periods. Possible string values: `monthly`, `weekly`. |
-| `tracking.enableReferers` | Bool | true | Enables tracking referrers. Gives an insight of who links to your website. | |
-| `tracking.enableDevices` | Bool | true | Enables tracking of minimal hardware configurations (device information) | |
-| `tracking.enableVisits` | Bool | true | Enables tracking page visits (frequentation) | |
-| `tracking.enableVisitLanguages` | Bool | true | Enables a counter per language per page. | Only effective in multi-language Kirby installations and `enableVisits` enabled. |
-| `tracking.ignore.roles` | Array | `['admin']` | Ignore any tracking for connected users with these roles. | |
-| `tracking.ignore.pages` | Array | `[]` | Ignore tracking for these page ids. | Make sure to use the full id, not the slug. |
-| `tracking.salt` | String | `'CHANGEME'` | A unique hash, used to generate a unique user id from visitor data. | Ensures that user identifying information is hard to retrieve if you database leaks. |
-| **PANEL** | | | | |
-| `panel.dismissDisclaimer` | Bool | false | Dismisses the panel disclaimer message. | |
-| `panel.enable` | Bool | true | Enable/Disable viewing stats in the panel. | |
-| `panel.authorizedRoles` | Array | `['admin']` | User roles that are allowed to view statistics from the panel. | |
+| Option                          | Type                                  | Default                                    | Description                                                                | Comment                                                                           |
+|---------------------------------|---------------------------------------|--------------------------------------------|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| **TRACKING**                    |                                       |                                            |                                                                            |                                                                                   |
+| `tracking.timeFrameUtility`     | String \| SimpleStatsTimeFrameUtility | `new SimpleStatsTimeFrameUtilityMonthly()` | Set the class that handles time conversions to periods.                    | Possible string values: `monthly`, `weekly`.                                      |
+| `tracking.enableReferers`       | Bool                                  | true                                       | Enables tracking referrers. Gives an insight of who links to your website. |                                                                                   |
+| `tracking.enableDevices`        | Bool                                  | true                                       | Enables tracking of minimal hardware configurations (device information)   |                                                                                   |
+| `tracking.enableVisits`         | Bool                                  | true                                       | Enables tracking page visits (frequentation)                               |                                                                                   |
+| `tracking.enableVisitLanguages` | Bool                                  | true                                       | Enables a counter per language per page.                                   | Only effective in multi-language Kirby installations and `enableVisits` enabled.  |
+| `tracking.ignore.roles`         | Array                                 | `['admin']`                                | Ignore any tracking for connected users with these roles.                  |                                                                                   |
+| `tracking.ignore.pages`         | Array                                 | `[]`                                       | Ignore tracking for these page ids.                                        | Make sure to use the full id, not the slug.                                       |
+| `tracking.ignore.templates`     | Array                                 | `['error']`                                | Ignore tracking for pages which these templates.                           | Check against `template()` and `intendedTemplate()`                               |
+| `tracking.salt`                 | String                                | `'CHANGEME'`                               | A unique hash, used to generate a unique user id from visitor data.        | Recommended to change, ensures that user identifying information is hard to retrieve if you database leaks. |
+| **PANEL**                       |                                       |                                            |                                                                            |                                                                                   |
+| `panel.dismissDisclaimer`       | Bool                                  | false                                      | Dismisses the panel disclaimer message.                                    |                                                                                   |
+| `panel.enable`                  | Bool                                  | true                                       | Enable/Disable viewing stats in the panel.                                 |                                                                                   |
+| `panel.authorizedRoles`         | Array                                 | `['admin']`                                | User roles that are allowed to view statistics from the panel.             |                                                                                   |
 
 ### Updating
 Before updating, make sure to **backup your database file**. If something goes wrong, you'll be able to retrieve your stats by replacing the database file later.
@@ -115,7 +128,7 @@ It's also a good idea to check the log file for any errors.
 ## Panel Interface
 
 ### Charts
-Charts are interactive, you can hover them to have details, and click labels to toggle filtering. You can even download timelines as png.
+Charts are interactive, you can hover them to have details, and click labels to toggle filtering. You can even download timelines as PNGs.
 
 ### Tables
 Tables are interactive and paginated. You can search data within and sort them by clicking on the column headers.
@@ -128,18 +141,18 @@ Tables are interactive and paginated. You can search data within and sort them b
 Development was started from [a standard Kirby PluginKit](https://github.com/getkirby/pluginkit/tree/4-panel), see [their plugin guide](https://getkirby.com/docs/guide/plugins/plugin-setup-basic) for more details on using it.
 *These steps are optional, for building development versions.*
 
-- Npm requirements    : `npm install -g parcel-bundler`
-- Setup               : `cd /path/to/website/site/plugins/simplestats && npm install`
-- While developing    : `npm run dev`
-- Publish changes     : `npm run build`
-- Update dependencies : `npm update`
+- Npm requirements (optional) : `npm install -g parcel-bundler`
+- Setup                       : `cd /path/to/website/site/plugins/simplestats && npm install`
+- While developing            : `npm run dev`
+- Compile a production build  : `npm run build`
+- Update dependencies         : `npm update`
 
 
 ****
 
 ## Powered by
 
-- [DistantNative/tbl-for-kirby](https://github.com/distantnative/tbl-for-kirby) : Table layout for the SimpleStats panel interface. [*MIT*]
+- [xaksis/vue-good-table](https://github.com/xaksis/vue-good-table) : Table component for the SimpleStats panel interface. [*MIT*]
 - [ChartKick](https://chartkick.com) using [Chart.js]() for displaying interactive charts. [*MIT*]
 - Package managers and packers : NPM, Parcel, Composer, Yarn.
 - [Kirby CMS](https://getkirby.com) : Providing the plugin interface [[*licensed software*](https://getkirby.com/license)]

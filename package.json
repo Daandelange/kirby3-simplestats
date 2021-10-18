@@ -1,6 +1,6 @@
 {
   "name": "SimpleStats",
-  "version": "0.3.1-beta",
+  "version": "0.4.2-beta",
   "description": "Simple analytics for your kirby website.",
   "main": "index.js",
   "author": "Daan de Lange",
@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "chart.js": "^2.9.4",
-    "tbl-for-kirby": "^1.2.0",
     "vue": "^2.6.12",
     "vue-chartkick": "^0.6.1",
+    "vue-good-table": "^2.21.11",
     "vue-hot-reload-api": "^2.3.4"
   }
 }

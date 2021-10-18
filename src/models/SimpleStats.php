@@ -22,30 +22,48 @@ use WhichBrowser\Constants\BrowserType;
 class SimpleStats extends SimpleStatsDb {
 
     // Trigger track function
-    // Note : the uri should be an id, the Kirby uri is translateable.
-    public static function track( string $page_uri = '' ): bool {
+    // Note : the uri should be $page->id(), the Kirby uri is translateable.
+    // Additional params are not recommended to use; mainly for testing purposes.
+    public static function track( string $page_uri = '', int $time = null, \Kirby\Cms\User $user = null, string $forceLang = null  ): bool {
 
         // skip ignored paths
         if( empty($page_uri) || in_array($page_uri, option('daandelange.simplestats.tracking.ignore.pages')) === true) {
             return false;
         }
 
+        // Format time
+        if(!$time) $time = time();
+
         // tmp : Sync daystats
-        Stats::syncDayStats();
+        Stats::syncDayStats($time);
 
         // Skip ignored roles
         if( count(option('daandelange.simplestats.tracking.ignore.roles')) > 0){
-            $curUser = kirby()->user();
+            // Fetch user
+            if(!$user) $user = kirby()->user();
             $ignores = option('daandelange.simplestats.tracking.ignore.roles');
-            if($curUser && $curUser->isLoggedIn()){
-                foreach($curUser->roles() as $role){
+            if($user && $user->isLoggedIn()){
+                foreach($user->roles() as $role){
                     if( in_array($role, $ignores)) return false;
                 }
             }
         }
 
-        // Todo: Kirby ignore user roles ?
-        // Todo: verify page uri
+        // Verify template exclulsions
+        $ignoredTemplates = option('daandelange.simplestats.tracking.ignore.templates');
+        if( is_array($ignoredTemplates) && count($ignoredTemplates) > 0 ){
+            // Try parse page object
+            $page = page($page_uri); // Slow... could be faster passing the page object instead of $page->id()
+            if($page){
+                if( in_array($page->intendedTemplate()->name(), $ignoredTemplates) === true ) return false;
+                if( in_array(        $page->template()->name(), $ignoredTemplates) === true ) return false;
+            }
+            else {
+                // continue (?), unknown page = unknown template, cannot verify template exclusion
+            }
+        }
+
+        // Todo: verify page uri ?
 
         // Get unique visitor id
         $userID = SimpleStats::getUserUniqueString();
@@ -61,6 +79,7 @@ class SimpleStats extends SimpleStatsDb {
         }
 
         $userEntry = $userResult->first();
+        //var_dump('$userEntry', $userEntry);
 
         // Bot detection / ignore
         $userIsBot = false;
@@ -68,7 +87,7 @@ class SimpleStats extends SimpleStatsDb {
         // New user ?
         if($userEntry===null){
             // Default values
-            $timestamp = time();
+            $timestamp = $time;
             $osfamily = $devicetype = $browserengine = '';
             $visitedpages = '';
 
@@ -82,7 +101,7 @@ class SimpleStats extends SimpleStatsDb {
 
                 // Populate visited pages
                 if( option('daandelange.simplestats.tracking.enableVisits') === true ){
-                    $visitedpages = self::getPageIDWithLang($page_uri);
+                    $visitedpages = self::getPageIDWithLang($page_uri, $forceLang);
                 }
 
                 // Populate device info ?
@@ -108,7 +127,7 @@ class SimpleStats extends SimpleStatsDb {
             // Append  visited pages (except bots)
             // Note: Bot visits are not tracked. Todo: Make this an option
             if( !$userIsBot && option('daandelange.simplestats.tracking.enableVisits') === true ){
-                $page_uri = self::getPageIDWithLang($page_uri);
+                $page_uri = self::getPageIDWithLang($page_uri, $forceLang);
 
                 // Check if the page was already visited.
                 if( !in_array($page_uri, explode(',', $userEntry->visitedpages) )){
@@ -181,11 +200,11 @@ class SimpleStats extends SimpleStatsDb {
         return true;
     }
 
-    public static function getPageIDWithLang($page_uri): string {
+    public static function getPageIDWithLang($page_uri, string $forceLang = null): string {
 
         // With language ?
         if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ) {
-            $curLang = kirby()->language();
+            $curLang = kirby()->language($forceLang)??kirby()->language();
             if(!$curLang) $curLang = 'none';
             else $curLang = $curLang->code();
             return $page_uri .'::'. $curLang;
@@ -217,9 +236,9 @@ class SimpleStats extends SimpleStatsDb {
     }
 
     // Returns an array with detected user hardware setup
-    public static function detectSystemFromUA( $ua = '' ): array {
+    public static function detectSystemFromUA( $ua = null ): array {
         // Kirby method : $kirby->visitor()->ip()->userAgent()
-    	if(empty($ua)) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
+    	if($ua===null) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
 
         $data = [
             'engine' 	=> 'undefined',
@@ -237,11 +256,15 @@ class SimpleStats extends SimpleStatsDb {
 
     	// Todo : Handle opt.out ?
 
-        // Parser
+        // Get Headers with replaced ua
         $headers = getallheaders();
-        $headers['HTTP_USER_AGENT']=$ua;
+        if(isset($headers['HTTP_USER_AGENT'])) $headers['HTTP_USER_AGENT']=$ua;
+        $headers['User-Agent']=$ua;
+        unset($headers['x-requested-with']); // $headers['x-requested-with'] = 'xmlhttprequest' interferes and makes all requests mobile devices
+
+        // Parser
         $clientData = new BrowserParser();//$headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>false,'features'=>false ]);
-    	$clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>false,'features'=>false ]);
+    	$clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>true,'features'=>false ]); // Note: Useragent must be false for detection to work
     	// Todo: set engine to true above ???
         //echo $clientData->os->name.' :: '.$clientData->engine->name.' :: '.$clientData->device->type."<br>\n";
 
@@ -344,7 +367,8 @@ class SimpleStats extends SimpleStatsDb {
     }
 
     // Referer retrieval
-    public static function getRefererInfo(): ?array {
+    public static function getRefererInfo( string $refHeader = null): ?array {
+        if(empty($refHeader) && isset($_SERVER['HTTP_REFERER'])) $refHeader = substr($_SERVER['HTTP_REFERER'], 0, 256);
         $returnData = [
             'url'       => '', // Full url
             'medium'    => '', // ex: social / search / website / other (unknown)
@@ -352,21 +376,21 @@ class SimpleStats extends SimpleStatsDb {
             'host'      => '', // domain name (with subdomain)
         ];
 
-        if( isset($_SERVER['HTTP_REFERER']) ){
-            $refHeader = $_SERVER['HTTP_REFERER'];
+        if( !empty($refHeader) ){
             	$parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
             	$referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
-            	//echo "Got referer! == ".$_SERVER['HTTP_REFERER']."\n";
+            	//echo "Got referer! == ".$refHeader."\n";
             	//echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
             	if( $referer->isValid() ){
             		if ($referer->isKnown()) {
             			$returnData['medium']=$referer->getMedium();
                         $returnData['source']=$referer->getSource();
 
-                        if( $urlParts = parse_url($refHeader) && isset($urlParts['host'])){
+                        $urlParts = parse_url($refHeader);
+                        if( $urlParts && isset($urlParts['host'])){
                             //var_dump($urlParts);
                             // Note: protocol and query strings are stripped
-                            $returnData['url']=$urlParts['host'].isset($urlParts['path'])?$urlParts['path']:'';//str_replace('www.','', $urlParts['host'].$urlParts['path'];
+                            $returnData['url']=$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');//str_replace('www.','', $urlParts['host'].$urlParts['path'];
                             $returnData['host']=$urlParts['host'];
 
                             // Todo: protect url against sql injections via url ?
@@ -386,25 +410,25 @@ class SimpleStats extends SimpleStatsDb {
             				//echo $referer->getMedium(); // "Search"
                 			//echo ' - ';
                 			//echo $referer->getSource(); // "Google"
-                            $returnData['medium']='website';$referer->getMedium(); // unknown
-                            $returnData['source']=''; // other ?
-                            if( $urlParts = parse_url($refHeader) && isset($urlParts['host']) ){
-                                //var_dump($urlParts);
-                                // Note: protocol and query strings are stripped
-                                $returnData['url']=$urlParts['host'].isset($urlParts['path'])?$urlParts['path']:'';
-                                $returnData['host']=$urlParts['host'];
+                        $returnData['medium']='website';//$referer->getMedium(); // Note: All unknown referrers are considered websites.
+                        $returnData['source']=''; // other ?
+                        $urlParts = parse_url($refHeader);
+                        if( $urlParts && isset($urlParts['host']) ){
+                            // Note: protocol and query strings are stripped
+                            $returnData['url'] =$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');
+                            $returnData['host']=$urlParts['host'];
 
-                                // Todo: protect url against sql injections via url ?
+                            // Todo: protect url against sql injections via url ?
 
-                                //var_dump($returnData);
-                                return $returnData;
-                            }
-                            else {
-                                // No valid URL
-                                return null;
-                            }
+                            return $returnData;
+                        }
+                        else {
+                            //echo 'Invalid URL!  ....';//var_dump(parse_url($refHeader));
+                            // No valid URL
+                            return null;
+                        }
 
-                            //var_dump($returnData);
+                        //var_dump($returnData);
             			}
             			//var_dump($referer);
             			//echo $referer->getMedium();

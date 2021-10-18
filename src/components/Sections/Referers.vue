@@ -47,33 +47,49 @@
 
       <k-grid gutter="medium">
         <k-column width="1/1">
-          <br><br>
-          <k-headline>All referrers</k-headline>
-          <tbl
-            :rows="refererFullData"
-            :columns="refererFullLabels"
-            :store="false"
-            :search="true"
-            :sort="true"
-            :pagination="true"
-            hheadline="All referers"
-            v-if="refererFullData.length > 0"
-          >
-            <!-- Default entryslot -->
-            <template slot="column-$default" slot-scope="props">
-              <p>{{ props.value }}</p>
-            </template>
-            <!-- percentage entryslot -->
-            <template slot="column-hitspercent" slot-scope="props">
-              <p v-bind:style="[ !props.value ? { width: '0%' } : { width: props.value + '%' }]"></p>
-            </template>
-             <!-- Timeframe date entryslot -->
-            <template slot="column-timefrom" slot-scope="props">
-              <p>
-                {{ new Date( props.value ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.value ).getFullYear() }}
-              </p>
-            </template>
-          </tbl>
+          <br><br><br>
+          <k-headline>
+            All referrers
+            <!-- {{ $t('simplestats.visitedpages') }} -->
+          </k-headline>
+          <div v-if="refererFullData.length > 0">
+            <vue-good-table
+              :rows="refererFullData"
+              :columns="refererFullLabels"
+              styleClass="vgt-table condensed"
+              max-height="500px"
+              :fixed-header="false"
+              compactMode
+              :search-options="{enabled: true, placeholder: 'Filter items...'}"
+              :pagination-options="{
+                enabled: true,
+                perPage: 20,
+                perPageDropdownEnabled: false,
+              }"
+            >
+              <div slot="emptystate">
+                <k-empty>
+                  There is nothing to show...
+                </k-empty>
+              </div>
+
+              <template slot="table-row" slot-scope="props">
+                <span v-if="props.column.field == 'hitspercent'" class="row-percent">
+                  <span class="visualiser" :style="{ width: props.row.hitspercent *100 + '%'}"></span>
+                  <span class="number">{{ (props.row.hitspercent * 100).toFixed(0) + '%' }}</span>
+                </span>
+                <span v-else-if="props.column.field == 'timefrom'">
+                  <span>
+                    {{ props.formattedRow[props.column.field] }}
+  <!-- (old way)                 {{ new Date( props.row.firstvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.firstvisited ).getFullYear() }} -->
+                  </span>
+                </span>
+                <span v-else>
+                  {{ props.formattedRow[props.column.field] }}
+                </span>
+              </template>
+            </vue-good-table>
+          </div>
           <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
         </k-column>
       </k-grid>
@@ -87,11 +103,11 @@ import Vue from 'vue'
 import Chartkick from 'vue-chartkick'
 import Chart from 'chart.js'
 
-import Tbl from 'tbl-for-kirby';
+import { VueGoodTable } from 'vue-good-table';
 
 export default {
   components: {
-    Tbl,
+    VueGoodTable,
   },
 
   data() {
@@ -165,7 +181,7 @@ export default {
           this.referersByMediumOverTimeData = response.referersbymediumovertimedata;
           //console.log( this.referersByMediumOverTimeData);
 
-          this.userLocale = this.$store.state.i18n.locale;
+          this.userLocale = window.panel.$language ? window.panel.$language.code : "";//this.$store.state.i18n.locale;
 /*
           Object.keys(this.referersByMediumOverTimeData).forEach(key => {
             //console.log(key, this.referersByMediumOverTimeData[key]);
