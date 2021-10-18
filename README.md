@@ -38,8 +38,7 @@ Any contributions (discussions, reports, feedback and pull requests) are welcome
 ## Setup
 
 ### Requirements
- - Requires Kirby 3.6+ or later and support for SQLite3.
- _For Kirby 3.4+, please use [the kirby-3.5 branch](https://github.com/Daandelange/kirby3-simplestats/tree/kirby-3.5)._
+ - A recent Kirby installation (currently tested with 3.5+) and support for SQLite3.
  - For a detailed report, check the `Information` tab in the plugin's panel view.
  ![Simplestats Information Tab](k3-simplestats-infotab.png)
 
