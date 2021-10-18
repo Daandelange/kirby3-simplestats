@@ -100,7 +100,7 @@ export default {
   data() {
     return {
       // Set initial tab and load it
-      tab: 'simplestats-tabs-visitedpages',//this.tabsKey(),/* this.$route.hash.replace('#', '')?? *///'simplestats-tabs-visitedpages',
+      tab: this.tabsKey,
       tabs: [
         { name:'simplestats-tabs-visitedpages',   label:'Page visits',      icon:'layers',  columns: [], 'link':'simplestats?tab=simplestats-tabs-visitedpages'},
         { name:'simplestats-tabs-visitordevices', label:'Visitor Devices',  icon:'users',   columns: [] , 'link':'simplestats?tab=simplestats-tabs-visitordevices' },
@@ -117,17 +117,24 @@ export default {
       // changes tab value when dynamically loading page
       this.tab = incoming;
     },
-    // Not used anymore
+    // Not used anymore, maybe needed for Kirby installations before 3.6 ?
 //     '$route'() {
-//       console.log('$route', this.tab);
+//       console.log('$route', this.tab, this.$store.state.system.info.version);
 //       this.tab = this.$route.hash.replace('#', '');
 //     },
   },
   computed: {
     tabsKey() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const myParam = urlParams.get('tab');
-      if(myParam) this.tab=myParam;
+      // K3.5 (has version in $store globally)
+      if(this.$store.state && this.$store.state.system && this.$store.state.system.info && this.$store.state.system.info.version && parseInt(this.$store.state.system.info.version.at(0) + this.$store.state.system.info.version.at(2)) < 36 ){
+        this.tab = this.$route.hash.replace('#', '');
+      }
+      // K3.6 (needs API query = system.info.version, or assume its 3.6+)
+      else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const myParam = urlParams.get('tab');
+        if(myParam) this.tab=myParam;
+      }
       if(!this.tab || this.tab=='') this.tab = 'simplestats-tabs-visitedpages';
       return this.tab;
     },

@@ -5,6 +5,7 @@ namespace daandelange\SimpleStats;
 //use Kirby\Http\Router;
 use ErrorException;
 use Throwable;
+use Kirby\Cms\Page;
 
 return [
     ( option('daandelange.simplestats.tracking.onLoad', true) !== true )?[]:
@@ -14,7 +15,8 @@ return [
         if( $final === true && empty($result) === false && $method==='GET') { // Only log visits when the page object was found
 
             $page = $path;
-            if( is_a($result, 'Kirby\Cms\Page') ) {
+
+            if( $result instanceof Page ) {
                 //var_dump( $result->id() );
                 $page = $result->id();
 
@@ -33,7 +35,7 @@ return [
             else {
                 // Panel and other requests are not Page objects. (HttpResponse)
                 // Idea: track downloaded files ?
-                //var_dump($result);
+                //var_dump(get_class($result), is_a($result, 'Page'), $result);
                 // Ignore
                 return $result;
             }

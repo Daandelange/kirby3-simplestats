@@ -37,13 +37,13 @@ Chartkick.use(Chart);
 // Register plugin @Kirby
 panel.plugin("daandelange/simplestats", {
   // K 3.5 and below
-//   views: {
-//     simplestats: {
-//       component: View,
-//       icon: "chart",
-//       label: "SimpleStats",
-//     }
-//   },
+  views: {
+    simplestats: {
+      component: View,
+      icon: "chart",
+      label: "SimpleStats",
+    }
+  },
   // K3.6+
   components: {
     'simplestats': View,

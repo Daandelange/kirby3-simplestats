@@ -213,7 +213,7 @@ export default {
           this.globalLanguagesData = response.globallanguagesdata
           this.languagesOverTimeData = response.languagesovertimedata
           this.languagesAreEnabled = response.languagesAreEnabled
-          this.userLocale = window.panel.$language ? window.panel.$language.locale : "";//this.$store.state.i18n.locale;// );//this.$store.state.languages.all.find(el => el.code=='en') ).url;
+          this.userLocale = window.panel.$language ? window.panel.$language.locale : (this.$store.state.i18n ? this.$store.state.i18n.locale : '');
           //console.warn(response);
           //console.log(response.data.rows);
           // replace default translations if needed
