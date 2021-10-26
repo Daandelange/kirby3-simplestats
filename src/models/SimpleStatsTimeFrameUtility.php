@@ -137,7 +137,7 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
         $year = substr(''.$period, 0,4);
         $week = substr(''.$period, 4,2);
         if($week && $year) return strtotime($year.'W'.$week)??0;
-        return 0;
+        return 0; // dangerous !
     }
 
     public function getPeriodFromTime( int $time = -1 ) : int {
@@ -147,7 +147,9 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
     public function incrementTime($time, $steps=1) : int {
         //$week = intval(date('W', $time),10)+$steps;
         //$year = intval( date('o', $time) + floor( ($week-1) / 53 ), 10);
-        return getTimeFromPeriod(getPeriodFromTime($time+(7*24*3600)*$steps));
+        return strtotime(($steps<0?'-':'+').$steps.' week',$time);
+        //return getTimeFromPeriod(getPeriodFromTime($newTime+7*24*3600)); // In some rare cases (26-10-2021) this causes an infinite loop : // time = 1635112800 = 2021-43 while 1635112800+1week = 2021-43 . Note : end of week is dayligt saving
+        //return getTimeFromPeriod(getPeriodFromTime($time)+$steps));
     }
     public function getPanelPeriodFormat() : string{
         //return 'dd MMM yyyy'; // 26 Dec 2021

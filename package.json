@@ -1,6 +1,6 @@
 {
   "name": "SimpleStats",
-  "version": "0.4.2-beta",
+  "version": "0.4.3-beta",
   "description": "Simple analytics for your kirby website.",
   "main": "index.js",
   "author": "Daan de Lange",

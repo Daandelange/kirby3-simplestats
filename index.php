@@ -29,7 +29,7 @@ App::plugin('daandelange/simplestats', [
 
                 // optional replacement for the breadcrumb label
                 'breadcrumbLabel' => function () {
-                  return 'SimppleStats - All your data are belong to us !';
+                  return 'SimpleStats - All your data are belong to us !';
                 },
 
                 // show / hide from the menu
