@@ -1,6 +1,7 @@
 {
     "name": "daandelange/simplestats",
     "description": "Very minimal visitor analytics for your kirby3 website.",
+    "homepage": "https://github.com/Daandelange/kirby3-simplestats",
     "type": "kirby-plugin",
     "version": "0.4.3-beta",
     "license": "MIT",
