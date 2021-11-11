@@ -102,6 +102,7 @@ export default {
       // Set initial tab and load it
       tab: this.tabsKey,
       tabs: [
+        // Note: columns are needed for the panel not to throw an error...
         { name:'simplestats-tabs-visitedpages',   label:'Page visits',      icon:'layers',  columns: [], 'link':'simplestats?tab=simplestats-tabs-visitedpages'},
         { name:'simplestats-tabs-visitordevices', label:'Visitor Devices',  icon:'users',   columns: [] , 'link':'simplestats?tab=simplestats-tabs-visitordevices' },
         { name:'simplestats-tabs-referers',       label:'Referers',         icon:'chart',   columns: [], 'link':'simplestats?tab=simplestats-tabs-referers'},

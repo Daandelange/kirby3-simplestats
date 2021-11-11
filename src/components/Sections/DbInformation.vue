@@ -6,8 +6,8 @@
     <k-headline>{{ $t('simplestats.info.db.title') }}</k-headline>
     <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.file')" :value="databaseLocation" icon="file-zip" />
     <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.size')" :value="databaseSize | prettyBytes" icon="download" />
-    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.dbversion')" :value="dbVersion" icon="bolt" />
-    <k-text-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.softwareversion')" :value="softwareDbVersion" icon="bolt" />
+    <k-number-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.dbversion')" :value="dbVersion" icon="bolt" />
+    <k-number-field name="" :counter="false" :disabled="true" :label="$t('simplestats.info.db.softwareversion')" :value="softwareDbVersion" icon="bolt" />
     <br />
     <br />
 

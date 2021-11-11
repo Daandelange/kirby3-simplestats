@@ -2,8 +2,8 @@
 import View from "./components/View.vue";
 
 //import Vue from 'vue'
-import Chartkick from 'vue-chartkick'
-import Chart from 'chart.js'
+import Chartkick from 'vue-chartkick';
+import Chart from 'chart.js';
 Chartkick.options = {
   colors: [
     // Generate a color palette in console :
@@ -70,8 +70,8 @@ panel.plugin("daandelange/simplestats", {
 //   sections: {
 //     simplestats: View
 //   },
-  use: {
+  use: [
     Chartkick,
-  },
+  ],
   devtool: 'source-map', // vue debugging
 });
