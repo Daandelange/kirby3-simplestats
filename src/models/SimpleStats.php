@@ -389,6 +389,8 @@ class SimpleStats extends SimpleStatsDb {
                         $urlParts = parse_url($refHeader);
                         if( $urlParts && isset($urlParts['host'])){
                             //var_dump($urlParts);
+                            // Sanitize yahoo urls specifically ?
+                            if( strpos($urlParts['host'], 'yahoo.com')!==false && isset($urlParts['path']) && ($cut=strpos($urlParts['path'], '_ylt')) && $cut !== false) $urlParts['path'] = substr($urlParts['path'], 0, $cut);
                             // Note: protocol and query strings are stripped
                             $returnData['url']=$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');//str_replace('www.','', $urlParts['host'].$urlParts['path'];
                             $returnData['host']=$urlParts['host'];
