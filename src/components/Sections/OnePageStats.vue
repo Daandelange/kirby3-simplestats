@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'simplestatsonepagedetailssection': true, 'small': size=='small'||size=='compact'|size=='tiny', 'medium': size=='medium'|size=='normal', 'large': size=='large'|size=='huge'}">
+  <div :class="{'simplestatsonepagedetailssection': true, 'small': sectionSize=='small', 'medium': sectionSize=='medium', 'large': sectionSize=='large'}">
     <br />
     <k-headline size="medium">{{ headline }}</k-headline>
     <br/>
@@ -25,7 +25,7 @@
           download="PageLanguagesOverTime.png"
           :xtitle="$t('simplestats.charts.time')"
           :ytitle="$t('simplestats.charts.visits')"
-          height="260px"
+          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':'260px'"
           :stacked="true"
           :library="chartOptions"
           v-if="languagesOverTime.length > 0"
@@ -34,6 +34,7 @@
       </div>
 
       <div v-else-if="showTimeline" class="detailcolumn visitsovertime">
+        <br/>
         <k-headline size="medium">{{ $t('simplestats.visits.languagesovertime') }}</k-headline>
         <area-chart
           :data="visitsOverTime"
@@ -41,7 +42,7 @@
           download="PageVisitsOverTime.png"
           :xtitle="$t('simplestats.charts.time')"
           :ytitle="$t('simplestats.charts.visits')"
-          height="260px"
+          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':'260px'"
           :library="chartOptions"
           v-if="visitsOverTime.length > 0"
         ></area-chart>
@@ -53,7 +54,7 @@
         <pie-chart
           :data="languageTotalHits"
           v-if="languageTotalHits.length > 0"
-          height="205px"
+          :height="(this.sectionSize=='small')?'185px':(this.sectionSize=='large')?'225px':'205px'"
           :library="pieOptions"
         />
         <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
@@ -91,46 +92,6 @@ export default {
       averageHits: false,
       timespanUnitName: '[unknown]',
       trackingPeriods : false,
-
-      chartOptions: {
-        scales: {
-          xAxes: [{
-            //display: false,
-            type: 'time',
-            time: {
-              unit: 'month',
-              displayFormats: {
-                  month: 'MMM YYYY'
-              }
-            }
-          }],
-          yAxes: [{
-            stacked: true
-          }]
-        },
-        //plugins: {
-          tooltips: {
-            //enabled: false,
-            //mode: 'dataset',
-            mode: 'x', // Tooltip sends all item on x axis, so we can sum them up
-            callbacks: {
-              footer: this.graphFooter,
-            }
-          }
-        //}
-      },
-      pieOptions: {
-        tooltips: {
-            //enabled: false,
-            //mode: 'dataset',
-            //mode: 'x', // Tooltip sends all item on x axis, so we can sum them up
-            callbacks: {
-              //footer: this.pieFooter,
-              label: this.pieLabel,
-              //footer: this.pieLabel,
-            }
-          }
-      }
     }
   },
 /*
@@ -141,6 +102,73 @@ export default {
   computed: {
     languagesAreEnabled(){
       return this.languagesOverTime && this.languagesOverTime.length > 0;
+    },
+    sectionSize(){
+      if(this.size=='small'||this.size=='compact'||this.size=='tiny') return 'small';
+      else if(this.size=='medium'||this.size=='normal') return 'medium';
+      else if(size=='large'||size=='huge') return 'large';
+      return 'medium';
+    },
+    chartOptions(){
+      return {
+        scales: {
+          xAxes: [{
+            display: !(this.sectionSize=='small'),
+            type: 'time',
+            time: {
+              unit: 'month',
+              displayFormats: {
+                  month: 'MMM YYYY'
+              }
+            },
+            scaleLabel: {
+              //labelString: '',
+              //display: true,
+            },
+          }],
+          yAxes: [{
+            stacked: true,
+            legend: true,
+            scaleLabel: {
+              //labelString: '',
+              display: !(this.sectionSize=='small'),
+            },
+          }],
+        },
+        tooltips: {
+          //enabled: false,
+          //mode: 'dataset',
+          mode: 'x', // Tooltip sends all item on x axis, so we can sum them up
+          callbacks: {
+            footer: this.graphFooter,
+          }
+        },
+        legend: {
+          display: !(this.sectionSize=='small'), // hides labels on small
+//           labels: {
+//             filter: function(legenditem, chartdata){
+//               return true;
+//             }
+//           },
+        },
+      };
+    },
+    pieOptions(){
+      return {
+        tooltips: {
+          //enabled: false,
+          //mode: 'dataset',
+          //mode: 'x', // Tooltip sends all item on x axis, so we can sum them up
+          callbacks: {
+            //footer: this.pieFooter,
+            label: this.pieLabel,
+            //footer: this.pieLabel,
+          }
+        },
+        //legend: {
+        //  display: false,
+        //},
+      };
     },
   },
   components: {
@@ -222,6 +250,9 @@ export default {
 
 <style lang="scss">
 .simplestatsonepagedetailssection {
+  .detailcolumn {
+    margin-bottom: 1.2rem;
+  }
   &.medium, &.large {
     .detailcolumn {
       display: inline-block;
