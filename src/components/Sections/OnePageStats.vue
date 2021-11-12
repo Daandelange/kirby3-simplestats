@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'simplestatsonepagedetailssection': true, 'small': size=='small'||size=='compact'|size=='tiny', 'medium': size=='medium'|size=='normal', 'large': size=='large'size=='huge'}">
+  <div :class="{'simplestatsonepagedetailssection': true, 'small': size=='small'||size=='compact'|size=='tiny', 'medium': size=='medium'|size=='normal', 'large': size=='large'|size=='huge'}">
     <br />
     <k-headline size="medium">{{ headline }}</k-headline>
     <br/>
