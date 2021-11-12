@@ -49,7 +49,7 @@
           ></area-chart>
           <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
         </k-column>
-
+      </k-grid>
     </k-view>
   </div>
 </template>
