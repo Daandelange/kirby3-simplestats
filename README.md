@@ -64,8 +64,23 @@ Eventually add `--depth 1` to discard the repo commit history. (saves disk space
 
 For now, check the comments in `options.php` for directions.
 
+#### Stats blueprint section
+If you wish to display page stats in a section, you may add a `pagestats` panel section to your page's blueprint.
+````yml
+sections:
+  pagestats:
+    type: pagestats
+    headline: TestHeadline
+    size: small
+    showTotals: true
+    showTimeline: true
+    showLanguages: true
+    showFullInfo: false
+````
+
 #### Language setup
 Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.
+Warning: Do not add or remove languages to your Kirby installation without resetting your database file.
 Also, the panel view has not (yet?) been translated.
 
 #### Legal configuration
