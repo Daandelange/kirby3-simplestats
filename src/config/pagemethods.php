@@ -38,4 +38,9 @@ return [
     'getSimplestatsCount' => function(){
         return 777;
     },
+
+    // Return fully computed stats of the page
+    'getPageStats' => function(){
+        return Stats::onePageStats($this->id());
+    }
 ];

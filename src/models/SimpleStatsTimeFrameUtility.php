@@ -39,7 +39,7 @@ abstract class SimpleStatsTimeFrameUtility {
 
     // For displaying period-names in tables mostly (first seen, last seen, ...)
     // Date format is in date-fns format : https://date-fns.org/v2.17.0/docs/parse
-    public function getPanelPeriodFormat() : string{
+    public function getPanelPeriodFormat() : string {
         return 'dd MMM yyyy'; // 26 Dec 2021
     }
 
@@ -50,6 +50,16 @@ abstract class SimpleStatsTimeFrameUtility {
         $month=intval(substr($stringPeriod, 4,2), 10);
         $day=intval(substr($stringPeriod, 6,2), 10);
         return mktime(0,0,0,$month,$day,$year);
+    }
+
+    // Returns the amount of timespans in-between two dates
+    final public function getNumPeriodsFromDates(int $from, int $to) : int {
+        if($to <= $from) return 0;
+        $cntr = 0;
+        for($cur = $from; $cur <= $to; $cur=incrementTime($cur)){
+            $cntr++;
+        }
+        return $cntr;
     }
 }
 
@@ -136,7 +146,11 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
     public function getTimeFromPeriod(int $period) : int {
         $year = substr(''.$period, 0,4);
         $week = substr(''.$period, 4,2);
-        if($week && $year) return strtotime($year.'W'.$week)??0;
+        $time = false;
+        if($week && $year){
+            $time = strtotime($year.'W'.$week);
+            return $time?$time:0;
+        }
         return 0; // dangerous !
     }
 

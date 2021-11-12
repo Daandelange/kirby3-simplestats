@@ -23,6 +23,7 @@
   "dependencies": {
     "chart.js": "^2.9.4",
     "vue": "^2.6.12",
+    "chartjs-adapter-moment": "^0.1.2",
     "vue-chartkick": "^0.6.1",
     "vue-good-table": "^2.21.11",
     "vue-hot-reload-api": "^2.3.4"

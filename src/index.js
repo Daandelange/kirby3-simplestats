@@ -1,9 +1,11 @@
 // Vue components
 import View from "./components/View.vue";
+import OnePageStats from "./components/Sections/OnePageStats.vue";
 
 //import Vue from 'vue'
 import Chartkick from 'vue-chartkick';
 import Chart from 'chart.js';
+import 'chartjs-adapter-moment';
 Chartkick.options = {
   colors: [
     // Generate a color palette in console :
@@ -67,9 +69,10 @@ panel.plugin("daandelange/simplestats", {
 // 			props: ["sharedLink"]
 // 		},
   },
-//   sections: {
-//     simplestats: View
-//   },
+  sections: {
+    //simplestats: View detailed stats (one page)
+    pagestats: OnePageStats,
+  },
   use: [
     Chartkick,
   ],

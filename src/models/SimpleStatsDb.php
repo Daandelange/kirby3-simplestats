@@ -61,6 +61,10 @@ function getPanelPeriodFormat() : string {
     return getTimeFrameUtility()->getPanelPeriodFormat();
 }
 
+function getNumPeriodsFromDates(int $from, int $to) : int {
+    return getTimeFrameUtility()->getNumPeriodsFromDates($from, $to);
+}
+
 
 
 // - - - - -

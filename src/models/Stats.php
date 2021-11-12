@@ -7,8 +7,10 @@ use Kirby\Database\Database;
 use Kirby\Toolkit\Collection;
 use Kirby\Toolkit\F;
 use Kirby\Toolkit\Obj;
+use Kirby\Cms\Page;
 
 use ErrorException;
+use Exception;
 use Throwable;
 
 class Stats extends SimpleStatsDb {
@@ -1159,5 +1161,141 @@ class Stats extends SimpleStatsDb {
         }
 
         return false;
+    }
+
+    // Get stats details for one page object
+    public static function onePageStats($page){
+        // Get ID from $page
+        if($page && $page instanceof \Kirby\Cms\Page) $page = $page->exists()?$page->uid():'';
+
+        // Ensure we got a string
+        if( !is_string($page) || empty($page)){
+            throw new Exception("Only accepting non-empty string or an existing \Kirby\Cms\Page !");
+        }
+
+        // Return object
+        $ret = [
+            'title'             => '[unknown] (404)',
+            'uid'               => $page,
+            'languagesOverTime' => [],
+            'visitsOverTime'    => [],
+            //'totalStats'        => [
+            'totalHits'         => false,
+            'averageHits'       => false,
+            'languageTotalHits' => [],
+            'lastPeriodHits'    => false,
+            'firstVisited'      => false, // (aka: tracking since)
+            'lastVisited'       => false,
+            'trackingPeriods'   => 0,
+            //],
+            //'languagesAreEnabled'=>false,
+        ];
+
+        // Fetch kirbyPage object to get some more information
+        $kirbyPage = kirby()->page($page); // This is probably the slowest part, to be optimized some day. todo
+        if($kirbyPage && $kirbyPage->exists()) $ret['title'] = $kirbyPage->title()->value();
+        else $ret['title'] = $page.' (404)'; // Use id for tracked pages without ID (virtual pages...)
+
+        // init languages stuff
+        $kirbyLangs = [];
+        if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
+            //$ret['languagesAreEnabled'] = true;
+            foreach( kirby()->languages() as $l ){
+                $kirbyLangs[$l->code()] = $l->name();
+            }
+        }
+
+        // Query page visits over time, with languages
+        {
+            // Init data
+            $ret['totalHits'] = 0;
+            $ret['lastPeriodHits']= 0;
+                        $ret['visitsOverTime'][0]=[
+                'name' => 'Total Visits',
+                'data' => [], // holds pairs of [date,value]
+            ];
+            $ret['firstVisited'] = 0;
+            $ret['lastVisited'] = 0;
+
+            // Prepare language-dependent data
+            //if(count($kirbyLangs)>0){}
+            $langQuery = '';
+            foreach($kirbyLangs as $l => $name){
+                // For SQL query
+                $langQuery .= ', `hits_'.$l.'` AS `'.$l.'`';
+
+                // Create keys for each language
+                $ret['languagesOverTime'][$l]=[
+                    'name' => $name,
+                    'data' => [], // holds pairs of [date,value]
+                ];
+                $ret['languageTotalHits'][$l]=[ // holds pairs of [label,value]
+                    $name, 0
+                ];
+            }
+
+            $pageVisitsOverTime = self::database()->query("SELECT `uid`, `monthyear`, `hits` ${langQuery} FROM `pagevisits` WHERE `uid` = '".$page."' ORDER BY `monthyear` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+            //echo "SELECT `uid`, `monthyear`, `hits` ${langQuery} FROM `pagevisits` WHERE `uid` = '".$page."' ORDER BY `monthyear` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT;
+            if($pageVisitsOverTime){
+                // Loop periods
+                $nowPeriod = getPeriodFromTime();
+                //$ret['languagesOverTime'][$l]=['name'=>'',data=>[]];
+                foreach($pageVisitsOverTime as $period){
+                    //echo $period->monthyear.'='.$period->hits.' - '; continue;
+                    // Compute total hits
+                    $ret['totalHits'] += $period->hits;
+
+                    // Remember Today period visits ?
+                    if( $period->monthyear == $nowPeriod ){
+                        $ret['lastPeriodHits'] = $period->hits;
+                    }
+
+                    // Get time and date str
+                    $periodTime = getTimeFromPeriod(intval($period->monthyear, 10));
+                    $periodDateStr = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $periodTime);
+
+                    // Remember first and last dates
+                    if($ret['firstVisited'] > $periodTime || $ret['firstVisited']==0) {
+                        $ret['firstVisited'] = $periodTime;
+                    }
+                    if($ret['lastVisited'] < $periodTime || $ret['lastVisited']==0) {
+                        $ret['lastVisited'] = $periodTime;
+                    }
+
+                    // Add period to visitsOverTime
+                    $ret['visitsOverTime'][0]['data'][]=[$periodDateStr, $period->hits];
+
+                    // Inject total per language
+                    foreach( $kirbyLangs as $l => $n ){
+                        $ret['languagesOverTime'][$l]['data'][]=[$periodDateStr, $period->$l];
+                        $ret['languageTotalHits'][$l][1]+=$period->$l;
+                    }
+                }
+            }
+
+            // Rename keys to nums so that the charts accept the data
+            foreach( $ret['languagesOverTime'] as $key => $data) {
+                $ret['languagesOverTime'][]=$data;
+                unset($ret['languagesOverTime'][$key]);
+            };
+            foreach( $ret['languageTotalHits'] as $key => $data) {
+                $ret['languageTotalHits'][]=$data;
+                unset($ret['languageTotalHits'][$key]);
+            };
+
+            // Compute averages
+            $ret['trackingPeriods'] = getNumPeriodsFromDates($ret['firstVisited'], time());
+            if($ret['trackingPeriods']>0) $ret['averageHits'] = $ret['totalHits'] / $ret['trackingPeriods'];
+            $ret['timespanUnitName'] = getTimeFrameUtility()->getPeriodName(false);
+
+            // Format dates
+            if($ret['lastVisited']>0) $ret['lastVisited'] = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $ret['lastVisited']);
+            if($ret['firstVisited']>0) $ret['firstVisited'] = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $ret['firstVisited']);
+
+        }
+        //var_dump($ret); exit;
+        return $ret;
+
+        //return false;
     }
 }
