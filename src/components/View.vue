@@ -183,6 +183,7 @@ export default {
 </script>
 
 <style lang="scss">
+.k-simplestats-view {
 .row-percent {
   //background-color: #bbb;
 }
@@ -305,5 +306,6 @@ table.vgt-table {
     //display: inline-block;
     visibility: visible;
   }
+}
 }
 </style>
