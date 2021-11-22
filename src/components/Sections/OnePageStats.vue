@@ -1,7 +1,7 @@
 <template>
   <div :class="{'simplestatsonepagedetailssection': true, 'small': sectionSize=='small', 'medium': sectionSize=='medium', 'large': sectionSize=='large'}">
     <br />
-    <k-headline size="medium">{{ headline }}</k-headline>
+    <k-headline v-if="headline" size="medium"><k-icon type="chart" style="display: inline-block; padding-right: 0.5rem;" size="tiny"/> {{ headline }}</k-headline>
     <br/>
     <p v-if="showFullInfo && showTotals">
       This page has been <strong>visited {{ totalHits }} times</strong> since {{ trackedSince }} and was last visited on {{ lastVisited }} which averages to <strong>{{ Math.round(averageHits) }} visits per {{ timespanUnitName }}</strong> using {{ trackingPeriods }} samples.
@@ -25,7 +25,7 @@
           download="PageLanguagesOverTime.png"
           :xtitle="$t('simplestats.charts.time')"
           :ytitle="$t('simplestats.charts.visits')"
-          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':'260px'"
+          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':(this.sectionSize=='tiny')?'120px':'260px'"
           :stacked="true"
           :library="chartOptions"
           v-if="languagesOverTime.length > 0"
@@ -42,7 +42,7 @@
           download="PageVisitsOverTime.png"
           :xtitle="$t('simplestats.charts.time')"
           :ytitle="$t('simplestats.charts.visits')"
-          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':'260px'"
+          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':(this.sectionSize=='tiny')?'120px':'260px'"
           :library="chartOptions"
           v-if="visitsOverTime.length > 0"
         ></area-chart>
@@ -54,7 +54,7 @@
         <pie-chart
           :data="languageTotalHits"
           v-if="languageTotalHits.length > 0"
-          :height="(this.sectionSize=='small')?'185px':(this.sectionSize=='large')?'225px':'205px'"
+          :height="(this.sectionSize=='small')?'185px':(this.sectionSize=='large')?'225px':(this.sectionSize=='tiny')?'80px':'205px'"
           :library="pieOptions"
         />
         <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
@@ -94,6 +94,19 @@ export default {
       trackingPeriods : false,
     }
   },
+  props: {
+//     size: {
+//       type: String,
+//       default: 'medium',
+//     },
+//     showFullInfo: {
+//       type: Boolean,
+//       default: true,
+//     },
+//       showTotals: false,
+//       showTimeline: false,
+//       showLanguages: false,
+  },
 /*
   props: {
     //leftcolumnwidth: "1/1",
@@ -104,16 +117,17 @@ export default {
       return this.languagesOverTime && this.languagesOverTime.length > 0;
     },
     sectionSize(){
-      if(this.size=='small'||this.size=='compact'||this.size=='tiny') return 'small';
+      if(this.size=='small'||this.size=='compact') return 'small';
       else if(this.size=='medium'||this.size=='normal') return 'medium';
-      else if(size=='large'||size=='huge') return 'large';
+      else if(this.size=='large'||this.size=='huge') return 'large';
+      else if(this.size=='tiny') return 'tiny';
       return 'medium';
     },
     chartOptions(){
       return {
         scales: {
           xAxes: [{
-            display: !(this.sectionSize=='small'),
+            display: !(this.sectionSize=='small'||this.sectionSize=='tiny'),
             type: 'time',
             time: {
               unit: 'month',
@@ -131,20 +145,25 @@ export default {
             legend: true,
             scaleLabel: {
               //labelString: '',
-              display: !(this.sectionSize=='small'),
+              display: !(this.sectionSize=='small'||this.sectionSize=='tiny'),
             },
           }],
         },
         tooltips: {
           //enabled: false,
+          position: 'nearest', // places tooltip on points in x-mode
           //mode: 'dataset',
           mode: 'x', // Tooltip sends all item on x axis, so we can sum them up
           callbacks: {
             footer: this.graphFooter,
-          }
+          },
+          //bodyAlign: '',
+          bodyFontSize:   (this.sectionSize=='tiny')?9:(this.sectionSize=='small')?11:12,
+          titleFontSize:  (this.sectionSize=='tiny')?9:(this.sectionSize=='small')?11:12,
+          footerFontSize: (this.sectionSize=='tiny')?9:(this.sectionSize=='small')?11:12,
         },
         legend: {
-          display: !(this.sectionSize=='small'), // hides labels on small
+          display: !(this.sectionSize=='small'||this.sectionSize=='tiny'), // hides labels on small
 //           labels: {
 //             filter: function(legenditem, chartdata){
 //               return true;
