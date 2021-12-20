@@ -20,6 +20,9 @@ App::plugin('daandelange/simplestats', [
     // New K3.6 method
     'areas' => [
         'simplestats' => function ($kirby) {
+
+            if(!$kirby->user() || !$kirby->user()->hasSimpleStatsPanelAccess()) return null;
+
             return [
                 // label for the menu and the breadcrumb
                 'label' => 'Simple Stats',
