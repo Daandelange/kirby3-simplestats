@@ -20,7 +20,7 @@ This data is kept for a very short amount of time to ensure only counting unique
   - The visited pages' hit counts are incremented, globally and per language.
   - Device, Engine and OS Family are separately incremented.
 - Referrers are processed immediately and are not bound to any user-related identifier.
-- All data is summed up on a monthly basis by default. You can easily change this "timeframe" to weekly or anything else.
+- All data is summed up on a monthly basis by default. You can easily change this "timeframe" to `weekly` or your own custom timeframe utility.
 
 
 ### Current state
@@ -105,7 +105,7 @@ return [
   'daandelange.simplestats.panel.enable' => false, // Disable the panel view completely
   'daandelange.simplestats.tracking.enableReferers' => false, // Disable referer tracking
   'daandelange.simplestats.tracking.timeFrameUtility' => new \daandelange\SimpleStats\SimpleStatsTimeFrameUtilityWeekly(), // Here you can put your custom inherited class from SimpleStatsTimeFrameUtility
-  //'daandelange.simplestats.tracking.timeFrameUtility' => 'weekly', // Alternative
+  'daandelange.simplestats.tracking.timeFrameUtility' => 'weekly', // Alternative
 ];
 ````
 
@@ -129,7 +129,7 @@ Here's a list with options that have been tested. (the `daandelange.simplestats`
 | `panel.authorizedRoles`         | Array                                 | `['admin']`     | User roles that are allowed to view statistics from the panel.             |                                                                                   |
 | `panel.breadcrumbLabel`         | String                                | `'SimpleStats'` | Breadcrumb shown in the panel.                                             |                                                                                   |
 
-* : Note - You have to choose the `timeFrameUtility` setting **before the initialisation**. If you'd like to change it afterwards, you'll not be able to import the previously collected data. Changing `timeFrameUtility`, you need to replace the database file.
+* : Note - You have to choose the `timeFrameUtility` setting **before the initialisation**. If you'd like to change it afterwards, you'll not be able to import the previously collected data. Changing `timeFrameUtility`, you need to replace the database file with a new one (or manage to convert it).
 
 ### Updating
 Before updating, make sure to **backup your database file**. If something goes wrong, you'll be able to retrieve your stats by replacing the database file later.
