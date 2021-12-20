@@ -29,7 +29,7 @@ App::plugin('daandelange/simplestats', [
 
                 // optional replacement for the breadcrumb label
                 'breadcrumbLabel' => function () {
-                  return 'SimpleStats - All your data are belong to us !';
+                  return option('daandelange.simplestats.panel.breadcrumbLabel', 'SimpleStats - All your data are belong to us !');
                 },
 
                 // show / hide from the menu
@@ -60,18 +60,31 @@ App::plugin('daandelange/simplestats', [
                         // the document title for the current view
                         'title' => 'Simple Stats',
 
-                        // the breadcrumb can be just an array or a callback
-                        // function for more complex breadcrumb logic
-//                         'breadcrumb' => function () {
-//                           // each item in the breadcrumb array
-//                           // has a label and a link attribute
-//                           return [
-//                             [
-//                               'label' => 'Buy some milk',
-//                               'link'  => '/todos/123'
-//                             ]
-//                           ];
-//                         },
+                        // the breadcrumb
+                        'breadcrumb' => function () {
+                            $tabLabel = t('simplestats.tabs.pagevisits');
+                            $tabID = 'simplestats-tabs-visitedpages';
+                            switch(get('tab')){
+                                case 'simplestats-tabs-visitordevices' :
+                                    $tabLabel = t('simplestats.tabs.visitordevices');
+                                    $tabID = 'simplestats-tabs-visitordevices';
+                                    break;
+                                case 'simplestats-tabs-referers' :
+                                    $tabLabel = t('simplestats.tabs.referers');
+                                    $tabID = 'simplestats-tabs-referers';
+                                    break;
+                                case 'simplestats-tabs-info' :
+                                    $tabLabel = t('simplestats.tabs.information');
+                                    $tabID = 'simplestats-tabs-info';
+                                    break;
+                                default:
+                                    break;
+                            }
+                            return [[
+                              'label' => $tabLabel,
+                              'link'  => '/simplestats?tab='.$tabID,
+                            ]];
+                        },
 
                         // props will be directly available in the
                         // Vue component. It's a super convenient way

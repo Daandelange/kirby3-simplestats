@@ -47,6 +47,7 @@ return [
         'enable'            => true, // Only disables the API (for now...) = makes the panel unusable.
         'dismissDisclaimer' => false,
         'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics.
+        'breadcrumbLabel'   => 'SimpleStats',
     ]
 
 
