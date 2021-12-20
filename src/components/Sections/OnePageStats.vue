@@ -1,8 +1,9 @@
 <template>
   <div :class="{'simplestatsonepagedetailssection': true, 'small': sectionSize=='small', 'medium': sectionSize=='medium', 'large': sectionSize=='large'}">
-    <br />
-    <k-headline v-if="headline" size="medium"><k-icon type="chart" style="display: inline-block; padding-right: 0.5rem;" size="tiny"/> {{ headline }}</k-headline>
-    <br/>
+    <div v-if="headline">
+      <k-headline size="medium"><k-icon type="chart" style="display: inline-block; padding-right: 0.5rem;" size="tiny"/> {{ headline }}</k-headline>
+      <br/>
+    </div>
     <p v-if="showFullInfo && showTotals">
       This page has been <strong>visited {{ totalHits }} times</strong> since {{ trackedSince }} and was last visited on {{ lastVisited }} which averages to <strong>{{ Math.round(averageHits) }} visits per {{ timespanUnitName }}</strong> using {{ trackingPeriods }} samples.
     </p>
@@ -270,7 +271,13 @@ export default {
 <style lang="scss">
 .simplestatsonepagedetailssection {
   .detailcolumn {
-    margin-bottom: 1.2rem;
+
+    &.medium {
+      margin-bottom: 0.6rem;
+    }
+    &.large {
+      margin-bottom: 1.2rem;
+    }
   }
   &.medium, &.large {
     .detailcolumn {

@@ -15,6 +15,6 @@ return [
             // user is authorized to view statistics
             in_array( $user->role()->id(), option('daandelange.simplestats.panel.authorizedRoles', ['admin']) )
             &&
-            ( !$forSpecialAdminAccess || $user->isAdmin() );
+            ( !$forSpecialAdminAccess || $user->isAdmin() ); //  && in_array( $this->user()->role()->id(), ['admin'] )
     }
 ];

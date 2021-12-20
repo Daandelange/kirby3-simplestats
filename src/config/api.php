@@ -298,7 +298,7 @@ return [
             'method'  => 'GET',
             'action'  => function () {
                 // Only allow admins explicitly for upgrading the db
-                if( $this->user()->hasSimpleStatsPanelAccess() && in_array( $this->user()->role()->id(), ['admin'] ) ){
+                if( $this->user()->hasSimpleStatsPanelAccess(true) ){
                     $result = Stats::checkUpgradeDatabase(false);
                     return [
                         'status'    => $result,
