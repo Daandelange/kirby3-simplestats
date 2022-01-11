@@ -85,7 +85,8 @@ import DbInformation from "./Sections/DbInformation.vue";
 import Configuration from "./Sections/Configuration.vue";
 import TrackingTester from "./Sections/TrackingTester.vue";
 
-import 'vue-good-table/dist/vue-good-table.css'
+
+//import 'vue-good-table/dist/vue-good-table.css';
 
 export default {
   components: {
@@ -182,8 +183,13 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="less">
+
+/* @import 'vue-good-table/dist/vue-good-table.css'; //*/
 .k-simplestats-view {
+  /* Scoped import not to break k3-pagetable. See https://github.com/Daandelange/kirby3-simplestats/issues/20 */
+  @import (less) 'vue-good-table/dist/vue-good-table.css';
+
 .row-percent {
   //background-color: #bbb;
 }
