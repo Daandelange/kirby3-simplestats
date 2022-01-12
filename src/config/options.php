@@ -21,19 +21,20 @@ return [
     // Tracking options
     'tracking' => [
         'database'              => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
-        'timeFrameUtility'      => new SimpleStatsTimeFrameUtilityMonthly(), // 'weekly' or 'monthly' or any instance of SimpleStatsTimeFrameUtility
+        'timeFrameUtility'      => new SimpleStatsTimeFrameUtilityMonthly(), // 'weekly' or 'monthly' or any instance of SimpleStatsTimeFrameUtility. Do not change without creating a new db file !!
         'enableReferers'        => true, // Enables tracking of referers. Gives an insigt of who links your website.
         'enableDevices'         => true, // Enables tracking of minimal hardware configurations (device information)
         'enableVisits'          => true, // Enables tracking of page visits
         'enableVisitLanguages'  => true, // In multilanguage setups, separately count language hits with page counts
         'salt'                  => 'CHANGEME', // Salt used to obfuscate unique user string.
         'uniqueSeconds'         => 1*24*60*60, // Anonimised user data is deleted after this delay to become obfuscated
+        'imageStyle'            => 'position: absolute; right: 0; pointer-events: none; height: 1px; width: 1px; opacity: 0;', // The style applied to the tracking image. Only for tracking.method=OnImage on $page->simpleStatsImage();
 
         // Tracking blacklist
         'ignore' => [
             'roles' => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here (causes the plugin's translations to vanish from php)
             'pages' => [], // Array of plain text page ids.
-            'templates' => ['error'], // Array of plain template names not to track (use lowercase) (checked againt intendedTemplate and template)
+            'templates' => ['error'], // Array of plain template names not to track (use lowercase) (checked against intendedTemplate and template)
         ],
 
         // Dont change onLoad yet !!! (keep to true)
