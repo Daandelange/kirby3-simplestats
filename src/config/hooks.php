@@ -8,38 +8,35 @@ use Throwable;
 use Kirby\Cms\Page;
 
 return [
-    ( option('daandelange.simplestats.tracking.onLoad', true) !== true )?[]:
     'route:after' => function ($path, $method, $result, $final) { // Available = ($route, $path, $method, $result, $final)
 
-        // Call general track object
-        if( $final === true && empty($result) === false && $method==='GET') { // Only log visits when the page object was found
+        if(
+            // Correct tracking method ?
+            SimplestatsTrackingMode::OnLoad === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad)
+            &&
+            // Any tracking feature is enabled ?
+            (
+                true===option('daandelange.simplestats.tracking.enableDevices' , true) ||
+                true===option('daandelange.simplestats.tracking.enableVisits'  , true) ||
+                true===option('daandelange.simplestats.tracking.enableReferers', true) ||
+                true===option('daandelange.simplestats.tracking.enableVisitLanguages', true)
+            )
+        ){
 
-            $page = $path;
+            // Call general track object
+            if( $final === true && empty($result) === false && $method==='GET') { // Only log visits when the page object was found
 
-            if( $result instanceof Page ) {
-                //var_dump( $result->id() );
-                $page = $result->id();
-
-                try {
-                    SimpleStats::track($page);
-                } catch (Throwable $e) {
-
-                    // If logging enable, initialize model and add record
-                    if (option('daandelange.simplestats.log.tracking') === true) {
-                        Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
-                    }
+                if( $result instanceof Page && $result->exists() && $result->isPublished() ) {
+                    SimpleStats::safeTrack($result->id());
+                    return $result;
                 }
-
-                return $result;
+                else {
+                    // Panel and other requests are not Page objects. (HttpResponse)
+                    // Idea: track downloaded files ?
+                    //var_dump(get_class($result), is_a($result, 'Page'), $result);
+                    // Ignore
+                }
             }
-            else {
-                // Panel and other requests are not Page objects. (HttpResponse)
-                // Idea: track downloaded files ?
-                //var_dump(get_class($result), is_a($result, 'Page'), $result);
-                // Ignore
-                return $result;
-            }
-
         }
 
         return $result;

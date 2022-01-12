@@ -11,6 +11,8 @@ use Kirby\Database\Database;
 use Kirby\Toolkit\Collection;
 use Kirby\Toolkit\F;
 use Kirby\Toolkit\Obj;
+use Kirby\Cms\Page;
+use Kirby\Cms\Response;
 
 use Snowplow\RefererParser\Parser as RefererParser;
 use Snowplow\RefererParser\Medium;
@@ -19,12 +21,75 @@ use WhichBrowser\Parser as BrowserParser;
 use WhichBrowser\Constants\DeviceType;
 use WhichBrowser\Constants\BrowserType;
 
+// Since v 0.4.8, OnLoad is stable, the others are in beta (use with caution).
+class SimplestatsTrackingMode {
+    const OnLoad   = 0; // Default. When the kirby router routes to a page, tracking happens. (all views are tracked, but pageload time increases a bit).
+    const OnImage  = 2; // Provides a dummy image for each page, which you have to display in your html using $page->simpleStatsImage(). Tracking happens when the image is loaded (delayed).
+    const Disabled = 3; // Any tracking / processing is disabled, viewing remains possible.
+    const Manual   = 4; // Tracking is enabled but not automatically triggered, you have to do this yourselve. ( calling `SimpleStats::track('uid');` )
+}
+
 class SimpleStats extends SimpleStatsDb {
+
+    // track() without exceptions
+    public static function safeTrack(string $page_uri = ''){
+        try {
+            return SimpleStats::track($page_uri);
+        } catch (Throwable $e) {
+            // If logging enable, initialize model and add record
+            if (option('daandelange.simplestats.log.tracking') === true) {
+                Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
+            }
+        }
+        return false;
+    }
+
+    // Generates a router response for serving the tracker image
+    public static function trackPageAndServeImageResponse(Page $page){
+        // Correct tracking method ?
+        if( SimplestatsTrackingMode::OnImage === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad) ){
+            // Any tracking feature is enabled ?
+            if(
+                true===option('daandelange.simplestats.tracking.enableDevices' , true) ||
+                true===option('daandelange.simplestats.tracking.enableVisits'  , true) ||
+                true===option('daandelange.simplestats.tracking.enableReferers', true) ||
+                true===option('daandelange.simplestats.tracking.enableVisitLanguages', true)
+            ){
+                // Does the page exist ?
+                if( $page && $page->exists() && $page->isPublished() ){
+                    SimpleStats::safeTrack( $page->id() );
+                    //return var_dump(SimpleStats::safeTrack( $page->id() ));
+
+                    return new Response(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII='), 'image/png', 200);
+
+                    //header('Content-Type: image/png');
+                    //header("Content-type: image/png");
+                    //echo  base64_decode('image/png;base64,'); // Smallest transparent PNG
+                    //echo  base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII='); // Smallest transparent PNG
+
+                    //header("Content-type: image/gif");
+                    //echo  base64_decode('R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='); // Smallest transparent GIF
+                    //echo  base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'); // Smallest transparent GIF
+                    //exit;
+                }
+            }
+            // Unknown kirby page  or nothing to track, return 404
+            return new \Kirby\Exception\ErrorPageException(['httpCode'=>410]); // Gone / Removed (with error page)
+        }
+        return new \Kirby\Exception\ErrorPageException(['httpCode'=>404]); // Not found (with error page)
+        //return new Response(null, null, 410); // Gone / Removed (no page is served)
+        //return false; // generates error page
+    }
 
     // Trigger track function
     // Note : the uri should be $page->id(), the Kirby uri is translateable.
     // Additional params are not recommended to use; mainly for testing purposes.
     public static function track( string $page_uri = '', int $time = null, \Kirby\Cms\User $user = null, string $forceLang = null  ): bool {
+
+        // Dont allow tracking in disabled mode
+        if( SimplestatsTrackingMode::Disabled === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad) ){
+            return false;
+        }
 
         // skip ignored paths
         if( empty($page_uri) || in_array($page_uri, option('daandelange.simplestats.tracking.ignore.pages')) === true) {
@@ -36,6 +101,16 @@ class SimpleStats extends SimpleStatsDb {
 
         // tmp : Sync daystats
         Stats::syncDayStats($time);
+
+        // Skip if any tracking feature is disabled
+        if(
+            false===option('daandelange.simplestats.tracking.enableDevices' , true) &&
+            false===option('daandelange.simplestats.tracking.enableVisits'  , true) &&
+            false===option('daandelange.simplestats.tracking.enableReferers', true) &&
+            false===option('daandelange.simplestats.tracking.enableVisitLanguages', true)
+        ){
+            return false;
+        }
 
         // Skip ignored roles
         if( count(option('daandelange.simplestats.tracking.ignore.roles')) > 0){
@@ -49,7 +124,7 @@ class SimpleStats extends SimpleStatsDb {
             }
         }
 
-        // Verify template exclulsions
+        // Verify template exclusions
         $ignoredTemplates = option('daandelange.simplestats.tracking.ignore.templates');
         if( is_array($ignoredTemplates) && count($ignoredTemplates) > 0 ){
             // Try parse page object

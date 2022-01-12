@@ -114,7 +114,7 @@ Here's a list with options that have been tested. (the `daandelange.simplestats`
 | Option                          | Type                                  | Default         | Description                                                                | Comment                                                                           |
 |---------------------------------|---------------------------------------|-----------------|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
 | **TRACKING**                    |                                       |                 |                                                                            |                                                                                   |
-| `tracking.timeFrameUtility`     | String \| SimpleStatsTimeFrameUtility | `'monthly'`     | Set the class that handles time conversions to periods.*                   | Possible string values: `monthly`, `weekly`.                                      |
+| `tracking.timeFrameUtility`     | String \| SimpleStatsTimeFrameUtility | `'monthly'`     | Set the class that handles time conversions to periods. (read note below!*)| Possible string values: `monthly`, `weekly`.                                      |
 | `tracking.enableReferers`       | Bool                                  | true            | Enables tracking referrers. Gives an insight of who links to your website. |                                                                                   |
 | `tracking.enableDevices`        | Bool                                  | true            | Enables tracking of minimal hardware configurations (device information)   |                                                                                   |
 | `tracking.enableVisits`         | Bool                                  | true            | Enables tracking page visits (frequentation)                               |                                                                                   |
@@ -122,7 +122,8 @@ Here's a list with options that have been tested. (the `daandelange.simplestats`
 | `tracking.ignore.roles`         | Array                                 | `['admin']`     | Ignore any tracking for connected users with these roles.                  |                                                                                   |
 | `tracking.ignore.pages`         | Array                                 | `[]`            | Ignore tracking for these page ids.                                        | Make sure to use the full id, not the slug.                                       |
 | `tracking.ignore.templates`     | Array                                 | `['error']`     | Ignore tracking for pages which these templates.                           | Check against `template()` and `intendedTemplate()`                               |
-| `tracking.salt`                 | String                                | `'CHANGEME'`    | A unique hash, used to generate a unique user id from visitor data.        | Recommended to change, ensures that user identifying information is hard to retrieve if you database leaks. |
+| `tracking.salt`                 | String                                | `'CHANGEME'`    | A unique hash, used to generate a unique user id from visitor data.        | Recommended to change, ensures that user identifying information is hard to retrieve if your database leaks. |
+| `tracking.method`               | SimplestatsTrackingMode               | `onLoad`        | Tracking mode. See `SimplestatsTrackingMode` for more information.         | `onLoad` is the only fully automatic mode, others need manual attention.          |
 | **PANEL**                       |                                       |                 |                                                                            |                                                                                   |
 | `panel.dismissDisclaimer`       | Bool                                  | false           | Dismisses the panel disclaimer message.                                    |                                                                                   |
 | `panel.enable`                  | Bool                                  | true            | Enable/Disable viewing stats in the panel.                                 |                                                                                   |
@@ -140,6 +141,25 @@ After updating, review new options and configure as wished.
 Sometimes, a database upgrade is needed. Head to the panel's `Information` tab and follow instructions in the upgrade section.
 It's also a good idea to check the log file for any errors.
 
+****
+
+## API
+
+### Singletons
+- `SimpleStats::safeTrack($id)`
+  Throw-safe alternative of `track()`. `$id` is a `$page->id()` to be tracked.
+- `SimpleStats::track($id)`
+  Function called to track user data. `$id` is a `$page->id()` to be tracked.
+
+### Page Methods
+- `$page->simpleStatsImage()`
+  HTML code for the tracking image, when using OnImage tracking method.
+- `$page->getPageStats()`
+  Returns an array with useful tracking information about the page.
+
+### User Methods
+- `$user->hasSimpleStatsPanelAccess($forSpecialAdminAccess=false)`
+  Returns true if the user is authorized to access the SimpleStats Panel, with or without special admin rights.
 ****
 
 ## Panel Interface
