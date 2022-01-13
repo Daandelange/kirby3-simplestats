@@ -39,7 +39,7 @@ return [
             'bots'          => false, // Beta.#21 Globally disable tracking bots (when they are detected as so).
             'botVisits'     => true, // Beta.#21 Enable if you'd like bots to increment page visit counters.
             'botReferers'   => true, // Beta.#21 Enable if you'd like to record referrers send by bots.
-            //'botDevices'    => false, // Beta.#21 Enable if you'd like bot device information to be saved. Note: no option as bot device info is needed by the 2 options above.
+            //'botDevices'    => false, // Beta.#21 Enable if you'd like bot device information to be saved. Note: no option as bot device info is needed by the 2 options above. Could become an option to hide bots from panel stats.
         ],
 
         // Dont change onLoad yet !!! (keep to true)
