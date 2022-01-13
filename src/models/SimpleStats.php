@@ -84,7 +84,7 @@ class SimpleStats extends SimpleStatsDb {
             return true;
         }
 
-        // Localhost protection #23
+        // Localhost protection #18
         if( true === option('daandelange.simplestats.tracking.ignore.localhost' , false) && in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1', '::1')) ){
             return true;
         }
