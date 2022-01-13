@@ -731,6 +731,12 @@ class Stats extends SimpleStatsDb {
     // Collect garbage, synthetize it and anonymously store it in permanent db
     public static function syncDayStats(int $time=null): bool {
 
+        // Prevent syncing in some circonstances ?
+        // Localhost protection #23 (not sure if needed here...)
+//         if( true === option('daandelange.simplestats.tracking.ignore.localhost' , false) && in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1', '::1')) ){
+//             return true;
+//         }
+
         // init db
         //$db = self::database();
 

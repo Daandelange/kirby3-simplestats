@@ -76,16 +76,22 @@ class SimpleStats extends SimpleStatsDb {
     // Trigger track function
     // Note : the uri should be $page->id(), the Kirby uri is translateable.
     // Additional params are not recommended to use; mainly for testing purposes.
+    // Return value : Needs to be unified. Sometimes it returns trackin status (tracked/not tracked), sometimes it indicates errors vs correct tracking behaviour.
     public static function track( string $page_uri = '', int $time = null, \Kirby\Cms\User $user = null, string $forceLang = null  ): bool {
 
         // Dont allow tracking in disabled mode
         if( SimplestatsTrackingMode::Disabled === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad) ){
-            return false;
+            return true;
+        }
+
+        // Localhost protection #23
+        if( true === option('daandelange.simplestats.tracking.ignore.localhost' , false) && in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1', '::1')) ){
+            return true;
         }
 
         // skip ignored paths
         if( empty($page_uri) || in_array($page_uri, option('daandelange.simplestats.tracking.ignore.pages')) === true) {
-            return false;
+            return true;
         }
 
         // Format time
@@ -101,7 +107,7 @@ class SimpleStats extends SimpleStatsDb {
             false===option('daandelange.simplestats.tracking.enableReferers', true) &&
             false===option('daandelange.simplestats.tracking.enableVisitLanguages', true)
         ){
-            return false;
+            return true;
         }
 
         // Skip ignored roles
@@ -159,16 +165,22 @@ class SimpleStats extends SimpleStatsDb {
             $visitedpages = '';
 
             // Get device info
-            // Note: Bot devices are always tracked, user devices are per settings
             $info = SimpleStats::detectSystemFromUA();
             $userIsBot = ($info['system'] == 'bot');
+
+            // Ignore bots globally ?
+            if( $userIsBot && true === option('daandelange.simplestats.tracking.ignore.bots' , false)){
+                return true;
+            }
 
             // Track Devices and/or Visits
             if ( option('daandelange.simplestats.tracking.enableVisits') === true || option('daandelange.simplestats.tracking.enableDevices')===true ){
 
                 // Populate visited pages
                 if( option('daandelange.simplestats.tracking.enableVisits') === true ){
-                    $visitedpages = self::getPageIDWithLang($page_uri, $forceLang);
+                    if( !$userIsBot || false === option('daandelange.simplestats.tracking.ignore.botVisits' , false) ){
+                        $visitedpages = self::getPageIDWithLang($page_uri, $forceLang);
+                    }
                 }
 
                 // Populate device info ?
@@ -191,24 +203,32 @@ class SimpleStats extends SimpleStatsDb {
         else {
             $userIsBot = ($userEntry->osfamily == 'bot');
 
-            // Append  visited pages (except bots)
-            // Note: Bot visits are not tracked. Todo: Make this an option
-            if( !$userIsBot && option('daandelange.simplestats.tracking.enableVisits') === true ){
-                $page_uri = self::getPageIDWithLang($page_uri, $forceLang);
+            // Ignore bots globally ?
+            if( $userIsBot && true === option('daandelange.simplestats.tracking.ignore.bots' , false)){
+                return true;
+            }
 
-                // Check if the page was already visited.
-                if( !in_array($page_uri, explode(',', $userEntry->visitedpages) )){
-                    // Add page visit
-                    $newPages = (!empty($userEntry->visitedpages)?$userEntry->visitedpages.',':'').$page_uri;
-                    if( !$db->query("UPDATE `pagevisitors` SET `visitedpages` = '${newPages}' WHERE `userunique`='${userID}'; ") ){
-                        Logger::LogWarning("Failed to update page visitors : ${userID}. Error=".$db->lastError()->getMessage());
+            // Append  visited pages
+            if( option('daandelange.simplestats.tracking.enableVisits') === true ){
+                // Bot visits are not tracked according to user setting
+                if( !$userIsBot || false === option('daandelange.simplestats.tracking.ignore.botVisits' , false) ){
+
+                    $page_uri = self::getPageIDWithLang($page_uri, $forceLang);
+
+                    // Check if the page was already visited.
+                    if( !in_array($page_uri, explode(',', $userEntry->visitedpages) )){
+                        // Add page visit
+                        $newPages = (!empty($userEntry->visitedpages)?$userEntry->visitedpages.',':'').$page_uri;
+                        if( !$db->query("UPDATE `pagevisitors` SET `visitedpages` = '${newPages}' WHERE `userunique`='${userID}'; ") ){
+                            Logger::LogWarning("Failed to update page visitors : ${userID}. Error=".$db->lastError()->getMessage());
+                        }
                     }
                 }
             }
         }
 
         // Ignore bots from here (they only participate to device stats)
-        if( $userIsBot ){
+        if( $userIsBot && true === option('daandelange.simplestats.tracking.ignore.botReferers' , true) ){
             //echo "IgnoredBot!";
             return true;
         }

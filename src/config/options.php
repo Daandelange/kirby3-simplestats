@@ -32,9 +32,14 @@ return [
 
         // Tracking blacklist
         'ignore' => [
-            'roles' => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here (causes the plugin's translations to vanish from php)
-            'pages' => [], // Array of plain text page ids.
-            'templates' => ['error'], // Array of plain template names not to track (use lowercase) (checked against intendedTemplate and template)
+            'roles'         => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here
+            'pages'         => [], // Array of plain text page ids.
+            'templates'     => ['error'], // Array of plain template names not to track (use lowercase) (checked against intendedTemplate and template)
+            'localhost'     => false, // Beta.#23 To ignore tracking (and any syncing?) from localhost. The database remains viewable trough the panel.
+            'bots'          => false, // Beta.#21 Globally disable tracking bots (when they are detected as so).
+            'botVisits'     => true, // Beta.#21 Enable if you'd like bots to increment page visit counters.
+            'botReferers'   => true, // Beta.#21 Enable if you'd like to record referrers send by bots.
+            //'botDevices'    => false, // Beta.#21 Enable if you'd like bot device information to be saved. Note: no option as bot device info is needed by the 2 options above.
         ],
 
         // Dont change onLoad yet !!! (keep to true)
