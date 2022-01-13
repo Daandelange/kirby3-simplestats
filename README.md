@@ -132,6 +132,7 @@ Here's a list with options that have been tested. (the `daandelange.simplestats`
 | `panel.enable`                  | Bool                                  | true            | Enable/Disable viewing stats in the panel.                                 |                                                                                   |
 | `panel.authorizedRoles`         | Array                                 | `['admin']`     | User roles that are allowed to view statistics from the panel.             |                                                                                   |
 | `panel.breadcrumbLabel`         | String                                | `'SimpleStats'` | Breadcrumb shown in the panel.                                             |                                                                                   |
+| `panel.hideBots`                | Bool                                  | false           | To hide bot information from the devices tab.                              |                                                                                   |
 
 * : Note - You have to choose the `timeFrameUtility` setting **before the initialisation**. If you'd like to change it afterwards, you'll not be able to import the previously collected data. Changing `timeFrameUtility`, you need to replace the database file with a new one (or manage to convert it).
 

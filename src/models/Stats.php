@@ -149,9 +149,13 @@ class Stats extends SimpleStatsDb {
 
         //$db = self::database();
 
+        // Need to hide bots ?
+        $hideBotsQueryPart = '';
+        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `device` != "server"';
+
         // Get devices
         $allDevices = [];
-        $allDevicesResult = self::database()->query("SELECT `device`, `hits` FROM `devices` GROUP BY `device` ORDER BY `device` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        $allDevicesResult = self::database()->query('SELECT `device`, `hits` FROM `devices`'.$hideBotsQueryPart.' GROUP BY `device` ORDER BY `device` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allDevicesResult){
             // parse sql result, line by line
             foreach($allDevicesResult as $device){
@@ -162,7 +166,8 @@ class Stats extends SimpleStatsDb {
 
         // Get Systems
         $allSystems = [];
-        $allSystemsResult = self::database()->query("SELECT `system`, `hits` FROM `systems` GROUP BY `system` ORDER BY `system` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `system` != "bot"';
+        $allSystemsResult = self::database()->query('SELECT `system`, `hits` FROM `systems`'.$hideBotsQueryPart.' GROUP BY `system` ORDER BY `system` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allSystemsResult){
             // parse sql result, line by line
             foreach($allSystemsResult as $system){
@@ -173,7 +178,8 @@ class Stats extends SimpleStatsDb {
 
         // Get Engines
         $allEngines = [];
-        $allEnginesResult = self::database()->query("SELECT `engine`, `hits` FROM `engines` GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `engine` != "bot"';
+        $allEnginesResult = self::database()->query('SELECT `engine`, `hits` FROM `engines`'.$hideBotsQueryPart.' GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allEnginesResult){
             // parse sql result, line by line
             foreach($allEnginesResult as $engine){
@@ -185,7 +191,8 @@ class Stats extends SimpleStatsDb {
 
         // Get Devices over time
         $devicesOverTimeData=[];
-        $devicesOverTime = self::database()->query("SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices` GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `device` != "server"';
+        $devicesOverTime = self::database()->query('SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices`'.$hideBotsQueryPart.' GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($devicesOverTime){
             $devicePeriods=[];
             foreach($devicesOverTime as $device){
@@ -994,7 +1001,7 @@ class Stats extends SimpleStatsDb {
                                 }
                             }
                             // Update existing entry
-                            elseif($newHits>0) { // Todo : if robots dont count as a hit, this will need reviewed.
+                            elseif($newHits>0) {
                                 //echo "---";var_dump($monthPages[$key]->id );
                                 //$newHits = intval($newPageInfo['hits']) + intval($monthPages->get($key)['hits']);
                                 $id = $monthPages[$key]->id;

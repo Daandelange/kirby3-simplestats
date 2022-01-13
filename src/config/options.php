@@ -55,6 +55,7 @@ return [
         'dismissDisclaimer' => false,
         'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics.
         'breadcrumbLabel'   => 'SimpleStats',
+        'hideBots'          => false,           // To hide bots in the devices tab.
     ]
 
 
