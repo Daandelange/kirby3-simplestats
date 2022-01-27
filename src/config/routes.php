@@ -3,7 +3,7 @@
 namespace daandelange\SimpleStats;
 
 //return (false===option('daandelange.simplestats.tracking.onLoad', true))?[]:[
-//return (SimplestatsTrackingMode::OnImage===option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad))?[]:[
+//return (SimpleStatsTrackingMode::OnImage===option('daandelange.simplestats.tracking.method', SimpleStatsTrackingMode::OnLoad))?[]:[
 //var_dump(option('daandelange.simplestats.tracking.method')); die();
 return [
     // Intercept counter pixel on home page

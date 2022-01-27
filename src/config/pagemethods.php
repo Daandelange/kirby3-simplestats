@@ -9,7 +9,7 @@ return [
         // Don't serve the image when disabled
         if(
             // Correct tracking method ?
-            SimplestatsTrackingMode::OnImage === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad)
+            SimpleStatsTrackingMode::OnImage === option('daandelange.simplestats.tracking.method', SimpleStatsTrackingMode::OnLoad)
             &&
             // Any tracking feature is enabled ?
             (

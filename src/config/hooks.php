@@ -12,7 +12,7 @@ return [
 
         if(
             // Correct tracking method ?
-            SimplestatsTrackingMode::OnLoad === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad)
+            SimpleStatsTrackingMode::OnLoad === option('daandelange.simplestats.tracking.method', SimpleStatsTrackingMode::OnLoad)
             &&
             // Any tracking feature is enabled ?
             (

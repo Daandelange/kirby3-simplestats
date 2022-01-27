@@ -39,7 +39,7 @@ class SimpleStats extends SimpleStatsDb {
     // Generates a router response for serving the tracker image
     public static function trackPageAndServeImageResponse(Page $page){
         // Correct tracking method ?
-        if( SimplestatsTrackingMode::OnImage === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad) ){
+        if( SimpleStatsTrackingMode::OnImage === option('daandelange.simplestats.tracking.method', SimpleStatsTrackingMode::OnLoad) ){
             // Any tracking feature is enabled ?
             if(
                 true===option('daandelange.simplestats.tracking.enableDevices' , true) ||
@@ -80,7 +80,7 @@ class SimpleStats extends SimpleStatsDb {
     public static function track( string $page_uri = '', int $time = null, \Kirby\Cms\User $user = null, string $forceLang = null  ): bool {
 
         // Dont allow tracking in disabled mode
-        if( SimplestatsTrackingMode::Disabled === option('daandelange.simplestats.tracking.method', SimplestatsTrackingMode::OnLoad) ){
+        if( SimpleStatsTrackingMode::Disabled === option('daandelange.simplestats.tracking.method', SimpleStatsTrackingMode::OnLoad) ){
             return true;
         }
 

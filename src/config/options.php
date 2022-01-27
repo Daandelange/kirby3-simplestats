@@ -46,7 +46,7 @@ return [
         //'onLoad'   => true, // Tracks when the page is served by the router (increases load time). If false, you need to add an image to all trackable templates (not yet available), you'll get better load performance, and "naturaly" exclude most bots.
         // Set to false to track from an image, which can naturally prevent calls from most robots, and speed up page loads. (recommended: set to false)
         // Track hits on page serve or using an image ?
-        'method' => SimplestatsTrackingMode::OnLoad, // Notyet. Important: SimplestatsTrackingMode
+        'method' => SimpleStatsTrackingMode::OnLoad, // Notyet. Important: SimpleStatsTrackingMode
     ],
 
     // Enable/Disable the admin panel and API
