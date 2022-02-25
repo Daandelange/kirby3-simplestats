@@ -1,7 +1,7 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => '0.4.7-beta',
-        'version' => '0.4.7.0-beta',
+        'pretty_version' => '0.4.8-beta',
+        'version' => '0.4.8.0-beta',
         'type' => 'kirby-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,8 +11,8 @@
     ),
     'versions' => array(
         'daandelange/simplestats' => array(
-            'pretty_version' => '0.4.7-beta',
-            'version' => '0.4.7.0-beta',
+            'pretty_version' => '0.4.8-beta',
+            'version' => '0.4.8.0-beta',
             'type' => 'kirby-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
