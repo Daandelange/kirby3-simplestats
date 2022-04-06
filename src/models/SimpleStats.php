@@ -287,6 +287,7 @@ class SimpleStats extends SimpleStatsDb {
         return true;
     }
 
+
     public static function getPageIDWithLang($page_uri, string $forceLang = null): string {
 
         // With language ?
@@ -302,46 +303,78 @@ class SimpleStats extends SimpleStatsDb {
 
     }
 
+
+    /**
+     * Anonymizes given IP address
+     *
+     * See https://github.com/geertw/php-ip-anonymizer
+     *
+     * @param string $address IP address
+     * @return string Anonymized IP address
+     * @throws Exception
+     */
+    public static function anonymize(string $address): string
+    {
+        $addressPacked = inet_pton($address);
+
+        if (strlen($addressPacked) == 4) {
+            return inet_ntop(inet_pton($address) & inet_pton('255.255.0.0'));
+        }
+
+        if (strlen($addressPacked) == 16) {
+            return inet_ntop(inet_pton($address) & inet_pton('ffff:ffff:ffff:ffff:0000:0000:0000:0000'));
+        }
+
+        throw new Exception(sprintf('Invalid IP address: "%s"', $address));
+    }
+
+
     // Combines the ip + user_agent to get a unique user string
     public static function getUserUniqueString(string $ua = ''): string {
-        $ip = preg_replace("/[\.\:]+/", '_', preg_replace("/[^a-zA-Z0-9\.\:]+/", '', substr($_SERVER['REMOTE_ADDR'],0,128))); // $kirby->visitor()->ip()
+        // Anonymize IP beforehand (if enabled)
+        $ip = option('daandelange.simplestats.log.anonymizeFirst', true) === true
+            ? static::anonymize($_SERVER['REMOTE_ADDR'])
+            : $_SERVER['REMOTE_ADDR']
+        ;
+
+        $ip = preg_replace("/[\.\:]+/", '_', preg_replace("/[^a-zA-Z0-9\.\:]+/", '', substr($ip,0,128))); // $kirby->visitor()->ip()
         $ua = preg_replace("/[^a-zA-Z0-9]+/", '', substr(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:'UserAgentNotSet', 0, 256) ); // $kirby->visitor()->ip()->userAgent()
         $salt = option('daandelange.simplestats.tracking.salt');
         // Compute final string
-    	$final = '';
-    	$iplen=strlen($ip);
-    	$ualen=strlen($ua);
-    	$saltlen=strlen($salt);
-    	$max=max($iplen, $ualen, $saltlen);
-    	for($i=0; $i<$max; $i++){
-    		if( $i < $iplen ) $final.=$ip[$i];
-    		if( $i < $ualen ) $final.=$ua[$i];
-    		if( $i < $saltlen ) $final.=$salt[$i];
-    	}
-    	//echo '----'.($ip.$salt.$ua).'----';
-    	return hash("sha1", base64_encode($final));
+        $final = '';
+        $iplen=strlen($ip);
+        $ualen=strlen($ua);
+        $saltlen=strlen($salt);
+        $max=max($iplen, $ualen, $saltlen);
+        for($i=0; $i<$max; $i++){
+            if( $i < $iplen ) $final.=$ip[$i];
+            if( $i < $ualen ) $final.=$ua[$i];
+            if( $i < $saltlen ) $final.=$salt[$i];
+        }
+        //echo '----'.($ip.$salt.$ua).'----';
+        return hash("sha1", base64_encode($final));
     }
 
     // Returns an array with detected user hardware setup
     public static function detectSystemFromUA( $ua = null ): array {
         // Kirby method : $kirby->visitor()->ip()->userAgent()
-    	if($ua===null) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
+        if($ua===null) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
 
         $data = [
-            'engine' 	=> 'undefined',
-            'device'	=> 'undefined',
-            'system'	=> 'undefined'
+            'engine' => 'undefined',
+            'device' => 'undefined',
+            'system' => 'undefined'
         ];
 
         // Respect DNT requests
         // Todo: Don't respect DNT bots !
-    	if (array_key_exists('HTTP_DNT', $_SERVER) && (1 === (int) $_SERVER['HTTP_DNT'])){
-    		// Don't collect private fingerprintable user data
-    		//$data['engine']=$data['device']=$data['system']='Anonymous';
-    		//return $data;
-    	}
+        if (array_key_exists('HTTP_DNT', $_SERVER) && (1 === (int) $_SERVER['HTTP_DNT'])){
+            // Don't collect private fingerprintable user data
+            //$data['engine']=$data['device']=$data['system']='Anonymous';
+            //return $data;
+        }
 
-    	// Todo : Handle opt.out ?
+        // Todo : Handle opt.out ?
 
         // Get Headers with replaced ua
         $headers = getallheaders();
@@ -351,106 +384,106 @@ class SimpleStats extends SimpleStatsDb {
 
         // Parser
         $clientData = new BrowserParser();//$headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>false,'features'=>false ]);
-    	$clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>true,'features'=>false ]); // Note: Useragent must be false for detection to work
-    	// Todo: set engine to true above ???
+        $clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>true,'features'=>false ]); // Note: Useragent must be false for detection to work
+        // Todo: set engine to true above ???
         //echo $clientData->os->name.' :: '.$clientData->engine->name.' :: '.$clientData->device->type."<br>\n";
 
-    	// Detected something ?
-    	if( $clientData->isDetected() ){
+        // Detected something ?
+        if( $clientData->isDetected() ){
 
-    		// Got a bot ?
-    		if( $clientData->isType(DeviceType::BOT)){//device->type == "bot" ){
-    			$data['engine']=$data['system']='bot';
-    			$data['device']='server';
-    			return $data;
-    		}
-    		// No bot
-    		else {
-    			// Save Device info
-    			// todo: Save only desktop / tablet / mobile / other
-    			// $data['device']=$clientData->device->type;
-    			if( $clientData->isType(DeviceType::DESKTOP) ){
-    				$data['device']='desktop';
-    			}
-    			elseif( $clientData->isType(DeviceType::MOBILE) ){
-    				$data['device']='mobile';
-    			}
-    			elseif( $clientData->isType(DeviceType::TABLET) ){
-    				$data['device']='tablet';
-    			}
-    			else {
-    				// todo: set to desktop ? Or other ?
-    				if( $clientData->isMobile() ){
-    					$data['device']='mobile';
-    				}
-    				else if( !empty($clientData->device) && !empty($clientData->device->type) ){
-    					//var_dump($clientData->device);
-    					$data['device']='other';
-    				}
-    				//elseif() // check browser here for fallback ?
-    				else {
-    					$data['device']='undefined';
-    				}
-    			}
+            // Got a bot ?
+            if( $clientData->isType(DeviceType::BOT)){//device->type == "bot" ){
+                $data['engine']=$data['system']='bot';
+                $data['device']='server';
+                return $data;
+            }
+            // No bot
+            else {
+                // Save Device info
+                // todo: Save only desktop / tablet / mobile / other
+                // $data['device']=$clientData->device->type;
+                if( $clientData->isType(DeviceType::DESKTOP) ){
+                    $data['device']='desktop';
+                }
+                elseif( $clientData->isType(DeviceType::MOBILE) ){
+                    $data['device']='mobile';
+                }
+                elseif( $clientData->isType(DeviceType::TABLET) ){
+                    $data['device']='tablet';
+                }
+                else {
+                    // todo: set to desktop ? Or other ?
+                    if( $clientData->isMobile() ){
+                        $data['device']='mobile';
+                    }
+                    else if( !empty($clientData->device) && !empty($clientData->device->type) ){
+                        //var_dump($clientData->device);
+                        $data['device']='other';
+                    }
+                    //elseif() // check browser here for fallback ?
+                    else {
+                        $data['device']='undefined';
+                    }
+                }
 
-    			// Save OS info
+                // Save OS info
     /*
-    			$data['system']=$clientData->os->name;
-    			if( $clientData->isOs('desktop') ){
-    				$data['system']=$clientData->os->name;
-    			}
+                $data['system']=$clientData->os->name;
+                if( $clientData->isOs('desktop') ){
+                    $data['system']=$clientData->os->name;
+                }
     */
-    			if( isset($clientData->os->family) && !empty($clientData->os->family->name) ){
-    				$data['system']=$clientData->os->family->name;// .'/'.$clientData->os->name;
-    			}
-    			elseif( isset($clientData->os->name) && !empty($clientData->os->name) ){
-    				$data['system']=$clientData->os->name;
-    			}
-    			elseif( $clientData->os->isDetected() ){
-    				$data['system']='other';
-    			}
-    			else{
-    				//var_dump($clientData->os);
-    				//echo WhichBrowser\Model\
-    				$data['system']='unknown';
-    			}
+                if( isset($clientData->os->family) && !empty($clientData->os->family->name) ){
+                    $data['system']=$clientData->os->family->name;// .'/'.$clientData->os->name;
+                }
+                elseif( isset($clientData->os->name) && !empty($clientData->os->name) ){
+                    $data['system']=$clientData->os->name;
+                }
+                elseif( $clientData->os->isDetected() ){
+                    $data['system']='other';
+                }
+                else{
+                    //var_dump($clientData->os);
+                    //echo WhichBrowser\Model\
+                    $data['system']='unknown';
+                }
 
-    			// Engine info
-    			//$data['engine']=$clientData->engine->name;
-    			// Engine detected ?
-    			if( !empty($clientData->engine) && isset($clientData->engine->family->name) && !empty($clientData->engine->family->name) ){
-    				$data['engine']=$clientData->engine->family->name;
-    			}
-    			elseif( !empty($clientData->engine) && isset($clientData->engine->name) && !empty($clientData->engine->name) ){
-    				$data['engine']=$clientData->engine->name;
-    			}
-    			// Look for engine fallback in browser type
-    			elseif( isset($clientData->browser->type) ) {
-    				//if( $clientData->browser->type ^= 'browser'
-    				if( $clientData->browser->type === BrowserType::BROWSER_TEXT ){//'browser:text'){
-    					$data['engine']='textbased';
-    				}
-    				elseif( stripos( $clientData->browser->type, BrowserType::BROWSER) === 0 ){
-    					$data['engine']='other';
-    				}
-    				elseif( stripos( $clientData->browser->type, BrowserType::APP) === 0 ){
-    					$data['engine']='application';
-    				}
-    				else {
-    					$data['engine']='unknown';
-    				}
-    			}
-    			else {
-    				$data['engine']='unknown';
-    			}
-    		}
-    	}
-    	// No client data detected
-    	else {
-    		$data['engine']=$data['device']=$data['system']='other';
-    		return $data;
-    	}
-    	return $data;
+                // Engine info
+                //$data['engine']=$clientData->engine->name;
+                // Engine detected ?
+                if( !empty($clientData->engine) && isset($clientData->engine->family->name) && !empty($clientData->engine->family->name) ){
+                    $data['engine']=$clientData->engine->family->name;
+                }
+                elseif( !empty($clientData->engine) && isset($clientData->engine->name) && !empty($clientData->engine->name) ){
+                    $data['engine']=$clientData->engine->name;
+                }
+                // Look for engine fallback in browser type
+                elseif( isset($clientData->browser->type) ) {
+                    //if( $clientData->browser->type ^= 'browser'
+                    if( $clientData->browser->type === BrowserType::BROWSER_TEXT ){//'browser:text'){
+                        $data['engine']='textbased';
+                    }
+                    elseif( stripos( $clientData->browser->type, BrowserType::BROWSER) === 0 ){
+                        $data['engine']='other';
+                    }
+                    elseif( stripos( $clientData->browser->type, BrowserType::APP) === 0 ){
+                        $data['engine']='application';
+                    }
+                    else {
+                        $data['engine']='unknown';
+                    }
+                }
+                else {
+                    $data['engine']='unknown';
+                }
+            }
+        }
+        // No client data detected
+        else {
+            $data['engine']=$data['device']=$data['system']='other';
+            return $data;
+        }
+        return $data;
     }
 
     // Referer retrieval
@@ -464,13 +497,13 @@ class SimpleStats extends SimpleStatsDb {
         ];
 
         if( !empty($refHeader) ){
-            	$parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
-            	$referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
-            	//echo "Got referer! == ".$refHeader."\n";
-            	//echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-            	if( $referer->isValid() ){
-            		if ($referer->isKnown()) {
-            			$returnData['medium']=$referer->getMedium();
+                $parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
+                $referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
+                //echo "Got referer! == ".$refHeader."\n";
+                //echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+                if( $referer->isValid() ){
+                    if ($referer->isKnown()) {
+                        $returnData['medium']=$referer->getMedium();
                         $returnData['source']=$referer->getSource();
 
                         $urlParts = parse_url($refHeader);
@@ -486,19 +519,19 @@ class SimpleStats extends SimpleStatsDb {
                         }
                         //var_dump($returnData);
                         return $returnData;
-            		}
-            		else {
-            			if( $referer->getMedium() == Medium::INTERNAL ){
-            				// IGNORE internals
-            				//echo "Got INTERNAL referer !";
-            				return null;
-            			}
-            			// Referer is valid but unknown (other)
-            			else {
-            				//echo "Got UNKNOWN referer!";
-            				//echo $referer->getMedium(); // "Search"
-                			//echo ' - ';
-                			//echo $referer->getSource(); // "Google"
+                    }
+                    else {
+                        if( $referer->getMedium() == Medium::INTERNAL ){
+                            // IGNORE internals
+                            //echo "Got INTERNAL referer !";
+                            return null;
+                        }
+                        // Referer is valid but unknown (other)
+                        else {
+                            //echo "Got UNKNOWN referer!";
+                            //echo $referer->getMedium(); // "Search"
+                            //echo ' - ';
+                            //echo $referer->getSource(); // "Google"
                         $returnData['medium']='website';//$referer->getMedium(); // Note: All unknown referrers are considered websites.
                         $returnData['source']=''; // other ?
                         $urlParts = parse_url($refHeader);
@@ -518,17 +551,17 @@ class SimpleStats extends SimpleStatsDb {
                         }
 
                         //var_dump($returnData);
-            			}
-            			//var_dump($referer);
-            			//echo $referer->getMedium();
-            		}
-            	}
-            	// Referer is an invalid URL (or empty)
-            	else {
-            		// IGNORE
-            		//echo "Got INVALID referer !\n";
-            		return null;
-            	}
+                        }
+                        //var_dump($referer);
+                        //echo $referer->getMedium();
+                    }
+                }
+                // Referer is an invalid URL (or empty)
+                else {
+                    // IGNORE
+                    //echo "Got INVALID referer !\n";
+                    return null;
+                }
         }
         // default return value (no referrer)
         return null;
