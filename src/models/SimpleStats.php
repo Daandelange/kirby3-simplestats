@@ -310,37 +310,49 @@ class SimpleStats extends SimpleStatsDb {
      * See https://github.com/geertw/php-ip-anonymizer
      *
      * @param string $address IP address
-     * @return string Anonymized IP address
-     * @throws Exception
+     * @return string Anonymized IP address or null if no valid IP.
      */
-    public static function anonymize(string $address): string
-    {
+    public static function anonymize(string $address): ?string {
         $addressPacked = inet_pton($address);
+        if(!$addressPacked) return null; // return early when IP address has wrong format
+        // Note: sometimes, on localhost, ip can be `::1` which is still valid and gets stripped to `::`
 
-        if (strlen($addressPacked) == 4) {
-            return inet_ntop(inet_pton($address) & inet_pton('255.255.0.0'));
+        $bitsToAnonymize = option('daandelange.simplestats.tracking.anonimizeIpBits', 1);
+        if($bitsToAnonymize < 1) return inet_ntop($addressPacked); // Return early when no-anonymization
+
+        $ipBits = strlen($addressPacked);
+
+        if ($ipBits == 4 || $ipBits == 16) {
+            $isIpv6 = ($ipBits == 16);
+            if($isIpv6){
+                $bitsToAnonymize *= 2; // note: ipv6 has double anonimized bits
+                $ipBits = 8;
+            }
+
+            $maskMax = array_fill(0, $ipBits, '');
+            $maskMax = array_map(function($k, $v) use($ipBits, $bitsToAnonymize, $isIpv6) {
+                return ($k >= $ipBits-$bitsToAnonymize )?(($isIpv6?'0000':'0')):($isIpv6?'ffff':'255');
+            }, array_keys($maskMax), $maskMax);
+implode($isIpv6?':':'.', $maskMax);
+
+            return inet_ntop($addressPacked & inet_pton(implode($isIpv6?':':'.', $maskMax)));
         }
 
-        if (strlen($addressPacked) == 16) {
-            return inet_ntop(inet_pton($address) & inet_pton('ffff:ffff:ffff:ffff:0000:0000:0000:0000'));
-        }
-
-        throw new Exception(sprintf('Invalid IP address: "%s"', $address));
+        return null;
     }
 
 
     // Combines the ip + user_agent to get a unique user string
     public static function getUserUniqueString(string $ua = ''): string {
         // Anonymize IP beforehand (if enabled)
-        $ip = option('daandelange.simplestats.log.anonymizeFirst', true) === true
-            ? static::anonymize($_SERVER['REMOTE_ADDR'])
-            : $_SERVER['REMOTE_ADDR']
-        ;
+        $ip = static::anonymize($_SERVER['REMOTE_ADDR']); // $kirby->visitor()->ip()
 
-        $ip = preg_replace("/[\.\:]+/", '_', preg_replace("/[^a-zA-Z0-9\.\:]+/", '', substr($ip,0,128))); // $kirby->visitor()->ip()
+        // Replace `.:` by `_`
+        $ip = preg_replace("/[\.\:]+/", '_', $ip);
         $ua = preg_replace("/[^a-zA-Z0-9]+/", '', substr(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:'UserAgentNotSet', 0, 256) ); // $kirby->visitor()->ip()->userAgent()
         $salt = option('daandelange.simplestats.tracking.salt');
-        // Compute final string
+
+        // Compute final string mixing the 3 previous ones
         $final = '';
         $iplen=strlen($ip);
         $ualen=strlen($ua);
@@ -352,7 +364,7 @@ class SimpleStats extends SimpleStatsDb {
             if( $i < $saltlen ) $final.=$salt[$i];
         }
         //echo '----'.($ip.$salt.$ua).'----';
-        return hash("sha1", base64_encode($final));
+        return hash('sha1', base64_encode($final));
     }
 
     // Returns an array with detected user hardware setup

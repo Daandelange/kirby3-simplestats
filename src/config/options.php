@@ -27,8 +27,9 @@ return [
         'enableVisits'          => true, // Enables tracking of page visits
         'enableVisitLanguages'  => true, // In multilanguage setups, separately count language hits with page counts
         'salt'                  => 'CHANGEME', // Salt used to obfuscate unique user string.
-        'uniqueSeconds'         => 1*24*60*60, // Anonimised user data is deleted after this delay to become obfuscated
+        'uniqueSeconds'         => 1*24*60*60, // Anonimised user data is deleted after this delay to become void
         'imageStyle'            => 'position: absolute; right: 0; pointer-events: none; height: 1px; width: 1px; opacity: 0;', // The style applied to the tracking image. Only for tracking.method=OnImage on $page->simpleStatsImage();
+        'anonimizeIpBits'       => 1, // how many bits to strip from the end of the IP ? (for IP anonimization)
 
         // Tracking blacklist
         'ignore' => [
