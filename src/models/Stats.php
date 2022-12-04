@@ -1247,11 +1247,12 @@ class Stats extends SimpleStatsDb {
                 ];
             }
 
-            $pageVisitsOverTime = self::database()->query("SELECT `uid`, `monthyear`, `hits` ${langQuery} FROM `pagevisits` WHERE `uid` = '".$page."' ORDER BY `monthyear` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+            $pageVisitsOverTime = self::database()->query("SELECT `uid`, `monthyear`, `hits` ${langQuery} FROM `pagevisits` WHERE `uid` = '".$page."' ORDER BY `monthyear` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
             //echo "SELECT `uid`, `monthyear`, `hits` ${langQuery} FROM `pagevisits` WHERE `uid` = '".$page."' ORDER BY `monthyear` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT;
             if($pageVisitsOverTime){
                 // Loop periods
                 $nowPeriod = getPeriodFromTime();
+                $prevPeriod = null;
                 //$ret['languagesOverTime'][$l]=['name'=>'',data=>[]];
                 foreach($pageVisitsOverTime as $period){
                     //echo $period->monthyear.'='.$period->hits.' - '; continue;
@@ -1283,7 +1284,28 @@ class Stats extends SimpleStatsDb {
                         $ret['languagesOverTime'][$l]['data'][]=[$periodDateStr, $period->$l];
                         $ret['languageTotalHits'][$l][1]+=$period->$l;
                     }
+
+                    // Add missing periods from first date to now (happens when no data at all in a full period)
+                    $curPeriod = intval($period->monthyear, 10);
+                    if($prevPeriod!==null){
+                        $nextPrevPeriod = intval(incrementPeriod($prevPeriod), 10);
+                        if( $curPeriod > $nextPrevPeriod ){ // Is this step too big, holding multiple intermediate periods ?
+                            for($interperiod=$nextPrevPeriod; $interperiod < $curPeriod; $interperiod=incrementPeriod($interperiod) ){
+                                
+                                $periodTime = getTimeFromPeriod(intval($interperiod, 10));
+                                $periodDateStr = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $periodTime);
+                                foreach( $kirbyLangs as $l => $n ){
+                                    if( count(array_filter($ret['languagesOverTime'][$l]['data'], fn($p) => $p[0] == $periodDateStr))===0 ){ // double check if not existing
+                                        $ret['languagesOverTime'][$l]['data'][]=[$periodDateStr, 0];
+                                    }
+                                }
+                            
+                            }
+                        }
+                    }
+                    $prevPeriod = $curPeriod;// remember
                 }
+                
             }
 
             // Rename keys to nums so that the charts accept the data
