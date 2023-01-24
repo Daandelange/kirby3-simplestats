@@ -1,7 +1,7 @@
 <template>
   <div :class="{'simplestatsonepagedetailssection': true, 'small': sectionSize=='small', 'medium': sectionSize=='medium', 'large': sectionSize=='large'}">
-    <div v-if="headline">
-      <k-headline size="medium"><k-icon type="chart" style="display: inline-block; padding-right: 0.5rem;" size="tiny"/> {{ headline }}</k-headline>
+    <div v-if="label">
+      <k-headline size="medium"><k-icon type="chart" style="display: inline-block; padding-right: 0.5rem;" size="tiny"/> {{ label }}</k-headline>
       <br/>
     </div>
     <p v-if="showFullInfo && showTotals">
@@ -197,7 +197,7 @@ export default {
   created() {
     this.load().then(response => {
       // Php props
-      this.headline       = response.headline;
+      this.label          = response.label ?? response.headline;
       this.showFullInfo   = response.showFullInfo;
       this.showTotals     = response.showTotals;
       this.showTimeline   = response.showTimeline;

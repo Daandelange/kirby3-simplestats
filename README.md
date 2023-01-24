@@ -71,7 +71,7 @@ If you wish to display page stats in a section, you may add a `pagestats` panel 
 sections:
   pagestats:
     type: pagestats
-    headline: TestHeadline
+    label: TestHeadline
     size: small
     showTotals: true
     showTimeline: true
