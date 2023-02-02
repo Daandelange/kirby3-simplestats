@@ -8,19 +8,20 @@ This plugin provides a simple solution for **self-hosted**, **minimal** and **no
 - It tracks **referrer URLs** to keep track of who links to your website, categorised as either `search`, `social` or `website`.
 - It tracks **device information** (device types, browser engine, OS family; all version-less) for keeping track of how your website is visited.
 - It tracks **page visits**, counting 1 hit per page per unique user per language, every 24H.
-- The collected data is stored in a **.sqlite database** (raw data) and can be visualised using Kirby's admin panel (computed).
+- The collected data is stored in a **.sqlite database** (raw data) which you could query for custom purposes. The `Stats` class also exposes most collected data.
+- A panel area **visualises** the data in charts.
 
 ### How it works
 - Tracking happens when the page is served by Kirby.
-- A crypted user-unique fingerprint is stored in order to track unique page views.
-_The formula is `md5( trunc(IP) + trunc(UserAgent) + Salt )`, which still, according to GDPR, seems to be considered as personal data._
-It's stored together with a list of visited pages, the device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.
+- A crypted user-unique fingerprint is stored in order to track unique page views.  
+_[The formula](https://github.com/Daandelange/kirby3-simplestats/search?q=getUserUniqueString) is more or less `sha1( base64_encode( mix( anonimize(IP, 0.0.0.x) + trunc(UserAgent) + Salt)) )`._  
+It's stored together with a list of visited pages, the device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.  
 This data is kept for a very short amount of time to ensure only counting unique hits.
 - After 24H, the collected data is processed and any user identifying data is deleted :
   - The visited pages' hit counts are incremented, globally and per language.
   - Device, Engine and OS Family are separately incremented.
 - Referrers are processed immediately and are not bound to any user-related identifier.
-- All data is summed up on a monthly basis by default. You can easily change this "timeframe" to `weekly` or your own custom timeframe utility.
+- All data is summed up on a monthly basis by default. You can easily change this "timeframe" to `weekly` or even provide your own custom timeframe utility.
 
 
 ### Current state
@@ -29,8 +30,9 @@ Please note that the database structure might evolve over time, until a more sta
 
 
 ### Contributing
-I guess a lot of options could be added to suit the plugin for a wider variety of website setups. The panel interface could also be improved and translated.
-Any contributions (discussions, reports, feedback and pull requests) are welcome, as long as the collected stats stay minimal and reasonably non-intrusive.
+I guess a lot of options could be added to suit the plugin for a wider variety of website setups. The panel interface could also be improved and translated.  
+Any contributions (discussions, reports, feedback and pull requests) are welcome, as long as the collected stats stay minimal and reasonably non-intrusive.  
+You may also have a look at the [open issues](https://github.com/Daandelange/kirby3-simplestats/issues/).
 
 ****
 
@@ -81,7 +83,7 @@ sections:
 
 #### Language setup
 Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.  
-*Warning:* Do not add or remove languages to your Kirby installation without resetting your database file.  
+*Warning:* Do not add or remove languages to your Kirby installation without resetting your database file !    
 Also, the panel view has not (yet?) been translated.
 
 #### Database Configuration
@@ -205,8 +207,8 @@ Development was started from [a standard Kirby PluginKit](https://github.com/get
 
 ## Powered by
 
-- [xaksis/vue-good-table](https://github.com/xaksis/vue-good-table) : Table component for the SimpleStats panel interface. [*MIT*]
-- [ChartKick](https://chartkick.com) using [Chart.js]() for displaying interactive charts. [*MIT*]
+- [noUi-slider](https://refreshless.com/nouislider/) : A slider interface [* [MIT](https://github.com/leongersen/noUiSlider/blob/master/LICENSE.md) *]
+- [Chart.js](https://www.chartjs.org) for displaying interactive charts. [* [MIT](https://github.com/chartjs/Chart.js/blob/master/LICENSE.md) *]
 - Package managers and packers : NPM, Parcel, Composer, Yarn.
 - [Kirby CMS](https://getkirby.com) : Providing the plugin interface [[*licensed software*](https://getkirby.com/license)]
 - [WhichBrowser/Parser-PHP](https://github.com/WhichBrowser/Parser-PHP) : an accurate and performant php user-agent parser.  [*MIT*]
