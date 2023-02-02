@@ -216,8 +216,9 @@ Development was started from [a standard Kirby PluginKit](https://github.com/get
 
 - [DistantNative/retour-for-kirby](https://github.com/distantnative/retour-for-kirby) : Manage redirects and track 404s right from the Panel.
 - [Bnomei/Pagecounter](https://github.com/bnomei/kirby3-pageviewcounter) : Count page hits and last visited date on your Kirby pages.
-- [SylvainJulé/kirby-matomo](https://github.com/sylvainjule/kirby-matomo) : A Matomo wrapper for Kirby.
+- [SylvainJulé/kirby-matomo](https://github.com/sylvainjule/kirby-matomo) : A Matomo wrapper for Kirby 3.
 - [FabianSperrle/kirby-stats](https://github.com/FabianSperrle/kirby-stats) : Simple stats for Kirby 2.
+- [Arnoson/kirby-stats](https://github.com/arnoson/kirby-stats) : (even more) Simple stats for Kirby 3.
 
 ## License
 
