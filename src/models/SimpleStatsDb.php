@@ -130,7 +130,7 @@ class SimpleStatsDb
             $db->exec("CREATE TABLE IF NOT EXISTS `pagevisitors` (`userunique` TEXT primary key unique, `timeregistered` INTEGER, `osfamily` TEXT, `devicetype` TEXT, `browserengine` TEXT, `visitedpages` TEXT)");
             //$db->exec("CREATE TABLE IF NOT EXISTS `languagevisits` (`id` INTEGER primary key unique, ${$langKeys}");
             $db->exec("CREATE TABLE IF NOT EXISTS `referers` (`id` INTEGER primary key unique, `referer` TEXT, `domain` TEXT, `medium` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
-            $db->exec("CREATE TABLE IF NOT EXISTS `pagevisits` (`id` INTEGER primary key unique, `uid` TEXT, `monthyear` INTEGER, `hits` INTEGER, ${langKeys})");
+            $db->exec('CREATE TABLE IF NOT EXISTS `pagevisits` (`id` INTEGER primary key unique, `uid` TEXT, `monthyear` INTEGER, `hits` INTEGER, '.$langKeys.')');
             $db->exec("CREATE TABLE IF NOT EXISTS `devices` (`id` INTEGER primary key unique, `device` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
             $db->exec("CREATE TABLE IF NOT EXISTS `engines` (`id` INTEGER primary key unique, `engine` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
             $db->exec("CREATE TABLE IF NOT EXISTS `systems` (`id` INTEGER primary key unique, `system` TEXT, `monthyear` INTEGER, `hits` INTEGER)");
@@ -141,11 +141,11 @@ class SimpleStatsDb
 
             // Double check
             if(!F::exists($target)){
-                Logger::LogWarning("Error creating database @ ${target} ! SimpleStats will not work.");
+                Logger::LogWarning('Error creating database @ '.$target.' ! SimpleStats will not work.');
                 return false;
             }
             else {
-                Logger::LogNotice("Successfully created a new SimpleStats database v_".self::engineDbVersion." @ ${target} !");
+                Logger::LogNotice("Successfully created a new SimpleStats database v_".self::engineDbVersion." @ '.$target.' !");
             }
         }
 
@@ -162,7 +162,7 @@ class SimpleStatsDb
             }
 
             if(self::$database===null){
-                Logger::LogWarning("Error loading database @ ${target} ! SimpleStats will not work.");
+                Logger::LogWarning('Error loading database @ '.$target.' ! SimpleStats will not work.');
                 return false;
             }
         }
@@ -181,7 +181,7 @@ class SimpleStatsDb
         if( !$target || F::extension($target)!='sqlite'){
             // Note, the log root is not available in early k3 distributions, so use a fallback
             $target = self::getLogsPath('simplestats.sqlite');
-            Logger::LogVerbose("Config --> db file replaced by default = ${target}.");
+            Logger::LogVerbose('Config --> db file replaced by default = '.$target.'.');
         }
         return $target;
     }
@@ -292,13 +292,13 @@ class SimpleStatsDb
                                 foreach($missingLangs as $l){
                                     // Note : ALTER TABLE cannot add several columns in 1 command.
                                     if( !$dbsql3->exec('ALTER TABLE `pagevisits` ADD COLUMN `hits_'.$l.'` INTEGER') ){
-                                        Logger::LogWarning("UPGRADE db, adding LANGUAGES FAILED creating columns for ${l}. Error=".$dbsql3->lastError()->getMessage());
+                                        Logger::LogWarning('UPGRADE db, adding LANGUAGES FAILED creating columns for '.$l.'. Error='.$dbsql3->lastError()->getMessage());
                                         //$dbsql3->close();
                                         //return true;
                                         $ret = false;
                                     }
                                     else {
-                                        Logger::LogNotice("UPGRADE db ADDED LANGUAGE = ${l}.");
+                                        Logger::LogNotice('UPGRADE db ADDED LANGUAGE = '.$l.'.');
                                     }
                                 }
                                 $dbsql3->close();

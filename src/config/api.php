@@ -28,7 +28,8 @@ return [
             'method'  => 'GET',
             'action'  => function () {
                 if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    return Stats::deviceStats();
+                    $timeFrame = Stats::getTimeSpanFromUrl();
+                    return Stats::deviceStats($timeFrame[0], $timeFrame[1]);
                 }
                 else {
                     throw new PermissionException('You are not authorised to view statistics.');
@@ -40,7 +41,8 @@ return [
             'method'  => 'GET',
             'action'  => function () {
                 if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    return Stats::refererStats();
+                    $timeFrame = Stats::getTimeSpanFromUrl();
+                    return Stats::refererStats($timeFrame[0], $timeFrame[1]);
                 }
                 else {
                     throw new PermissionException('You are not authorised to view statistics.');
@@ -52,7 +54,8 @@ return [
             'method'  => 'GET',
             'action'  => function () {
                 if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    return Stats::pageStats();
+                    $timeFrame = Stats::getTimeSpanFromUrl();
+                    return Stats::pageStats($timeFrame[0], $timeFrame[1]);
                 }
                 else {
                     throw new PermissionException('You are not authorised to view statistics.');

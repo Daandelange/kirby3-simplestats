@@ -12,44 +12,11 @@
     <br />
 
     <!-- HISTORY -->
-    <k-headline>
-      {{ $t('simplestats.info.db.versionhistory') }}
-    </k-headline>
-    <vue-good-table
-        :rows="dbHistory"
-        :columns="dbHistoryLabels"
-        styleClass="vgt-table condensed nosearch"
-        max-height="500px"
-        :fixed-header="false"
-        compactMode
-        :search-options="{enabled: false}"
-        :pagination-options="{
-          enabled: true,
-          perPage: 5,
-          perPageDropdownEnabled: false,
-          nextLabel: $t('simplestats.table.pages.next', 'Next'),
-          prevLabel: $t('simplestats.table.pages.prev', 'Previous'),
-          ofLabel: $t('simplestats.table.pages.of', 'of'),
-        }"
-      >
-        <div slot="emptystate">
-          <k-empty>
-            {{ $t('simplestats.nodatayet') }}
-          </k-empty>
-        </div>
-
-        <template slot="table-row" slot-scope="props">
-          <span v-if="props.column.field == 'timefrom'">
-            <span>
-              {{ props.formattedRow[props.column.field] }}
-<!-- (old way)                 {{ new Date( props.row.firstvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.firstvisited ).getFullYear() }} -->
-            </span>
-          </span>
-          <span v-else>
-            {{ props.formattedRow[props.column.field] }}
-          </span>
-        </template>
-      </vue-good-table>
+    <searchable-table
+      :rows="dbHistory"
+      :columns="dbHistoryLabels"
+      :label="$t('simplestats.info.db.versionhistory')"
+    />
 
     <k-line-field />
 
@@ -98,18 +65,16 @@
 
 // Todo: separate db and config into separate vue components, like visitor info
 
-import { VueGoodTable } from 'vue-good-table';
+import SearchableTable from '../Ui/SearchableTable.vue';
 
 export default {
   extends: 'k-pages-section',
   data() {
     return {
-      isLoading: true,
-      error: "",
 
       // Db stuff
       dbHistory: [],
-      dbHistoryLabels: [],
+      dbHistoryLabels: {},
       upgradeRequired: false,
       softwareDbVersion: "unknown",
       dbVersion: "undefined",
@@ -124,7 +89,7 @@ export default {
     }
   },
   components: {
-    VueGoodTable,
+    SearchableTable,
   },
 
   filters: {

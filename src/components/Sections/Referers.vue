@@ -1,133 +1,116 @@
 <template>
-  <div>
+  <k-grid gutter="medium">
+    <k-column width="1/2">
+      <k-headline>{{ $t('simplestats.referers.referersbymedium', 'Referers by medium') }}</k-headline>
+      <area-chart v-if="refererMediumData.length > 0"
+        type="Pie"
+        :chart-data="refererMediumData"
+        :chart-labels="refererMediumLabels"
+        download="Site_ReferrersByMedium.png"
+        :label="$t('simplestats.referers.referersbymedium', 'Referers by medium')"
+        :fill="true"
+        :auto-colorize="true"
+        :height="200"
+      />
+    </k-column>
 
-      <k-grid gutter="medium">
-        <k-column width="1/3">
-          <k-headline>Referrers by medium</k-headline>
-          <!--<pie :dataset="refererMediumData" :labels="refererMediumLabels" />-->
-          <pie-chart v-if="refererMediumData.length > 0"
-            :data="refererMediumData"
-          />
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
-        </k-column>
+    <k-column width="1/2">
+      <k-headline>{{ $t('simplestats.referers.referersbydomain', 'Referers by domain') }}</k-headline>
+      <area-chart
+        type="Pie"
+        :chart-data="refererDomainsData"
+        :chart-labels="refererDomainsLabels"
+        download="Site_ReferrersByDomain.png"
+        :label="$t('simplestats.referers.referersbydomain', 'Referers by domain')"
+        :fill="true"
+        :auto-colorize="true"
+        :height="200"
+      />
+    </k-column>
 
-        <k-column width="1/3">
-          <k-headline>Referrers by domain</k-headline>
-          <pie-chart v-if="refererDomainsData.length > 0"
-            :data="refererDomainsData"
-          />
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
-        </k-column>
+    <!-- <k-column width="1/3">
+      <k-headline>Referrers by domain (this month)</k-headline>
+      <area-chart
+        type="Pie"
+        :chart-data="refererRecentDomainsData"
+      />
+    </k-column> -->
 
-        <k-column width="1/3">
-          <k-headline>Referrers by domain (this month)</k-headline>
-          <pie-chart v-if="refererRecentDomainsData.length > 0" :data="refererRecentDomainsData" />
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
-        </k-column>
-      </k-grid>
+    <k-column width="1/1">
+      <k-headline>{{ $t('simplestats.referer.referersovertime') }}</k-headline>
+      <area-chart
+        type="Line"
+        :chart-data="referersByMediumOverTimeData"
+        :chart-labels="chartPeriodLabels"
+        download="Site_ReferersEvolution.png"
+        :label="$t('simplestats.referers.referersovertime')"
+        :y-title="$t('simplestats.charts.hitspermedium', 'Hits per medium')"
+        :stacked="true"
+        :fill="true"
+        :auto-colorize="true"
+        :x-time-axis="true"
+        :y-visits-axis="true"
+        :height="300"
+      ></area-chart>
+    </k-column>
 
-      <k-grid gutter="medium">
-        <k-column width="1/1">
-          <br><br>
-          <k-headline>Referrers by medium over time</k-headline>
-          <area-chart
-            :data="referersByMediumOverTimeData"
-            :download="true"
-            download="Site_ReferersEvolution.png"
-            label="Referers"
-            xtitle="Time"
-            ytitle="Hits per medium"
-            :stacked="true"
-            v-if="referersByMediumOverTimeData.length > 0"
-            :library="timeOptions"
-          ></area-chart>
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
-        </k-column>
-      </k-grid>
+    <k-column width="1/1">
+      <k-line-field />
+    </k-column>
 
-      <k-grid gutter="medium">
-        <k-column width="1/1">
-          <br><br><br>
-          <k-headline>
-            All referrers
-            <!-- {{ $t('simplestats.visitedpages') }} -->
-          </k-headline>
-          <div v-if="refererFullData.length > 0">
-            <vue-good-table
-              :rows="refererFullData"
-              :columns="refererFullLabels"
-              styleClass="vgt-table condensed"
-              max-height="500px"
-              :fixed-header="false"
-              compactMode
-              :search-options="{enabled: true, placeholder: 'Filter items...'}"
-              :pagination-options="{
-                enabled: true,
-                perPage: 20,
-                perPageDropdownEnabled: false,
-              }"
-            >
-              <div slot="emptystate">
-                <k-empty>
-                  There is nothing to show...
-                </k-empty>
-              </div>
-
-              <template slot="table-row" slot-scope="props">
-                <span v-if="props.column.field == 'hitspercent'" class="row-percent">
-                  <span class="visualiser" :style="{ width: props.row.hitspercent *100 + '%'}"></span>
-                  <span class="number">{{ (props.row.hitspercent * 100).toFixed(0) + '%' }}</span>
-                </span>
-                <span v-else-if="props.column.field == 'timefrom'">
-                  <span>
-                    {{ props.formattedRow[props.column.field] }}
-  <!-- (old way)                 {{ new Date( props.row.firstvisited ).toLocaleString( userLocale, { month: "short" }) }} {{ new Date( props.row.firstvisited ).getFullYear() }} -->
-                  </span>
-                </span>
-                <span v-else>
-                  {{ props.formattedRow[props.column.field] }}
-                </span>
-              </template>
-            </vue-good-table>
-          </div>
-          <k-empty v-else layout="block" class="emptyChart">No data yet</k-empty>
-        </k-column>
-      </k-grid>
-
-  </div>
+    <k-column width="1/1">
+      <searchable-table
+        :rows="refererTableData"
+        :columns="refererTableLabels"
+        :label="$t('simplestats.referers.allreferers')"
+      />
+    </k-column>
+  </k-grid>
 </template>
+
 
 <script>
 
-//import Vue from 'vue';
-//import Chartkick from 'vue-chartkick';
-//import Chart from 'chart.js';
-
-import { VueGoodTable } from 'vue-good-table';
+import AreaChart from '../Ui/AreaChart.vue';
+import SearchableTable from '../Ui/SearchableTable.vue';
+import SectionBase from '../Sections/SimpleStatsSectionBase.vue';
 
 export default {
+  extends: SectionBase,
   components: {
-    VueGoodTable,
+    AreaChart,
+    SearchableTable,
   },
-
+  props: {
+    dateFrom : {
+      type: String,
+      required: true,
+    },
+    dateTo : {
+      type: String,
+      required: true,
+    },
+  },
   data() {
     return {
-      refererDomainsData: [],
-      //refererDomainsLabels: [],
+      //...SectionBase.data(),
 
-      refererRecentDomainsData: [],
+      chartPeriodLabels: [],
+
+      refererDomainsData: [],
+      refererDomainsLabels: [],
+
+      // refererRecentDomainsData: [],
       //refererRecentDomainsLabels: [],
 
       refererMediumData: [],
-      //refererMediumLabels: [],
+      refererMediumLabels: [],
 
-      refererFullData: [],
-      refererFullLabels: [],
+      refererTableData: [],
+      refererTableLabels: {},
 
       referersByMediumOverTimeData: [],
 
-      isLoading: false,
-      error: "",
       userLocale: 'en',
 
       timeOptions : {
@@ -141,7 +124,7 @@ export default {
             time: {
               unit: 'month',
               displayFormats: {
-                  month: 'MMM YYYY'
+                  month: 'MMM YYYY',
               }
             }
           }],
@@ -153,77 +136,34 @@ export default {
     }
   },
 
-  created() {
-    this.load();
-  },
-
   methods: {
-    load(reload) {
-      if (!reload) this.isLoading = true
+    loadData(response) {
 
-      this.$api
-        .get("simplestats/refererstats")
-        .then(response => {
-          this.isLoading = false
+      this.chartPeriodLabels = response.chartperiodlabels;
 
-          this.refererDomainsData   = response.referersbydomaindata
-          //this.refererDomainsLabels = response.referersbydomainlabels
+      this.refererDomainsData   = response.referersbydomaindata
+      this.refererDomainsLabels = response.referersbydomainlabels
 
-          this.refererMediumData   = response.referersbymediumdata
-          //this.refererMediumLabels = response.referersbymediumlabels
+      this.refererMediumData   = response.referersbymediumdata
+      this.refererMediumLabels = response.referersbymediumlabels
 
-          this.refererRecentDomainsData   = response.referersbydomainrecentdata
-          //this.refererRecentDomainsLabels = response.referersbydomainrecentlabels
+      // this.refererRecentDomainsData   = response.referersbydomainrecentdata
+      //this.refererRecentDomainsLabels = response.referersbydomainrecentlabels
 
-          this.refererFullData   = response.allreferersrows
-          this.refererFullLabels = response.allrefererscolumns
+      this.refererTableData   = response.refererstabledata
+      this.refererTableLabels = response.refererstablelabels
 
-          this.referersByMediumOverTimeData = response.referersbymediumovertimedata;
-          //console.log( this.referersByMediumOverTimeData);
+      this.referersByMediumOverTimeData = response.referersbymediumovertimedata;
+      //console.log( this.referersByMediumOverTimeData);
 
-          this.userLocale = window.panel.$language ? window.panel.$language.code : "";//this.$store.state.i18n.locale;
-/*
-          Object.keys(this.referersByMediumOverTimeData).forEach(key => {
-            //console.log(key, this.referersByMediumOverTimeData[key]);
-            Object.keys(this.referersByMediumOverTimeData[key]['data']).forEach(k => {
-              //console.log(k, this.referersByMediumOverTimeData[key]['data'][k]);
-              var d = new Date(1000*k);
-              console.log(key, this.referersByMediumOverTimeData[key]['name'],d,k);
-              this.referersByMediumOverTimeData[key]['data'][d]=parseInt(this.referersByMediumOverTimeData[key]['data'][k]);
-              //this.referersByMediumOverTimeData[key]['data'][k]=parseInt(this.referersByMediumOverTimeData[key]['data'][k]);
-              delete this.referersByMediumOverTimeData[key]['data'][k];
-            });
-          });
-*/
-
-          //console.log(response.referersbymediumovertimedata);
-
-          // replace default translations if needed
-//           let translations = response.translations
-//           Object.keys(translations).forEach(k => {
-//               if (translations[k] == null) delete translations[k]
-//           })
-//           this.translations = Object.assign({}, this.translations, translations)
-        })
-        .catch(error => {
-          this.isLoading = false
-          this.error = error.message
-
-          this.$store.dispatch("notification/open", {
-            type: "error",
-            message: error.message,
-            timeout: 5000
-          });
-        })
+      this.userLocale = window.panel.$language ? window.panel.$language.code : "";//this.$store.state.i18n.locale;
     },
-  }
+  },
 };
+
 </script>
 
-<style lang="scss">
-.emptyChart {
-  min-height: 250px;
-  margin-top: 1em;
-  padding: 1em;
-}
+
+<style lang="less">
+
 </style>

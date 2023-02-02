@@ -38,8 +38,7 @@ App::plugin('daandelange/simplestats', [
                 // show / hide from the menu
                 'menu' => true,
 
-                //'link' => 'simplestats',
-                //'disabled' => false,
+                'link' => 'simplestats',
 
                 // views
                 'views' => [
@@ -49,57 +48,71 @@ App::plugin('daandelange/simplestats', [
                     'pattern' => 'simplestats',
                     'action'  => function () use ($kirby)  {
 
-                      // view routes return a simple array,
-                      // which will be injected into our Vue app;
-                      // the array can control the loaded Vue component,
-                      // props for the component and settings for the current view
-                      // (like breadcrumb, title, active search type etc.)
+                        // view routes return a simple array,
+                        // which will be injected into our Vue app;
+                        // the array can control the loaded Vue component,
+                        // props for the component and settings for the current view
+                        // (like breadcrumb, title, active search type etc.)
 
-                      return [
-                        // the Vue component can be defined in the
-                        // `index.js` of your plugin
-                        'component' => 'simplestats',//k-plausible-view',//k-simplestats-view',
+                        $tabs = [];
+                        foreach([
+                            'pagevisits'        => ['label'=>'Page visits',     'icon'=>'layers'],
+                            'visitordevices'    => ['label'=>'Visitor Devices', 'icon'=>'users' ],
+                            'referers'          => ['label'=>'Referers',        'icon'=>'chart' ],
+                            'information'       => ['label'=>'Information',     'icon'=>'map'   ],
+                        ] as $key=>$tabData){
+                            $tabs[$key] = [
+                                'name' => $key,
+                                'label' => t('simplestats.tabs.'.$key, $tabData['label']),
+                                'icon' => $tabData['icon'],
+                                'columns' => [],// Needed for the panel not to crash
+                                // 'link' => 'simplestats?tab='.$key,
+                                //'link' => 'javascript:alert("OK")',
+                            ];
+                        };
+                        $timeSpan = Stats::getDbTimeSpan();
+                        $timeFrames = Stats::fillPeriod($timeSpan['start'], $timeSpan['end'], 'Y-m-d');
+                        // $timeFrames = [];
+                        // $tfu = getTimeFrameUtility();
+                        // for($period=min($timeSpan[0]); $period <= getPeriodFromTime(); $period=incrementPeriod($period) ){
+                        //     $timeFrames[] = 
+                        // } 
 
-                        // the document title for the current view
-                        'title' => 'Simple Stats',
+                        return [
+                            // the Vue component can be defined in the
+                            // `index.js` of your plugin
+                            'component' => 'k-simplestats-view',
 
-                        // the breadcrumb
-                        'breadcrumb' => function () {
-                            $tabLabel = t('simplestats.tabs.pagevisits');
-                            $tabID = 'simplestats-tabs-visitedpages';
-                            switch(get('tab')){
-                                case 'simplestats-tabs-visitordevices' :
-                                    $tabLabel = t('simplestats.tabs.visitordevices');
-                                    $tabID = 'simplestats-tabs-visitordevices';
-                                    break;
-                                case 'simplestats-tabs-referers' :
-                                    $tabLabel = t('simplestats.tabs.referers');
-                                    $tabID = 'simplestats-tabs-referers';
-                                    break;
-                                case 'simplestats-tabs-info' :
-                                    $tabLabel = t('simplestats.tabs.information');
-                                    $tabID = 'simplestats-tabs-info';
-                                    break;
-                                default:
-                                    break;
-                            }
-                            return [[
-                              'label' => $tabLabel,
-                              'link'  => '/simplestats?tab='.$tabID,
-                            ]];
-                        },
+                            // the document title for the current view
+                            'title' => 'Simple Stats',
 
-                        // props will be directly available in the
-                        // Vue component. It's a super convenient way
-                        // to send backend data to the Panel
-//                         'props' => [
-//                           'todos' => Array
-//                         ],
+                            // the breadcrumb
+                            'breadcrumb' => function () use($kirby, $tabs) {
+                                $tabID = $kirby->request()->get('tab') ?? 'pagevisits';
+                                
+                                return [[
+                                'label' => array_keys($tabs, $tabID) ? $tabs[$tabID]['label'] : t('simplestats.tabs.pagevisits'),
+                                //'link'  => '/simplestats?tab='.$tabID,
+                                ]];
+                            },
 
-                        // we can preset the search type with the
-                        // search attribute
-                        'search' => 'pages'
-                      ];
+                            // props will be directly available in the
+                            // Vue component. It's a super convenient way
+                            // to send backend data to the Panel
+                            'props' => [
+                                'initialtab' => $kirby->request()->get('tab') ?? $tabs['pagevisits']['name'],
+                                'tabs' => array_values($tabs),
+                                'globaltimespan' => [
+                                    date('Y-m-d', getTimeFromPeriod($timeSpan['start'])),
+                                    date('Y-m-d', getTimeFromPeriod($timeSpan['end'])),
+                                ],
+                                'timeframes' => $timeFrames,
+                            ],
+
+                            // we can preset the search type with the
+                            // search attribute
+                            //'search' => 'pages'
+                        ];
                     }
                   ]
                 ]

@@ -1,80 +1,48 @@
 // Vue components
-import View from "./components/View.vue";
+import SimpleStatsArea from "./components/SimpleStatsArea.vue";
 import OnePageStats from "./components/Sections/OnePageStats.vue";
-
-//import Vue from 'vue'
-import Chartkick from 'vue-chartkick';
-import Chart from 'chart.js';
-import 'chartjs-adapter-moment';
-Chartkick.options = {
-  colors: [
-    // Generate a color palette in console :
-    // var colors=8; var variants=4; out=""; for(var v=0; v<variants; v++){var b=70+(v%2)*10; var s=70+((v+1)%2)*10; for(var i=0; i<colors; i++){out+="'hsl("+((i/colors)*360)+", "+s+"%, "+b+"%)', ";}} out;
-    'hsl(0, 80%, 70%)', 'hsl(45, 80%, 70%)', 'hsl(90, 80%, 70%)', 'hsl(135, 80%, 70%)', 'hsl(180, 80%, 70%)', 'hsl(225, 80%, 70%)', 'hsl(270, 80%, 70%)', 'hsl(315, 80%, 70%)', 'hsl(0, 70%, 80%)', 'hsl(45, 70%, 80%)', 'hsl(90, 70%, 80%)', 'hsl(135, 70%, 80%)', 'hsl(180, 70%, 80%)', 'hsl(225, 70%, 80%)', 'hsl(270, 70%, 80%)', 'hsl(315, 70%, 80%)', 'hsl(0, 80%, 70%)', 'hsl(45, 80%, 70%)', 'hsl(90, 80%, 70%)', 'hsl(135, 80%, 70%)', 'hsl(180, 80%, 70%)', 'hsl(225, 80%, 70%)', 'hsl(270, 80%, 70%)', 'hsl(315, 80%, 70%)', 'hsl(0, 70%, 80%)', 'hsl(45, 70%, 80%)', 'hsl(90, 70%, 80%)', 'hsl(135, 70%, 80%)', 'hsl(180, 70%, 80%)', 'hsl(225, 70%, 80%)', 'hsl(270, 70%, 80%)', 'hsl(315, 70%, 80%)',
-  ],
-  dataset : {
-    borderWidth: 1,
-    borderColor: 'black',
-  },
-  options: {
-    scales: {
-      xAxes: [{
-        //display: false,
-        type: 'time',
-        time: {
-          unit: 'month',
-          displayFormats: {
-              month: 'MMM YYYY',
-          }
-        }
-      }],
-      yAxes: [{
-        stacked: true,
-      }]
-    }
-  }
-};
-Chartkick.use(Chart);
+import PercentageFieldPreview from "./components/Ui/PercentagePreview.vue";
 
 // Register plugin @Kirby
 panel.plugin("daandelange/simplestats", {
-  // K 3.5 and below
-  views: {
-    simplestats: {
-      component: View,
-      icon: "chart",
-      label: "SimpleStats",
-    }
-  },
   // K3.6+
   components: {
-    'simplestats': View,
-//     simplestats: {
-//       component: View,
-//       icon: "chart",
-//       label: "SimpleStats",
-//       menu: true
-//     },
-//     'k-simplestats-view': {
-// 			template: `
-// 				<k-inside>
-// 					<k-view class="k-simplestats-view">
-// 						<iframe v-if="sharedLink" plausible-embed v-bind:src="sharedLink" scrolling="no" frameborder="0" loading="lazy" style="width: 1px; min-width: 100%; height: 1600px;"></iframe>
-// 						<div style="margin-top: 30px; text-align: center;" v-else>
-// 							<code>You need to set floriankarsten.plausible.sharedLink in config.php</code>
-// 						</div>
-// 					</k-view>
-// 				</k-inside>
-// 			`,
-// 			props: ["sharedLink"]
-// 		},
+    'k-simplestats-view': SimpleStatsArea,
+    // Slider,
+
+    // Replacement of k-tabs that allows switching tabs without reloading the page
+    'k-tabs' : {
+      extends: 'k-tabs',
+      mounted(){
+        this.bindTabClicks();
+      },
+      emits: ['tabChange'],
+      methods: {
+        bindTabClicks(){
+          const thisRef = this;
+          for(const child of this.$children){
+            if(child.$el.classList.contains('k-tab-button')){
+              child.$el.addEventListener('click', function(){ thisRef.onClick(child.$vnode.key); } );
+            }
+          }
+        },
+        onClick(tabKey){
+          if(this.tab !== tabKey){
+            // k-header < k-tabs < k-button : fire $emit on header
+            this.$parent.$emit('tabChange', tabKey);
+          }
+        }
+      },
+    },
+    // Custom field preview for table
+    'k-percentage-field-preview': PercentageFieldPreview,
   },
   sections: {
     //simplestats: View detailed stats (one page)
     pagestats: OnePageStats,
   },
   use: [
-    Chartkick,
+    // Slider,
   ],
   devtool: 'source-map', // vue debugging
 });

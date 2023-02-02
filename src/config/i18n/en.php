@@ -2,10 +2,11 @@
 
 return [
     // Misc
-    'simplestats.nodatayet'     => 'No data yet',
-    'simplestats.taberror'      => 'Something is wrong with tab handling...',
-    'simplestats.loaderror'     => 'Load Error',
-    'simplestats.loading'       => 'Loading...',
+    'simplestats.nodatayet'             => 'No data yet',
+    'simplestats.nodatafortimerange'    => 'There is no data for the selected time range.',
+    'simplestats.taberror'              => 'Something is wrong with tab handling...',
+    'simplestats.loaderror'             => 'Load Error',
+    'simplestats.loading'               => 'Loading...',
 
     // Tabs
     'simplestats.tabs.pagevisits'       => 'Page Visits',
@@ -20,6 +21,7 @@ return [
     'simplestats.table.pages.of'        => 'of',
     'simplestats.table.uid'             => 'UID',
     'simplestats.table.pagetitle'       => 'Title',
+    'simplestats.table.average'         => 'Average',
     'simplestats.table.hits'            => 'Hits',
     'simplestats.table.popularity'      => 'Popularity',
     'simplestats.table.firstvisited'    => 'First Visited',
@@ -29,6 +31,9 @@ return [
     'simplestats.table.devicetype'      => 'Device Type',
     'simplestats.table.browserengine'   => 'Browser Engine',
     'simplestats.table.timeregistered'  => 'Time Registered',
+    'simplestats.table.firstseen'       => 'First Seen',
+    'simplestats.table.medium'          => 'Medium',
+    'simplestats.table.domain'          => 'Domain',
 
     // Disclaimer
     'simplestats.disclaimer.title'      => 'Disclaimer - Collecting Data',
@@ -40,16 +45,18 @@ return [
     'simplestats.disclaimer.dismiss'    => 'To dismiss this message : refer to the readme.',
 
     // Page Visits
-    'simplestats.visits.visitsovertime'     => 'Visits over time',
-    'simplestats.visits.pagevisitsovertime' => 'Page visits over time',
-    'simplestats.visits.languagesovertime'  => 'Languages over time',
-    'simplestats.visits.globallanguages'    => 'Global languages',
-    'simplestats.visits.visitedpages'       => 'Visited Pages',
+    'simplestats.visits.visitsovertime'     => 'Visits',
+    'simplestats.visits.pagevisitsovertime' => 'Visits by page',
+    'simplestats.visits.languagesovertime'  => 'Visits by language',
+    'simplestats.visits.globallanguages'    => 'Language popularity',
+    'simplestats.visits.visitedpages'       => 'Visited pages',
 
     // Charts
-    'simplestats.charts.time'       => 'Time',
-    'simplestats.charts.visits'     => 'Visits',
-    'simplestats.charts.seconds'    => 'seconds',
+    'simplestats.charts.time'             => 'Time',
+    'simplestats.charts.visits'           => 'Visits',
+    'simplestats.charts.seconds'          => 'seconds',
+    'simplestats.charts.hitspermedium'    => 'Hits per medium',
+    'simplestats.charts.hitsperdomain'    => 'Hits per domain',
 
     // Timeframe Utilities
     'simplestats.timeframe.week.name'        => 'Weekly',
@@ -58,6 +65,8 @@ return [
     'simplestats.timeframe.month.name'       => 'Monthly',
     'simplestats.timeframe.month.singular'   => 'month',
     'simplestats.timeframe.month.plural'     => 'months',
+    'simplestats.timeframe.date.to'          => 'To',
+    'simplestats.timeframe.date.from'        => 'From',
 
     // Devices
     'simplestats.devices.graph.devices'         => 'Visitor Devices',
@@ -65,6 +74,7 @@ return [
     'simplestats.devices.graph.oses'            => 'Operating Systems',
     'simplestats.devices.graph.devicehistory'   => 'Device types over time',
     'simplestats.devices.graph.devicehistory.y' => 'Visits per device type',
+    'simplestats.devices.names.server'          => 'Server',
     'simplestats.devices.names.desktop'         => 'Desktop',
     'simplestats.devices.names.mobile'          => 'Mobile',
     'simplestats.devices.names.pda'             => 'PDA',
@@ -90,6 +100,12 @@ return [
     'simplestats.devices.names.pos'             => 'Pos',
     'simplestats.devices.names.bot'             => 'Bot',
     'simplestats.devices.names.projector'       => 'Projector',
+
+    // Referrers
+    'simplestats.referers.referersbymedium'     => 'Referrers by medium',
+    'simplestats.referers.referersbydomain'     => 'Referrers by domain',
+    'simplestats.referers.referersovertime'     => 'Referrers by medium over time',
+    'simplestats.referers.allreferers'          => 'All referrers',
 
     // Info Tab
     'simplestats.info.title'                            => 'Database',

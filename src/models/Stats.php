@@ -7,6 +7,7 @@ use Kirby\Database\Database;
 use Kirby\Toolkit\Collection;
 use Kirby\Toolkit\F;
 use Kirby\Toolkit\Obj;
+use Kirby\Toolkit\Str;
 use Kirby\Cms\Page;
 
 use ErrorException;
@@ -30,7 +31,7 @@ class Stats extends SimpleStatsDb {
     public static function listDbInfo(): array {
         $dbVersion = '';
         $dbArray = [];
-        $dbvQ = self::database()->query("SELECT `version`, `migrationdate` FROM `simplestats` ORDER BY `migrationdate` DESC LIMIT 0,1000");
+        $dbvQ = self::database()->query("SELECT `version`, `migrationdate` FROM `simplestats` ORDER BY `migrationdate` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
         if( $dbvQ ){
             if( $dbvQ->isNotEmpty() ){
                 $dbVersion = intval($dbvQ->first()->version, 10);
@@ -49,11 +50,11 @@ class Stats extends SimpleStatsDb {
         else {
             $error = self::database()->lastError()->getMessage();
             // v1 didn't have the simplestats table (only way to detect)
-            if( stripos($error, 'no such table:') !== false && stripos($error, 'simplestats') !== false ){
+            if( stripos($error, 'no such table: simplestats') !== false ){
                 $dbVersion = '1 ('.t('simplestats.info.db.versionless','versionless').')';
             }
             else {
-                $dbVersion = t('simplestats.info.db.versionerror', 'Unable to query : ');//.$error;
+                $dbVersion = t('simplestats.info.db.versionerror', 'Unable to query...');//.$error;
             }
         }
 
@@ -72,12 +73,13 @@ class Stats extends SimpleStatsDb {
             $dbFile = str_replace( kirby()->root(),'', $dbFile);
         }
 
+        // Todo: Read some stats from the db such as timespan, etc.
         return [
             'softwareDbVersion' => self::engineDbVersion,
             'dbVersion'         => $dbVersion,
             'dbHistoryLabels'   => [
-                ['label'=>t('simplestats.info.db.table.dbversion'), 'field'=>'version', 'type'=>'number',   'sortable'=>true,  'width'=>'34%'],
-                ['label'=>t('simplestats.info.db.table.usedsince'), 'field'=>'date',    'type'=>'date',     'sortable'=>true,  'width'=>'66%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'dd MMM yyyy'], // todo: Date display should be customized to custom timespans
+                'version'  => ['label'=>t('simplestats.info.db.table.dbversion'), 'type'=>'number',   'sortable'=>true, 'search'=>false,  'width'=>'34%'],
+                'date'     => ['label'=>t('simplestats.info.db.table.usedsince'), 'type'=>'date',     'sortable'=>true, 'search'=>false,  'width'=>'66%'],
             ],
             'dbHistory'         => $dbArray,
             'upgradeRequired'   => self::engineDbVersion != $dbVersion,
@@ -86,179 +88,212 @@ class Stats extends SimpleStatsDb {
         ];
     }
 
-    public static function listvisitors(): array {
-        //$log  = new Log;
-        //var_dump( self::singleton()->database() );
-        //$db = self::database();
-        $result = self::database()->query('SELECT `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
-        if($result){
-            //var_dump(array_keys($result->get(0)->toArray()));
-            //var_dump(($result));
-
-            // Get keys
-//             $keys = [];
-//             foreach($result as $visitor){
-//                 $keys = array_keys($visitor->toArray());
-//                 //var_dump(array_keys($visitor->toArray()));
-//                 break; // 1 iteration should be enough here
-//             }
-//
-//             // Format keys
-//             foreach($keys as $key => $value){
-//                 $keys[$key] = ['label'=>$value,'field'=>$value, 'type'=>'text','sort'=>false,'search'=>false,'class'=>'myClass','width'=>'1fr'];
-//             }
-            $keys =[
-                [ 'label' => t('simplestats.table.visitedpages',    'Visited Pages'),   'field' => 'visitedpages',      'type' => 'text', 'sortable' => false,  'width' => '50%' ],
-                [ 'label' => t('simplestats.table.osfamily',        'OS Family'),       'field' => 'osfamily',          'type' => 'text', 'sortable' => true,   'width' => '15%' ],
-                [ 'label' => t('simplestats.table.devicetype',      'Device Type'),     'field' => 'devicetype',        'type' => 'text', 'sortable' => true,   'width' => '10%' ],
-                [ 'label' => t('simplestats.table.browserengine',   'Browser Engine'),  'field' => 'browserengine',     'type' => 'text', 'sortable' => true,   'width' => '10%' ],
-                [ 'label' => t('simplestats.table.timeregistered',  'Time Registered'), 'field' => 'timeregistered',    'type' => 'date', 'sortable' => true,   'width' => '15%', 'globalSearchDisabled'=>true, 'dateInputFormat'=>'yyyy-MM-dd HH:mm', 'dateOutputFormat'=>'d MMMM yyyy HH:mm'],
-            ];
-
-            $rows = $result->toArray();
-            // Format rows
-            foreach($rows as $key => $value){
-                //var_dump($value->toArray());
-                //$rows[$key] = ['props'=>['value'=>$value]];
-                $rows[$key] = array_merge(['id'=>$key, 'text'=>'text', 'title'=>'title', 'dragText'=>'dragText', 'info'=>'info!!'], $value->toArray());
-//                 $rows[$key] = ['id'=>$key, 'text'=>'text', 'dragText'=>'dragText', 'info'=>'info!!'];//, 'props'=>$value->toArray()];
-//
-//                 foreach($value as $k => $v){
-//                     $rows[$key][$k] = ['label'=>$v];
-//                 }
-                // convert date format
-                $rows[$key]['timeregistered'] = date( SIMPLESTATS_PRECISE_DATE_FORMAT, intval($rows[$key]['timeregistered']) );
-
-            }
-
-            return [
-                'data'  => [
-                    'columns'   => $keys,
-                    'rows'      => $rows,
-                ],
-            ];
+    // Returns the timespan of all mixed tables in the db
+    public static function getDbTimeSpan(string $returnFormat = null) : array {
+        $monthyearTables = ['pagevisits','systems', 'engines', 'referers', 'devices'];
+        $queryStr = 'SELECT MIN(`monthyear`) as `start`, MAX(`monthyear`) as `end` FROM ( ';
+        foreach($monthyearTables as $i => $my) {
+            $queryStr.= 'SELECT `monthyear` FROM `'.$my.'` '.(($i===(count($monthyearTables)-1))?') ':'UNION ALL ');
         }
-        return [];
+        $queryStr .= ' LIMIT 0, '.SIMPLESTATS_DUMMY_DB_LIMIT;
+        $result = self::database()->query($queryStr);
+        if($result && $result->get(0, false)){
+            $data = $result->get(0)->toArray();
+            if(array_key_exists('start', $data) && array_key_exists('end', $data)) {
+                // Parse to int and date
+                foreach($data as &$d){
+                    $d = intval($d, 10);
+                    if($returnFormat){
+                        $d = date($returnFormat, getTimeFromPeriod($d));
+                    }
+                }
+                return $data;
+            }
+        }
+        return null;
     }
 
-    public static function deviceStats() {
-        //var_dump( kirby()->roles() );//->toArray();
-        //return[];
-        // tmp
+    public static function getTimeSpanFromUrl(string $urlParamFrom = 'dateFrom', string $urlParamTo = 'dateTo') : array {
+        $request = kirby()->request();
+        $timeFrame = [
+            $request->get('dateFrom', null),
+            $request->get('dateTo', null),
+        ];
+        // Parse Y-d-m to period
+        foreach([0,1] as $i){
+            if($timeFrame[$i] && strlen($timeFrame[$i])>0){
+                $split = explode('-', trim($timeFrame[$i]));
+                if($split && count($split)===3){
+                    foreach($split as &$s) $s = intval($s, 10);
+                    $timeFrame[$i] = getPeriodFromTime( mktime(0,0,0, $split[1], $split[2], $split[0]) );
+                }
+            }
+        }
+        return $timeFrame;
+    }
+
+    // Returns all periods between them
+    public static function fillPeriod(int $startPeriod, int $endPeriod, string $dateFormat=null) : array {
+        $periods = [];
+        for($period=$startPeriod; $period <= $endPeriod; $period=incrementPeriod($period) ){
+            if(!$dateFormat){
+                $periods[] = $period;
+            }
+            else {
+                $periods[] = date($dateFormat, getTimeFromPeriod($period));
+            }
+        }
+        return $periods;
+    }
+
+    public static function listvisitors(): array {
+        $keys = [
+            'visitedpages'   => [ 'label' => t('simplestats.table.visitedpages',    'Visited Pages'),   'type' => 'text', 'sortable' => false,  'width' => '50%', 'search'=>true ],
+            'osfamily'       => [ 'label' => t('simplestats.table.osfamily',        'OS Family'),       'type' => 'text', 'sortable' => true,   'width' => '15%', 'search'=>true ],
+            'devicetype'     => [ 'label' => t('simplestats.table.devicetype',      'Device Type'),     'type' => 'text', 'sortable' => true,   'width' => '10%', 'search'=>true ],
+            'browserengine'  => [ 'label' => t('simplestats.table.browserengine',   'Browser Engine'),  'type' => 'text', 'sortable' => true,   'width' => '10%', 'search'=>true ],
+            'timeregistered' => [ 'label' => t('simplestats.table.timeregistered',  'Time Registered'), 'type' => 'date', 'sortable' => true,   'width' => '15%', 'search'=>false],//, 'dateInputFormat'=>'yyyy-MM-dd HH:mm', 'dateOutputFormat'=>'d MMMM yyyy HH:mm'],
+        ];
+        $rows = [];
+        $result = self::database()->query('SELECT `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        if($result){
+            // Format rows
+            $rows = $result->toArray();
+            foreach($rows as $key => $value){
+                $rows[$key] = array_merge(['id'=>$key, 'text'=>'text', 'title'=>'title', 'dragText'=>'dragText', 'info'=>'info!!'], $value->toArray());
+
+                // convert date format
+                $rows[$key]['timeregistered'] = date( SIMPLESTATS_PRECISE_DATE_FORMAT, intval($rows[$key]['timeregistered']) );
+            }
+        }
+        return [
+            'columns'   => $keys,
+            'rows'      => $rows,
+        ];
+    }
+
+    public static function deviceStats(int $fromPeriod = null, int $toPeriod = null) {
+        
         //self::syncDayStats();
 
-        //$db = self::database();
+        // Format period
+        $timeSpan = static::constrainPeriodsToDbSpan($fromPeriod, $toPeriod);
 
-        // Need to hide bots ?
-        $hideBotsQueryPart = '';
-        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `device` != "server"';
+         // Array holding all possible periods
+        $selectedPeriods = array_combine(
+            static::fillPeriod( $timeSpan['start'], $timeSpan['end'] ),
+            static::fillPeriod( $timeSpan['start'], $timeSpan['end'], 'Y-m-d' ),
+        );
+
+        // Global Where query part
+        $whereQuery = ' WHERE `monthyear` BETWEEN '.$timeSpan['start'].' AND '.$timeSpan['end'];
 
         // Get devices
-        $allDevices = [];
-        $allDevicesResult = self::database()->query('SELECT `device`, `hits` FROM `devices`'.$hideBotsQueryPart.' GROUP BY `device` ORDER BY `device` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $hideBotsQueryPart = '';
+        if( true === option('daandelange.simplestats.panel.hideBots', false) ) 
+            $hideBotsQueryPart = ' AND `device` != "server"';
+        $allDevices = [
+            'label' => 'All Device Types',
+            'data' => [],
+        ];
+        $allDevicesLabels = [];
+        $allDevicesResult = self::database()->query('SELECT `device`, `hits` FROM `devices`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `device` ORDER BY `device` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allDevicesResult){
             // parse sql result, line by line
             foreach($allDevicesResult as $device){
-                //var_dump($device->toArray());
-                $allDevices[] = [self::translateDeviceType($device->device),$device->hits];
+                $key = $device->device;
+                if(!array_key_exists($key, $allDevices['data'])){
+                    $allDevices['data'][$key] = intval($device->hits, 10);
+                }
+                $allDevicesLabels[$key] = static::translateDeviceType($key);
             }
+            // Remove keys
+            $allDevices['data'] = array_values($allDevices['data']);
         }
 
         // Get Systems
-        $allSystems = [];
-        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `system` != "bot"';
-        $allSystemsResult = self::database()->query('SELECT `system`, `hits` FROM `systems`'.$hideBotsQueryPart.' GROUP BY `system` ORDER BY `system` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $allSystems = [
+            'label' => 'All Operating Systems',
+            'data' => [],
+        ];
+        $allSystemsLabels = [];
+        if( true === option('daandelange.simplestats.panel.hideBots', false) )
+            $hideBotsQueryPart = ' AND `system` != "bot"';
+        $allSystemsResult = self::database()->query('SELECT `system`, `hits` FROM `systems`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `system` ORDER BY `system` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allSystemsResult){
             // parse sql result, line by line
             foreach($allSystemsResult as $system){
-                //var_dump($device->toArray());
-                $allSystems[] = [$system->system,$system->hits];
+                $key = $system->system;
+                if(!array_key_exists($key, $allSystems['data'])){
+                    $allSystems['data'][$key] = intval($system->hits, 10);
+                }
+                $allSystemsLabels[$key] = $key;
             }
+            // Remove keys
+            $allSystems['data'] = array_values($allSystems['data']);
         }
 
         // Get Engines
-        $allEngines = [];
-        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `engine` != "bot"';
-        $allEnginesResult = self::database()->query('SELECT `engine`, `hits` FROM `engines`'.$hideBotsQueryPart.' GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $allEngines = [
+            'label' => 'All Browser Engines',
+            'data' => [],
+        ];
+        $allEnginesLabels = [];
+        if( true === option('daandelange.simplestats.panel.hideBots', false) )
+            $hideBotsQueryPart = ' AND `engine` != "bot"';
+        $allEnginesResult = self::database()->query('SELECT `engine`, `hits` FROM `engines`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allEnginesResult){
             // parse sql result, line by line
             foreach($allEnginesResult as $engine){
-                //var_dump($device->toArray());
-                $allEngines[] = [$engine->engine,$engine->hits];
+                $key = $engine->engine;
+                if(!array_key_exists($key, $allEngines['data'])){
+                    $allEngines['data'][$key] = intval($engine->hits, 10);
+                }
+                $allEnginesLabels[$key] = $key;
             }
-            //var_dump($allEngines);
+            // Remove keys
+            $allEngines['data'] = array_values($allEngines['data']);
         }
 
         // Get Devices over time
         $devicesOverTimeData=[];
-        if( true === option('daandelange.simplestats.panel.hideBots', false) ) $hideBotsQueryPart = ' WHERE `device` != "server"';
-        $devicesOverTime = self::database()->query('SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices`'.$hideBotsQueryPart.' GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $chartPeriodLabels = array_values($selectedPeriods);
+        if( true === option('daandelange.simplestats.panel.hideBots', false) )
+            $hideBotsQueryPart = ' AND `device` != "server"';
+        $devicesOverTime = self::database()->query('SELECT `device`, SUM(`hits`) AS `hits`, `monthyear` FROM `devices`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `device`, `monthyear` ORDER BY `monthyear` ASC, `device` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($devicesOverTime){
             $devicePeriods=[];
             foreach($devicesOverTime as $device){
                 $devicePeriod = intval($device->monthyear, 10);
                 $name = $device->device;
-                //echo 'NAME=='.$name."\n";
 
                 // Need to create the first entry ?
                 if(!array_key_exists($name, $devicesOverTimeData)){
                     $devicesOverTimeData[$name]=[
-                        'name' => self::translateDeviceType($name),
-                        'data' => [],
+                        'label' => self::translateDeviceType($name),
+                        'data' => array_fill_keys(array_keys($selectedPeriods), 0),
                     ];
                 }
-
-                // Remember period
-                if( array_search($devicePeriod, $devicePeriods)===false ){
-                    $devicePeriods[]=$devicePeriod;
-                }
-                // value
-                $devicesOverTimeData[$name]['data'][$devicePeriod]=intval($device->hits);
+                
+                // Increment values
+                if(array_key_exists($devicePeriod, $devicesOverTimeData[$name]['data'])) $devicesOverTimeData[$name]['data'][$devicePeriod] += intval($device->hits);
             }
 
-            // Add missing periods from first date to now (happens when no data at all in a full period)
-            if( count($devicePeriods) > 0 ) for($period=min($devicePeriods); $period <= getPeriodFromTime(); $period=incrementPeriod($period) ){
-                if( array_search($period, $devicePeriods) === false ) $devicePeriods[]=$period;
+            // Unset keys for JS
+            foreach($devicesOverTimeData as &$dataset){
+                $dataset['data']=array_values($dataset['data']);
             }
-
-            // Process data
-            $tmp=[];
-            foreach($devicesOverTimeData as $name => $data){
-
-                // Add missing keys / zero values
-                foreach($devicePeriods as $month){
-                    if(!array_key_exists($month, $devicesOverTimeData[$name]['data'])){
-                        $devicesOverTimeData[$name]['data'][$month]=0;
-                    }
-                }
-
-                // Convert periods to date string
-                $devicesOverTimeData[$name]['data2']=[];
-                foreach($devicesOverTimeData[$name]['data'] as $period => $hits){
-                    $devicesOverTimeData[$name]['data2'][getDateFromPeriod(intval($period), SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
-                }
-                $devicesOverTimeData[$name]['data']=$devicesOverTimeData[$name]['data2'];
-                unset($devicesOverTimeData[$name]['data2']);
-
-
-                // Object to array (remove key)
-                $tmp[]=$devicesOverTimeData[$name];
-
-                // Should be ok now
-            }
-            $devicesOverTimeData=$tmp;
-            unset($tmp);
-            //var_dump($devicesOverTimeData);
         }
 
         return [
-            //'deviceslabels'  => $deviceLabels, // $devicetypes,
-            'devicesdata'       => $allDevices,
-            'systemsdata'       => $allSystems,
-            //'systemslabels'     => $systemsLabels,
-            'enginesdata'       => $allEngines,
-            'devicesovertime'   => $devicesOverTimeData,
-            //'engineslabels' => $enginesLabels,
+            'deviceslabels'     => array_values($allDevicesLabels),
+            'devicesdata'       => [$allDevices],
+            'systemslabels'     => array_values($allSystemsLabels),
+            'systemsdata'       => [$allSystems],
+            'engineslabels'     => array_values($allEnginesLabels),
+            'enginesdata'       => [$allEngines],
+            'devicesovertime'   => array_values($devicesOverTimeData),
+            'chartperiodlabels' => $chartPeriodLabels,
         ];
     }
 
@@ -270,169 +305,138 @@ class Stats extends SimpleStatsDb {
         return $key;
     }
 
-    public static function refererStats(): ?array {
+    public static function refererStats(int $fromPeriod = null, int $toPeriod = null): ?array {
+        
+        // Format period
+        $timeSpan = static::constrainPeriodsToDbSpan($fromPeriod, $toPeriod);
 
-        $referersByDomainData =[];
-        //$referersByDomainLabels=[];
+         // Array holding all possible periods
+        $selectedPeriods = array_combine(
+            static::fillPeriod( $timeSpan['start'], $timeSpan['end'] ),
+            static::fillPeriod( $timeSpan['start'], $timeSpan['end'], 'Y-m-d' ),
+        );
 
-        $referersByMediumData=[];
-        //$referersByMediumLabels=[];
+        // Global Where query part
+        $whereQuery = ' WHERE `monthyear` BETWEEN '.$timeSpan['start'].' AND '.$timeSpan['end'].'';
 
-        $referersByMediumOverTimeData=[];
+        $chartPeriodLabels = array_values($selectedPeriods);
 
-        $referersByDomainRecentData=[];
-        //$referersByDomainRecentLabels=[];
-
-        $allReferersRows = [];
-        $allReferersColumns = [];
-
-        //$db = self::database();
-
+        // Parse referers by domain
+        $referersByDomainData = [
+            'label' => 'Global Referrer Domains',
+            'data' => [],
+        ];
+        // $referersByDomainData = [];
+        $referersByDomainLabels=[];
         //$globalStats = $db->query("SELECT `referer`, `domain`, SUM(`hits`) AS hits, `medium` from `referers`, MIN(`referers`.`monthyear`) AS firstseen, MAX(`monthyear`) AS lastseen GROUP BY `monthyear` ORDER BY `lastseen` DESC LIMIT 0,100");
-        $globalStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        $globalStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers`'.$whereQuery.' )'.$whereQuery.' GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($globalStats){
-            //echo 'RESULT=';
-            //var_dump($globalStats->toArray());
-            //return $globalStats->toArray();
-
             foreach($globalStats as $referer){
-                //var_dump($referer);
-                $referersByDomainData[] = [$referer->domain, $referer->hits];
-                //$referersByDomainLabels[] = $referer->domain;
+                $key = Str::slug($referer->domain);//intval($referer->monthyear,10);
+                if(!array_key_exists($key, $referersByDomainData['data'])){
+                    $referersByDomainData['data'][$key] = intval($referer->hits, 10);
+                }
+                $referersByDomainLabels[$key] = $referer->domain;
             }
-
+            // Remove keys
+            $referersByDomainData['data'] = array_values($referersByDomainData['data']);
         }
         else {
             Logger::LogWarning("refererStats(globalStats) : db error =".self::database()->lastError()->getMessage() );
-            //echo 'DBERROR=';var_dump($db->lastError()->getMessage() );
         }
+        
 
-
-        $mediumStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `medium` ORDER BY `lastseen` DESC, `medium` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
-
+        // Grab referrers by medium
+        $referersByMediumLabels = [];
+        $referersByMediumData=[
+            'label' => 'Global Referrer Mediums',
+            'data' => [],
+        ];
+        // Todo: this query is almost the same as above, do we need to run it twice ?
+        $mediumStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` '.$whereQuery.') '.$whereQuery.' GROUP BY `medium` ORDER BY `lastseen` DESC, `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($mediumStats){
-            //echo 'RESULT=';
-            //var_dump($globalStats->toArray());
-            //return $globalStats->toArray();
-
-            foreach($mediumStats as $referer){
-                //var_dump($referer);
-                $referersByMediumData[] =   [$referer->medium, $referer->hits];
-                //$referersByMediumLabels[] = $referer->medium;
+            foreach($mediumStats as $medium){
+                $key = Str::slug($medium->domain);
+                if(!array_key_exists($key, $referersByMediumData['data'])){
+                    $referersByMediumData['data'][$key] = intval($medium->hits,10);
+                }
+                $referersByMediumLabels[$key] = $medium->domain;
             }
-
+            // Remove keys
+            $referersByMediumData['data'] = array_values($referersByMediumData['data']);
         }
         else {
             Logger::LogWarning("refererStats(mediumStats) : db error =".self::database()->lastError()->getMessage() );
-            //echo 'DBERROR=';var_dump($db->lastError()->getMessage() );
+            //echo 'DBERROR=';var_dump(self::database()->lastError()->getMessage() );
         }
+        // dump($referersByMediumData);
 
         // Mediums over time
-        $mediumStatsOverTime = self::database()->query("SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers` GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        $referersByMediumOverTimeData=[];
+        //dump('SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers`'.$whereQuery.' GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);die();
+        $mediumStatsOverTime = self::database()->query('SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers`'.$whereQuery.' GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($mediumStatsOverTime){
-            //$mediumNames=[];
-            $mediumPeriods=[];
-            //$num = 0;
+
             foreach($mediumStatsOverTime as $medium){
                 $mediumPeriod = intval($medium->monthyear, 10);
                 $name = $medium->medium;
-                //echo 'NAME=='.$name."\n";
-
+                $key = Str::slug($name);
                 // Need to create the first entry ?
-                if(!array_key_exists($name, $referersByMediumOverTimeData)){
-                    $referersByMediumOverTimeData[$name]=[
-                        'name' => $name,
-                        'data' => [],
+                if(!array_key_exists($key, $referersByMediumOverTimeData)){
+                    $referersByMediumOverTimeData[$key]=[
+                        'label' => $name,
+                        'data' => array_fill_keys(array_keys($selectedPeriods), 0),
                     ];
                 }
-
-                // Remember period
-                if(array_search($mediumPeriod, $mediumPeriods)===false){
-                    $mediumPeriods[]=$mediumPeriod;
+                
+                // Increment values
+                if(array_key_exists($mediumPeriod, $referersByMediumOverTimeData[$key]['data'])){
+                    $referersByMediumOverTimeData[$key]['data'][$mediumPeriod] += intval($medium->hits);
                 }
-                // value
-                $referersByMediumOverTimeData[$name]['data'][$mediumPeriod]=intval($medium->hits);
-                //$referersByMediumOverTimeData[$mediumPeriod]['data']=[];
-                //$referersByMediumOverTimeData[$mediumPeriod]['name']=$name;
             }
 
-            // Add missing periods from first date to now (happens when no data at all in a full period)
-            if( count($mediumPeriods) > 0 ) for($period=min($mediumPeriods); $period <= getPeriodFromTime(); $period=incrementPeriod($period) ){
-                if( array_search($period, $mediumPeriods) === false ) $mediumPeriods[]=$period;
+            // Unset keys for JS
+            foreach($referersByMediumOverTimeData as &$dataset){
+                $dataset['data']=array_values($dataset['data']);
             }
-
-            // Process data
-            $tmp=[];
-            foreach($referersByMediumOverTimeData as $name => $data){
-
-                // Add missing keys / zero values
-                foreach($mediumPeriods as $period){
-                    if(!array_key_exists($period, $referersByMediumOverTimeData[$name]['data'])){
-                        $referersByMediumOverTimeData[$name]['data'][$period]=0;
-                    }
-                }
-
-                // Convert monthyear to date string
-                $referersByMediumOverTimeData[$name]['data2']=[];
-                foreach($referersByMediumOverTimeData[$name]['data'] as $my => $hits){
-                    //$referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my, SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
-                    $referersByMediumOverTimeData[$name]['data2'][getDateFromPeriod($my, SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
-                }
-                $referersByMediumOverTimeData[$name]['data']=$referersByMediumOverTimeData[$name]['data2'];
-                unset($referersByMediumOverTimeData[$name]['data2']);
-
-                // Object to array (remove key)
-                $tmp[]=$referersByMediumOverTimeData[$name];
-                //unset($referersByMediumOverTimeData[$name]);
-
-                // Should be ok now
-            }
-            $referersByMediumOverTimeData=$tmp;
         }
         else {
             Logger::LogWarning("refererStats(mediumStatsOverTime) : db error =".self::database()->lastError()->getMessage() );
         }
 
         // Recent stats
-        $todayPeriod = getPeriodFromTime();
-        $domainRecentStats = self::database()->query("SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`=${todayPeriod} ) WHERE `monthyear`=${todayPeriod} GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
-        if($domainRecentStats){
+        //$referersByDomainRecentData=[];
+        // $todayPeriod = getPeriodFromTime();
+        // $domainRecentStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` WHERE `monthyear`='.$todayPeriod.' ) WHERE `monthyear` = '.$todayPeriod.' GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        // if($domainRecentStats){
+        //     foreach($domainRecentStats as $referer){
+        //         $referersByDomainRecentData[]   = [$referer->domain, $referer->hits];
+        //     }
+        // }
+        // else{
+        //     Logger::LogWarning("refererStats(domainRecentStats) : db error =".self::database()->lastError()->getMessage() );
+        // }
 
-            foreach($domainRecentStats as $referer){
-                $referersByDomainRecentData[]   = [$referer->domain, $referer->hits];
-            }
-
-        }
-        else{
-            Logger::LogWarning("refererStats(domainRecentStats) : db error =".self::database()->lastError()->getMessage() );
-            //else echo 'DBERROR=';var_dump($db->lastError()->getMessage() );
-        }
-
-
-        $AllDomainStats = self::database()->query("SELECT `id`, `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `timefrom`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` ) GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        // Set column names
+        $referersTableLabels = [
+            'url'         => [ 'label'=>t('simplestats.table.url',          'URL'       ), 'type'=>'text',       'sortable'=>true,  'search'=>true,  'width'=>'30%' ],
+            'domain'      => [ 'label'=>t('simplestats.table.domain',       'Domain'    ), 'type'=>'text',       'sortable'=>true,  'search'=>true,  'width'=>'20%' ],
+            'medium'      => [ 'label'=>t('simplestats.table.medium',       'Medium'    ), 'type'=>'text',       'sortable'=>true,  'search'=>true,  'width'=>'10%' ],
+            'hits'        => [ 'label'=>t('simplestats.table.hits',         'Hits'      ), 'type'=>'number',     'sortable'=>true,  'search'=>false, 'width'=>'10%' ],
+            'hitspercent' => [ 'label'=>t('simplestats.table.popularity',   'Popularity'), 'type'=>'percentage', 'sortable'=>true,  'search'=>false, 'width'=>'15%' ],
+            'timefrom'    => [ 'label'=>t('simplestats.table.firstseen',    'First seen'), 'type'=>'date',       'sortable'=>true,  'search'=>false, 'width'=>'15%' ], //, 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
+        ];
+        $referersTableData = [];
+        $AllDomainStats = self::database()->query('SELECT `id`, `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `timefrom`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` '.$whereQuery.' ) '.$whereQuery.' GROUP BY `domain` ORDER BY `medium` ASC, `domain` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($AllDomainStats){
 
-            // Set column names
-            $allReferersColumns = [
-                //['label'=>'ID','field'=>'id','type'=>'text','sort'=>false,'search'=>false,'class'=>'myClass','width'=>'1fr'],
-                ['label'=>'URL',        'field'=>'url',         'type'=>'text',     'sortable'=>true,  'width'=>'35%'],
-                ['label'=>'Domain',     'field'=>'domain',      'type'=>'text',     'sortable'=>true,  'width'=>'20%'],
-                ['label'=>'Medium',     'field'=>'medium',      'type'=>'text',     'sortable'=>true,  'width'=>'15%'],
-                ['label'=>'Hits',       'field'=>'hits',        'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'5%'   ],
-                ['label'=>'Popularity', 'field'=>'hitspercent', 'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'15%'  ],
-                ['label'=>'First seen', 'field'=>'timefrom',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'15%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>'MMM yyyy'], // todo: Date display should be customized to custom timespans
-
-            ];
-
             // Get max for calc
-            $max = 0;
-            foreach($AllDomainStats as $referer){
-                if( $referer->hits>$max ) $max = $referer->hits;
-            }
+            $allHits = $AllDomainStats->pluck('hits');
+            $max = count($allHits)>0?max($allHits):0;
 
             // Set rows
             foreach($AllDomainStats as $referer){
-                $allReferersRows[] = [
+                $referersTableData[] = [
                     //'id'          => $referer->id,
                     'url'           => $referer->referer,
                     'domain'        => $referer->domain,
@@ -446,24 +450,54 @@ class Stats extends SimpleStatsDb {
         else Logger::LogWarning("refererStats(AllDomainStats) : db error =".self::database()->lastError()->getMessage() );
 
         return [
-            'referersbydomaindata'          => $referersByDomainData,
-            'referersbymediumdata'          => $referersByMediumData,
-            'referersbymediumovertimedata'  => $referersByMediumOverTimeData,
-            'referersbydomainrecentdata'    => $referersByDomainRecentData,
-            'allreferersrows'               => $allReferersRows,
-            'allrefererscolumns'            => $allReferersColumns,
+            'referersbydomaindata'          => [$referersByDomainData],
+            'referersbydomainlabels'        => array_values($referersByDomainLabels),
+
+            'referersbymediumdata'          => [$referersByMediumData],
+            'referersbymediumlabels'        => array_values($referersByMediumLabels),
+
+            'referersbymediumovertimedata'  => array_values($referersByMediumOverTimeData),
+            'chartperiodlabels'             => $chartPeriodLabels,
+
+            // 'referersbydomainrecentdata'    => $referersByDomainRecentData,
+
+            'refererstabledata'             => $referersTableData,
+            'refererstablelabels'           => $referersTableLabels,
         ];
     }
 
-    public static function pageStats(): ?array {
-        $pageStatsData  =[];
-        $pageStatsLabels=[];
+    // Constrains 2 dates to the given dates.
+    public static function constrainPeriodsToDbSpan(int $fromPeriod = null, int $toPeriod = null) : array {
+        $maxTimespan = $timeSpan = static::getDbTimeSpan();
+        if($fromPeriod && $fromPeriod > $maxTimespan['start']){
+            $timeSpan['start'] = $fromPeriod;
+        }
+        if($toPeriod && $toPeriod < $maxTimespan['end']){
+            $timeSpan['end'] = $toPeriod;
+        }
+        return $timeSpan;
+    }
 
-        $visitsOverTimeData    =[];
-        $pageVisitsOverTimeData=[];
+    public static function pageStats(int $fromPeriod = null, int $toPeriod = null): ?array {
+        
+        // Format period
+        $timeSpan = static::constrainPeriodsToDbSpan($fromPeriod, $toPeriod);
 
-        $globalLanguagesData  =[];
-        $languagesOverTimeData=[];
+        // Array holding all possible periods
+        $selectedPeriods = array_combine(
+            static::fillPeriod( $timeSpan['start'], $timeSpan['end'] ),
+            static::fillPeriod( $timeSpan['start'], $timeSpan['end'], 'Y-m-d' ),
+        );
+
+        // Global Where query part
+        $whereQuery = ' WHERE `monthyear` BETWEEN '.$timeSpan['start'].' AND '.$timeSpan['end'].'';
+        
+        // per-x-axis label of each entry
+        $chartPeriodLabels = array_values($selectedPeriods);
+
+        // Start with all period keys holding 0
+        $visitsOverTimeData    = array_fill_keys(array_keys($selectedPeriods), 0);
+        $pageVisitsOverTimeData = [];
 
         // SYNC inline (todo: allow syncing in multiple ways [callback, crontab, inline..] )
         self::syncDayStats(); // tmp
@@ -476,73 +510,77 @@ class Stats extends SimpleStatsDb {
             }
         }
 
-        $visitedPages = self::database()->query("SELECT `uid`, MIN(`monthyear`) AS `firstvisited`, MAX(`monthyear`) AS `lastvisited`, SUM(`hits`) AS `hits` ${langQuery} FROM `pagevisits` GROUP BY `uid` ORDER BY `uid` ASC, `monthyear` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
-        if($visitedPages){
-            // Set column names
-            $pageStatsLabels = [
-                //['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'1fr'],
-                ['label'=>'URL',                                                'field'=>'url',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'0%',  'hidden'=>'true'],
-                ['label'=>t('simplestats.table.uid','UID'),                     'field'=>'uid',             'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'35%'], // todo : add 'tooltip'
-                ['label'=>'Depth',                                              'field'=>'depth',           'type'=>'number',   'sortable'=>false, 'globalSearchDisabled'=>true,    'width'=>'0%',  'hidden'=>'true' ],
-                ['label'=>t('simplestats.table.pagetitle', 'Title'),            'field'=>'title',           'type'=>'text',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'20%'],
-                ['label'=>t('simplestats.table.hits','Hits'),                   'field'=>'hits',            'type'=>'number',   'sortable'=>true,  'globalSearchDisabled'=>true,    'width'=>'5%'],
-                ['label'=>t('simplestats.table.popularity','Popularity'),       'field'=>'hitspercent',     'type'=>'percentage','sortable'=>true, 'globalSearchDisabled'=>true,    'width'=>'10%', 'align'=>'left'],
-                ['label'=>t('simplestats.table.firstvisited','First Visited'),  'field'=>'firstvisited',    'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()], // todo: Date display should be customized to custom timespans
-                ['label'=>t('simplestats.table.lastvisited','Last Visited'),    'field'=>'lastvisited',     'type'=>'date',     'sortable'=>true,  'globalSearchDisabled'=>false,   'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()],
-                ['label'=>'Icon',                                               'field'=>'icon',            'type'=>'text',     'sortable'=>false, 'globalSearchDisabled'=>true,    'width'=>'0%',  'hidden'=>'true' ],
-            ];
-
-            // Add language columns
-            if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
-                foreach( kirby()->languages() as $l ){
-                    $pageStatsLabels[] = ['label'=>$l->name(), 'field'=>'hits_'.$l->code(), 'type'=>'number', 'sort'=>true,   'search'=>false,   'class'=>'', 'width'=>'5%'];
-                }
+        // Data for the table
+        $pageStatsData = [];
+        $pageStatsLabels = [
+            //['label'=>'UID',            'field'=>'uid',             'type'=>'text',     'sort'=>true,  'search'=>true,    'class'=>'', 'width'=>'1fr'],
+            'flag'          => ['label'=>' ',                                                  'type'=>'flag',      'sortable'=>false, 'search'=>false,  'mobile' => false,  'width'=>'var(--table-row-height)'  ],
+            'icon'          => ['label'=>' ',                                                  'type'=>'image',     'sortable'=>false, 'search'=>false,  'mobile' => false,  'width'=>'var(--table-row-height)' ],
+            'url'           => ['label'=>'URL',                                                'type'=>'text',      'sortable'=>true,  'search'=>true,   'mobile' => false,  'width'=>'0%',  'hidden'=>'false'],
+            'uid'           => ['label'=>t('simplestats.table.uid','UID'),                     'type'=>'slug',      'sortable'=>true,  'search'=>true,   'mobile' => true,   'width'=>'25%', 'hidden'=>'true'], // todo : add 'tooltip'
+            'depth'         => ['label'=>'Depth',                                              'type'=>'number',    'sortable'=>false, 'search'=>false,  'mobile' => false,  'width'=>'0%',  'hidden'=>'true' ],
+            'title'         => ['label'=>t('simplestats.table.pagetitle', 'Title'),            'type'=>'url',       'sortable'=>true,  'search'=>true,   'mobile' => true,   'width'=>'20%'],
+            'average'       => ['label'=>t('simplestats.table.average','Average'),             'type'=>'number',    'sortable'=>true,  'search'=>false,  'mobile' => true,   'width'=>'5%'],
+            'hits'          => ['label'=>t('simplestats.table.hits','Hits'),                   'type'=>'number',    'sortable'=>true,  'search'=>false,  'mobile' => true,   'width'=>'5%'],
+            'hitspercent'   => ['label'=>t('simplestats.table.popularity','Popularity'),       'type'=>'percentage','sortable'=>true,  'search'=>false,  'mobile' => true,   'width'=>'10%', 'align'=>'left'],
+            'firstvisited'  => ['label'=>t('simplestats.table.firstvisited','First Visited'),  'type'=>'date',      'sortable'=>true,  'search'=>false,  'mobile' => false,  'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()], // todo: Date display should be customized to custom timespans
+            'lastvisited'   => ['label'=>t('simplestats.table.lastvisited','Last Visited'),    'type'=>'date',      'sortable'=>true,  'search'=>false,  'mobile' => false,  'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()],
+            
+        ];
+        // Add language columns
+        if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
+            foreach( kirby()->languages() as $l ){
+                $pageStatsLabels['hits_'.$l->code()] = ['label'=>$l->name(), 'field'=>'hits_'.$l->code(), 'type'=>'number', 'sortable'=>true,   'search'=>false, 'width'=>'5%'];
             }
+        }
+
+        $visitedPages = self::database()->query('SELECT `uid`, MIN(`monthyear`) AS `firstvisited`, MAX(`monthyear`) AS `lastvisited`, SUM(`hits`) AS `hits` '.$langQuery.' FROM `pagevisits`'.$whereQuery.' GROUP BY `uid` ORDER BY `uid` ASC, `monthyear` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        if($visitedPages){
 
             // Get max for calc
-            $max = 0;
+            $allHits = $visitedPages->pluck('hits');
+            $max = count($allHits)>0?max($allHits):0;
+
+            $numPeriods = count($selectedPeriods);
+            if($numPeriods<1) $numPeriods = 1; // Avoid division by zero
+
+            // Loop query results
             foreach($visitedPages as $page){
-                if( $page->hits > $max ) $max = $page->hits;
-            }
+                $kirbyPage = kirby()->page($page->uid); // This is probably the slowest part to be optimized some day ? use bnomei/kirby-boost ?
 
-            // Set rows
-            foreach($visitedPages as $page){
-                $kirbyPage = kirby()->page($page->uid); // This is probably the slowest part to be optimized some day
+                // Default data not based on the $page object
+                $pageStatsData[] = [
+                    'url'           => $page->uid,
+                    'uid'           => $page->uid,
+                    'title'         => ['href'=>false,'text'=>$page->uid . ' (404)'],
+                    'average'       => round(intval($page->hits, 10)/$numPeriods),
+                    'hits'          => intval($page->hits, 10),
+                    'hitspercent'   => round(($page->hits/$max),2),
+                    'firstvisited'  => getDateFromPeriod(intval($page->firstvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                    'lastvisited'   => getDateFromPeriod(intval($page->lastvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                    'depth'         => -1,
+                    'icon'          => ['icon'=>'page', 'color'=>'gray-700','back'=>'gray-200','ratio'=>'1/1'],
+                    'flag'        => ['disabled'=>true,'status'=>'disabled'],
+                ];
 
-                // Pages that don't exist (anymore?)
-                if(!$kirbyPage){
-                    $pageStatsData[] = [
-                        'url'           => $page->uid,
-                        'uid'           => $page->uid,
-                        'title'         => $page->uid . ' (404)',
-                        'hits'          => intval($page->hits, 10),
-                        'hitspercent'   => round(($page->hits/$max),2),
-                        'firstvisited'  => getDateFromPeriod(intval($page->firstvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
-                        'lastvisited'   => getDateFromPeriod(intval($page->lastvisited, 10), SIMPLESTATS_TABLE_DATE_FORMAT),
-                        'depth'         => 0,
-                        'icon'          => 'page',
-                    ];
-                    //continue;
-                }
-
-                else {
-                    $pageStatsData[] = [
-                        //'uid'           => $page->uid,
-                        'uid'           => $page->uid,
+                // Augmented data by page object
+                $lastEntry = count($pageStatsData)-1;
+                if($kirbyPage) {
+                    $pageStatsData[$lastEntry] = array_merge($pageStatsData[$lastEntry], [
                         'url'           => $kirbyPage->url(),
-                        'title'         => $kirbyPage->title()->value(),
-                        'hits'          => intval($page->hits, 10),
-                        'hitspercent'   => round(($page->hits/$max)*100)*0.01,
-                        'firstvisited'  => getDateFromPeriod(intval($page->firstvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
-                        'lastvisited'   => getDateFromPeriod(intval($page->lastvisited,10), SIMPLESTATS_TABLE_DATE_FORMAT),
+                        'title'         => ['href'=>$kirbyPage->panel()->url(), 'text'=>$kirbyPage->title()->value()],
                         'depth'         => $kirbyPage->depth()-1,
-                        'icon'          => $kirbyPage->blueprint()->icon(),//'page',//$kirbyPage->panelIcon()?$kirbyPage->panelIcon()['type']:'page',
-                    ];
+                        'icon'          => ['icon'=>$kirbyPage->blueprint()->icon()??'page', 'color'=>'gray-700','back'=>'gray-200','ratio'=>'1/1'],
+                        // 'icon'    => $kirbyPage->panel()->image(
+                        //     ['icon'=>'page', 'color'=>'gray-500','back'=>'black','ratio'=>'1/1'],
+                        //     'table'
+                        // ),
+                        'flag'        => ['disabled'=>false,'status'=>$kirbyPage->status()],
+                    ]);
                 }
 
                 // Inject language data
                 if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
-                    $lastEntry = count($pageStatsData)-1;
                     foreach( kirby()->languages() as $l ){
                         $langStr = 'hits_'.$l->code();
                         $pageStatsData[$lastEntry][$langStr] = intval($page->$langStr, 10);
@@ -550,25 +588,15 @@ class Stats extends SimpleStatsDb {
                 }
             }
         }
+        else Logger::LogWarning("pageStats(visitedPages) : db error =".self::database()->lastError()->getMessage() );
 
         // Compute visits over time (monthly)
-        $visitsOverTime = self::database()->query("SELECT `monthyear`, SUM(`hits`) AS `hits` FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        $visitsOverTime = self::database()->query('SELECT `monthyear`, SUM(`hits`) AS `hits` FROM `pagevisits`'.$whereQuery.' GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($visitsOverTime){
-            $firstTimeFrame = 0;
             foreach($visitsOverTime as $timeFrame){
-                // Add timeframe from db
-                $visitsOverTimeData[]=[ getDateFromPeriod(intval($timeFrame->monthyear,10), SIMPLESTATS_TIMELINE_DATE_FORMAT), $timeFrame->hits ];
-                if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
-                //$visitsOverTimeLabels[]=date('M Y',$time);//"${month} - ${year}";
-                //$visitsOverTimeData[]=$timeFrame->hits;
-            }
-            // Add missing timeframes
-            if($firstTimeFrame!==0){
-                $visitsOverTimePeriods = array_column($visitsOverTimeData, 0);
-                for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
-                    $timeFrameKey = date('Y-m-d', $timeFrame);
-                    if( array_search($timeFrameKey, $visitsOverTimePeriods) === false ) $visitsOverTimeData[]=[$timeFrameKey, 0];
-                }
+                $key = intval($timeFrame->monthyear,10);
+                // Only keep value if key exists in array (respect timespan)
+                if(array_key_exists($key, $visitsOverTimeData)) $visitsOverTimeData[$key] = $timeFrame->hits;
             }
         }
         else Logger::LogWarning("pageStats(visitsOverTime) : db error =".self::database()->lastError()->getMessage() );
@@ -576,65 +604,53 @@ class Stats extends SimpleStatsDb {
         // Get pages over time
         // Todo: Add total and remove visitsOverTimeData, see https://stackoverflow.com/a/39374290/58565
         $pageVisitsOverTimeData=[];
-        $pageVisitsOverTime = self::database()->query("SELECT `uid`, SUM(`hits`) AS `hits`, `monthyear` FROM `pagevisits` GROUP BY `UID`, `monthyear` ORDER BY `monthyear` ASC, `uid` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        $pageVisitsOverTime = self::database()->query('SELECT `uid`, SUM(`hits`) AS `hits`, `monthyear` FROM `pagevisits`'.$whereQuery.' GROUP BY `UID`, `monthyear` ORDER BY `monthyear` ASC, `uid` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($pageVisitsOverTime){
-            $pageTimeframes=[];
+            //$pageTimeframes=[];
             foreach($pageVisitsOverTime as $page){
                 $pagevisitPeriod = intval($page->monthyear, 10);
-                $name = $page->uid;
+                $uid = $page->uid;
 
-                // Need to create the first entry ?
-                if(!array_key_exists($name, $pageVisitsOverTimeData)){
-                    $pageVisitsOverTimeData[$name]=[
-                        'name' => $name,
-                        'data' => [],
+                // Need to create the first dataset for this page ?
+                if( !array_key_exists($uid, $pageVisitsOverTimeData) ){
+                    // Convert uid to title
+                    $title = $uid;
+                    if( $kirbyPage = kirby()->page($uid) ){
+                        if($kirbyPage->title()->isNotEmpty()){
+                            $title = (string) $kirbyPage->title()->value();
+                        }
+                    }
+                    $pageVisitsOverTimeData[$uid] = [
+                        'label' => $title,
+                        'ss_uid' => $uid, // used by colorize in panel
+                        'data'  => array_fill_keys(array_keys($selectedPeriods), 0),
+                        //'fill' => true,//'origin',
+                        // 'borderColor' => '#f00',
+                        //'backgroundColor' => 'hsl('.round($colorTreshold*360).',100%,50%)',
                     ];
                 }
 
-                // Remember period
-                if(array_search($pagevisitPeriod, $pageTimeframes)===false){
-                    $pageTimeframes[]=$pagevisitPeriod;
+                // Keep value
+                if( array_key_exists($pagevisitPeriod, $pageVisitsOverTimeData[$uid]['data']) ){
+                    $pageVisitsOverTimeData[$uid]['data'][$pagevisitPeriod] = intval($page->hits, 10);
                 }
-                // value
-                $pageVisitsOverTimeData[$name]['data'][$pagevisitPeriod]=intval($page->hits);
             }
 
-            // Process data
-            $tmp=[];
-            foreach($pageVisitsOverTimeData as $name => $data){
-
-                // Add missing keys / zero values
-                foreach($pageTimeframes as $month){
-                    if(!array_key_exists($month, $pageVisitsOverTimeData[$name]['data'])){
-                        $pageVisitsOverTimeData[$name]['data'][$month]=0;
-                    }
-                }
-
-                // Convert monthyear to date string
-                $pageVisitsOverTimeData[$name]['data2']=[];
-                foreach($pageVisitsOverTimeData[$name]['data'] as $my => $hits){
-                    $pageVisitsOverTimeData[$name]['data2'][getDateFromPeriod($my, SIMPLESTATS_TIMELINE_DATE_FORMAT)]=$hits;
-                }
-                $pageVisitsOverTimeData[$name]['data']=$pageVisitsOverTimeData[$name]['data2'];
-                unset($pageVisitsOverTimeData[$name]['data2']);
-
-                // Convert uid to title
-                if( $kirbyPage = kirby()->page($pageVisitsOverTimeData[$name]['name']) ){
-                    $pageVisitsOverTimeData[$name]['name']=$kirbyPage->title()->value();
-                }
-
-                // Object to array (remove key)
-                $tmp[]=$pageVisitsOverTimeData[$name];
-
-                // Should be ok now
+            // Unset keys for JS
+            foreach($pageVisitsOverTimeData as &$dataset){
+                $dataset['data']=array_values($dataset['data']);
             }
-            $pageVisitsOverTimeData=$tmp;
         }
         else Logger::LogWarning("pageStats(pageVisitsOverTime) : db error =".self::database()->lastError()->getMessage() );
 
-
-
         // Compute Global languages data
+        $globalLanguagesData  = [
+            'label' => 'Global Visits per language',//$language->name(),
+            'data' => array_fill_keys(kirby()->languages()->keys(), 0),
+        ];
+        $chartLanguagesLabels = kirby()->languages()->pluck('name');
+
+        $languagesOverTimeData = [];
         if( option('daandelange.simplestats.tracking.enableVisitLanguages') === true /* && kirby()->multilang() */  ) {
             // Build langs part of query
             $queryLangs = '';
@@ -646,91 +662,56 @@ class Stats extends SimpleStatsDb {
 
                     // Create keys for each language
                     $languagesOverTimeData[$language->code()]=[
-                        'name' => $language->name(),
-                        'data' => [], // holds pairs of [date,value]
+                        'label' => $language->name(),
+                        'data' => array_fill_keys(array_keys($selectedPeriods), 0),
                     ];
-
-                    // Init $globalLanguagesData
-                    $globalLanguagesData[$language->code()] = [$language->name(),0];
                 }
-            }
-            else {
-                // There's no need for language stats on single lange kirby installs...
-                //$queryLangs .= ', SUM(`hits_en`) AS `en`';
-                //$kirbyLangs[] = 'en';
             }
 
             // Compute $languagesOverTime and $globalLanguagesData
-            $languagesOverTimeQ = self::database()->query("SELECT `monthyear` ${queryLangs} FROM `pagevisits` GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+            $languagesOverTimeQ = self::database()->query('SELECT `monthyear` '.$queryLangs.' FROM `pagevisits`'.$whereQuery.' GROUP BY `monthyear` ORDER BY `monthyear` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
             if($languagesOverTimeQ){
-                $firstTimeFrame = 0;
                 foreach($languagesOverTimeQ as $timeFrame){
-                    $langsPeriod = getDateFromPeriod(intval($timeFrame->monthyear, 10), SIMPLESTATS_TIMELINE_DATE_FORMAT);
-                    if($firstTimeFrame===0) $firstTimeFrame = intval($timeFrame->monthyear, 10); // remember for later
+                    $langsPeriod = intval($timeFrame->monthyear, 10);
 
                     // Get hits for each lang on this period
                     foreach($kirbyLangs as $l){
-                        // value
-                        $languagesOverTimeData[$l]['data'][$langsPeriod] = intval($timeFrame->$l, 10);
+                        // Keep value
+                        if( array_key_exists($langsPeriod, $languagesOverTimeData[$l]['data']) ){
+                            $languagesOverTimeData[$l]['data'][$langsPeriod] = intval($timeFrame->$l, 10);
 
-                        // compute globals
-                        $globalLanguagesData[$l][1] += $languagesOverTimeData[$l]['data'][$langsPeriod];
-                    }
-                }
-
-                // Add missing timeframes from first date to now (happens when no data at all is recorded in a full period)
-                if($firstTimeFrame !== 0) for($timeFrame=getTimeFromPeriod($firstTimeFrame); $timeFrame <= time(); $timeFrame=incrementTime($timeFrame) ){
-                    $timeFrameKey = date( SIMPLESTATS_TIMELINE_DATE_FORMAT, $timeFrame);
-                    foreach($kirbyLangs as $l){
-                        if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) && array_key_exists($timeFrameKey, $languagesOverTimeData[$l]['data']) === false ){
-                            $languagesOverTimeData[$l]['data'][$timeFrameKey]=0;
+                            // compute globals
+                            $globalLanguagesData['data'][$l] += $languagesOverTimeData[$l]['data'][$langsPeriod];
                         }
                     }
-                    //var_dump($timeFrameKey);
                 }
 
-
-                // Remove empty rows in $languagesOverTimeData (unvisited languages are removed)
-                foreach($kirbyLangs as $l){
-                   if( array_key_exists($l, $languagesOverTimeData) && array_key_exists('data', $languagesOverTimeData[$l]) ){
-                       $total = 0;
-                       foreach($languagesOverTimeData[$l]['data'] as $hits){
-                           $total+=$hits;
-                       }
-                       if($total===0){
-                           unset($languagesOverTimeData[$l]);
-                       }
-                   }
+                // Unset keys for JS
+                foreach($languagesOverTimeData as &$dataset){
+                    $dataset['data']=array_values($dataset['data']);
                 }
-
-                // Rename keys to nums so that the charts accept the data
-                foreach( $languagesOverTimeData as $key => $data) {
-                    $languagesOverTimeData[]=$data;
-                    unset($languagesOverTimeData[$key]);
-                };
-                //var_dump($languagesOverTimeData);
-
-                // Rename keys to nums so that the charts accept the data
-                foreach( $globalLanguagesData as $key => $data) {
-                    // Only keep non-zero values (so panel sees them empty)
-                    if( isset($data[1]) && $data[1]!=0 ) $globalLanguagesData[]=$data;
-                    unset($globalLanguagesData[$key]);
-                };
-                //var_dump($globalLanguagesData);
+                $globalLanguagesData['data']=array_values($globalLanguagesData['data']);
             }
             else Logger::LogWarning("pageStats(languagesOverTime) : db error =".self::database()->lastError()->getMessage() );
         }
 
-
+        // Flush all data
         return [
             'pagestatsdata'         => $pageStatsData,
             'pagestatslabels'       => $pageStatsLabels,
 
-            'visitsovertimedata'    => $visitsOverTimeData,
-            'pagevisitsovertimedata'=> $pageVisitsOverTimeData,
+            'chartperiodlabels'     => $chartPeriodLabels,
+            'visitsovertimedata'    => [
+                [
+                    'label' => 'Total Visits',
+                    'data'  => array_values($visitsOverTimeData), // ['labels'=>[], 'datasets'=>['label'=>'Total Visits', 'data'=>[]]]
+                ],
+            ],
+            'pagevisitsovertimedata'=> array_values($pageVisitsOverTimeData), 
 
-            'globallanguagesdata'   => $globalLanguagesData,
-            'languagesovertimedata' => $languagesOverTimeData,
+            'globallanguagesdata'   => [$globalLanguagesData],
+            'chartlanguageslabels'   => array_values($chartLanguagesLabels), // Pie chart labels
+            'languagesovertimedata' => array_values($languagesOverTimeData),
             'languagesAreEnabled'   => (option('daandelange.simplestats.tracking.enableVisitLanguages') === true) && kirby()->multilang(),
         ];
     }
@@ -744,11 +725,7 @@ class Stats extends SimpleStatsDb {
 //             return true;
 //         }
 
-        // init db
-        //$db = self::database();
-
         // init return variabes
-        //$sitePages = [];
         $newPageVisits = []; // --> $newPageVisits[period][pageid][attr]
         $newDevices = [];
         $newEngines = [];
@@ -758,15 +735,12 @@ class Stats extends SimpleStatsDb {
 
         // Get visitors older then 1 day
         $yesterday = $time - option('daandelange.simplestats.tracking.uniqueSeconds', 24*60*60);
-        $visitors = self::database()->query("SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        $visitors = self::database()->query('SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < '.$yesterday.' ORDER BY `timeregistered` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
 
+        // Todo: this code could be refactored to use $timeFrame
         if($visitors){
-            //echo 'RESULT='."SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < ${yesterday} ORDER BY `timeregistered` ASC LIMIT 0,1000;";
-            //var_dump($visitors->toArray());
-
             // process each one
             foreach($visitors as $visitor){
-                //var_dump($visitor);
                 $sincePeriod = getPeriodFromTime(intval($visitor->timeregistered,10));
 
                 // Compute visited pages
@@ -797,7 +771,6 @@ class Stats extends SimpleStatsDb {
                         // Newly visited page ?
                         if( !array_key_exists($page, $visitorPages) ){
                             $visitorPages[$page]=[
-                                //'uid',
                                 'hits' => 1, // Only counts 1 global visit if user visited the same page in multiple languages
                                 'langs' => [],
                             ];
@@ -822,7 +795,6 @@ class Stats extends SimpleStatsDb {
                         // Insert page ?
                         $key = array_search($page, array_column($newPageVisits[$sincePeriod], 'uid') );
                         if( $key === false ){
-                            //echo 'Created $newPageVisits['.$sincePeriod.'][] --- as '.$page."\n";
                             $newPageVisits[$sincePeriod][]=[
                                 'hits' => 1,//$pageInfo['hits'],
                                 'uid'  => $page,
@@ -832,7 +804,6 @@ class Stats extends SimpleStatsDb {
                         }
                         // Increment existing page ?
                         else {
-                            //echo 'Incrementing $newPageVisits['.$sincePeriod.']['.$key.'] '."\n";
 
                             // increment total hits
                             $newPageVisits[$sincePeriod][$key]['hits']++;
@@ -909,11 +880,6 @@ class Stats extends SimpleStatsDb {
                 }
             }
 
-            //var_dump($newPageVisits);
-            //var_dump($newDevices);
-            //var_dump($newSystems);
-            //var_dump($newEngines);
-
             // Update page visits
             if( count($newPageVisits)>0 ){
 
@@ -932,22 +898,12 @@ class Stats extends SimpleStatsDb {
                 // Loop dates
                 foreach( $newPageVisits as $pagePeriod => $monthlyPageVisits ){
 
-                    //echo 'Updating page visits for '.$pagePeriod."\n"; continue;
-                    $existingPages = self::database()->query("SELECT `id`, `uid`, `hits`, ${queryLangs} FROM `pagevisits` WHERE `monthyear` = ${pagePeriod} LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+                    $existingPages = self::database()->query('SELECT `id`, `uid`, `hits`, '.$queryLangs.' FROM `pagevisits` WHERE `monthyear` = '.$pagePeriod.' LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
 
-                    // Dirty security for if languages make the request fail
-/*
-                    if( !$existingPages ){
-                        // retry query without the language strings
-                        $existingPages = self::database()->query("SELECT `id`, `uid`, `hits` FROM `pagevisits` WHERE `monthyear` = ${pagePeriod} LIMIT 0,1000;");
-                    }
-*/
                     // Query ok ?
                     if($existingPages){
-                        //echo "EXISTING=";var_dump($existingPages->toArray());
 
                         $monthPages = $existingPages->toArray();
-
 
                         // Loop newly visited pages (existing)
                         foreach( $monthlyPageVisits as $newPageInfo ){
@@ -956,14 +912,11 @@ class Stats extends SimpleStatsDb {
                             $key = array_search( $newPageInfo['uid'], array_column($monthPages, 'uid') );
                             // Needs new entry this month ?
                             if( $key === false ){
-                                //echo "NEED TO INSERT PAGE@DATE\n";
-                                //$newHits = $newPageInfo['hits'];
                                 $uid = $newPageInfo['uid'];
 
                                 // Ignore non-existent pages
                                 if( !kirby()->page($uid) ){
-                                    //echo 'Page not found !';
-                                    Logger::LogVerbose("Error syncing new visits : Kirby could not find the registered page (${uid}). Has it been deleted ?");
+                                    Logger::LogVerbose("Error syncing new visits : Kirby could not find the registered page ('.$uid .'). Has it been deleted ?");
                                     continue;
                                 }
 
@@ -996,14 +949,12 @@ class Stats extends SimpleStatsDb {
                                 }
 
                                 // Save
-                                if(!self::database()->query("INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear` ${langKeys} ) VALUES ('${uid}', ${newHits}, ${pagePeriod} ${langValues})")){
+                                if(!self::database()->query("INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear` '.$langKeys .' ) VALUES (''.$uid .'', '.$newHits .', '.$pagePeriod .' '.$langValues .')")){
                                     Logger::LogWarning("Could not INSERT pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
                             // Update existing entry
                             elseif($newHits>0) {
-                                //echo "---";var_dump($monthPages[$key]->id );
-                                //$newHits = intval($newPageInfo['hits']) + intval($monthPages->get($key)['hits']);
                                 $id = $monthPages[$key]->id;
 
                                 // Prepare lang query
@@ -1026,8 +977,7 @@ class Stats extends SimpleStatsDb {
                                     }
                                 }
 
-                                //echo "UPDATE PAGE@DATE, HITS=${newHits} !\n";
-                                if(!self::database()->query("UPDATE `pagevisits` SET `hits`=`hits` + ${newHits} ${langEdits} WHERE `id`=${id}") ){
+                                if(!self::database()->query("UPDATE `pagevisits` SET `hits`=`hits` + '.$newHits .' '.$langEdits .' WHERE `id`='.$id .'") ){
                                     Logger::LogWarning("Could not UPDATE pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1047,10 +997,9 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newDevices as $devicesPeriod => $monthlyDevices ){
                     // Query existing db
-                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '${devicesPeriod}' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = ''.$devicesPeriod .'' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingDevices){
-                        //echo "EXISTING=";var_dump($existingPages->toArray());
                         $existingDevicesA = $existingDevices->toArray();
 
                         // Loop visited devices (existing)
@@ -1062,14 +1011,14 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ('".$newDeviceInfo['device']."', ${newHits}, ${devicesPeriod})")){
+                                if(!self::database()->query("INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ('".$newDeviceInfo['device']."', '.$newHits .', '.$devicesPeriod .')")){
                                     Logger::LogWarning("Could not INSERT new device while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingDevicesA[$key]->id;
-                                if(!self::database()->query("UPDATE `devices` SET `hits`=`hits` + ${newHits} WHERE `id`=${id};") ){
+                                if(!self::database()->query("UPDATE `devices` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .';") ){
                                     Logger::LogWarning("Could not UPDATE devices hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1088,7 +1037,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newSystems as $systemsPeriod => $monthlySystems ){
                     // Query existing db
-                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '${systemsPeriod}' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = ''.$systemsPeriod .'' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingSystems){
                         $existingSystemsA = $existingSystems->toArray();
@@ -1102,7 +1051,7 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ('".$newSystemInfo['system']."', ${newHits}, ${systemsPeriod})")){
+                                if(!self::database()->query("INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ('".$newSystemInfo['system']."', '.$newHits .', '.$systemsPeriod .')")){
                                     //echo 'DBFAIL [insert new system]'."\n";
                                     Logger::LogWarning("Could not INSERT systems while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
@@ -1110,7 +1059,7 @@ class Stats extends SimpleStatsDb {
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingSystemsA[$key]->id;
-                                if(!self::database()->query("UPDATE `systems` SET `hits`=`hits` + ${newHits} WHERE `id`=${id}") ){
+                                if(!self::database()->query("UPDATE `systems` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .'") ){
                                     Logger::LogWarning("Could not UPDATE system hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1129,7 +1078,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newEngines as $enginesPeriod => $monthlyEngines ){
                     // Query existing db
-                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '${enginesPeriod}' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = ''.$enginesPeriod .'' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingEngines){
                         $existingEnginesA = $existingEngines->toArray();
@@ -1143,18 +1092,16 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ('".$newEngineInfo['engine']."', ${newHits}, ${enginesPeriod})")){
+                                if(!self::database()->query("INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ('".$newEngineInfo['engine']."', '.$newHits .', '.$enginesPeriod .')")){
                                     Logger::LogWarning("Could not INSERT engines while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
-                                //else echo "INSERTED_ENGINE!";
                             }
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingEnginesA[$key]->id;
-                                if(!self::database()->query("UPDATE `engines` SET `hits`=`hits` + ${newHits} WHERE `id`=${id};") ){
+                                if(!self::database()->query("UPDATE `engines` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .';") ){
                                     Logger::LogWarning("Could not UPDATE engine hits while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
-                                //else echo "UPDATED_ENGINE!";
                             }
 
                         }
@@ -1247,15 +1194,12 @@ class Stats extends SimpleStatsDb {
                 ];
             }
 
-            $pageVisitsOverTime = self::database()->query("SELECT `uid`, `monthyear`, `hits` ${langQuery} FROM `pagevisits` WHERE `uid` = '".$page."' ORDER BY `monthyear` ASC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
-            //echo "SELECT `uid`, `monthyear`, `hits` ${langQuery} FROM `pagevisits` WHERE `uid` = '".$page."' ORDER BY `monthyear` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT;
+            $pageVisitsOverTime = self::database()->query('SELECT `uid`, `monthyear`, `hits` '.$langQuery.' FROM `pagevisits` WHERE `uid` = "'.$page.'" ORDER BY `monthyear` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
             if($pageVisitsOverTime){
                 // Loop periods
                 $nowPeriod = getPeriodFromTime();
                 $prevPeriod = null;
-                //$ret['languagesOverTime'][$l]=['name'=>'',data=>[]];
                 foreach($pageVisitsOverTime as $period){
-                    //echo $period->monthyear.'='.$period->hits.' - '; continue;
                     // Compute total hits
                     $ret['totalHits'] += $period->hits;
 
@@ -1328,9 +1272,6 @@ class Stats extends SimpleStatsDb {
             if($ret['firstVisited']>0) $ret['firstVisited'] = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $ret['firstVisited']);
 
         }
-        //var_dump($ret); exit;
         return $ret;
-
-        //return false;
     }
 }

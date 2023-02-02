@@ -21,12 +21,12 @@
 
 <script>
 
+import SectionBase from '../Sections/SimpleStatsSectionBase.vue';
+
 export default {
-  extends: 'k-pages-section',
+  extends: SectionBase,
   data() {
     return {
-      isLoading: true,
-      error: "",
       saltIsSet : false,
       trackingPeriodName : '',
       trackingSince : '',
@@ -42,9 +42,6 @@ export default {
       logLevels : [],
     }
   },
-  created() {
-    this.load();
-  },
   computed: {
     trackingFeatures() {
       var features = [];
@@ -56,36 +53,20 @@ export default {
     },
   },
   methods: {
-    load() {
-
-      // Load configuration
-      this.$api
-        .get("simplestats/configinfo")
-        .then(response => {
-          this.isLoading = false
-          this.saltIsSet = response.saltIsSet
-          this.trackingPeriodName = response.trackingPeriodName
-          this.trackingSince = response.trackingSince
-          this.uniqueSeconds = response.uniqueSeconds
-          this.enableReferers = response.enableReferers
-          this.enableDevices = response.enableDevices
-          this.enableVisits = response.enableVisits
-          this.enableVisitLanguages = response.enableVisitLanguages
-          this.ignoredRoles = response.ignoredRoles
-          this.ignoredPages = response.ignoredPages
-          this.logFile = response.logFile
-          this.logLevels = response.logLevels
-          this.ignoredTemplates = response.ignoredTemplates
-        })
-        .catch(error => {
-          this.isLoading = false
-          this.error = error.message
-          this.$store.dispatch("notification/open", {
-            type: "error",
-            message: error.message,
-            timeout: 5000
-          });
-        });
+    loadData(response) {
+      this.saltIsSet = response.saltIsSet
+      this.trackingPeriodName = response.trackingPeriodName
+      this.trackingSince = response.trackingSince
+      this.uniqueSeconds = response.uniqueSeconds
+      this.enableReferers = response.enableReferers
+      this.enableDevices = response.enableDevices
+      this.enableVisits = response.enableVisits
+      this.enableVisitLanguages = response.enableVisitLanguages
+      this.ignoredRoles = response.ignoredRoles
+      this.ignoredPages = response.ignoredPages
+      this.logFile = response.logFile
+      this.logLevels = response.logLevels
+      this.ignoredTemplates = response.ignoredTemplates
     },
   }
 };

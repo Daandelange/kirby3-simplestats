@@ -1,56 +1,62 @@
 <template>
-  <div class="configuration">
-    <k-headline size="large">{{ $t('simplestats.info.tester.title') }}</k-headline>
+  <k-grid gutter="large" class="trackingtester">
 
-    <k-headline class="rightColumnAlign">{{ $t('simplestats.info.tester.device') }}</k-headline>
-    <k-text-field :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.device.currentua')" :value="currentUserAgent" icon="display"/>
-    <k-text-field :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.device.currentdetected')" :value="formattedCurrentUA" icon="display"/>
-    <k-form @submit="testUserAgent">
-      <k-text-field  class="field-with-btn" :counter="false" :disabled="false" :label="$t('simplestats.info.tester.device.customua')" v-model="customUserAgent" icon="display"/>
-      <k-button @click="testUserAgent" class="floating-btn">Go!</k-button>
-      <k-text-field v-if="this.customDevice" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.device.customdetected')" :value="formattedCustomUA" icon="display"/>
-    </k-form>
-    <k-box v-if="this.customDevice" theme="info" :text="$t('simplestats.info.tester.device.note')" />
-    <br />
+    <k-column width="1/1">
+      <k-headline size="large">{{ $t('simplestats.info.tester.title') }}</k-headline>
+    </k-column>
 
-    <k-headline class="rightColumnAlign">{{ $t('simplestats.info.tester.referrer') }}</k-headline>
-    <k-form @submit="testReferrer">
-      <k-text-field class="field-with-btn" :counter="false" :disabled="false" :label="$t('simplestats.info.tester.referrer.field')" v-model="referrerField" icon="globe" />
-      <k-button name="btn" @click="testReferrer" class="floating-btn">Go!</k-button>
-      <!-- <k-text-field :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response')" :value="formattedReferrer" icon="globe"/> -->
-      <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.host')" :value="formattedReferrerHost" icon="globe"/>
-      <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.source')" :value="formattedReferrerSource" icon="globe"/>
-      <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.medium')" :value="formattedReferrerMedium" icon="globe"/>
-      <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.url')" :value="formattedReferrerUrl" icon="globe"/>
-    </k-form>
-    <br />
+    <k-column width="1/2">
+      <k-headline class="rightColumnAlign">{{ $t('simplestats.info.tester.device') }}</k-headline>
+      <k-text-field :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.device.currentua')" :value="currentUserAgent" icon="display"/>
+      <k-text-field :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.device.currentdetected')" :value="formattedCurrentUA" icon="display"/>
+      <k-form @submit="testUserAgent">
+        <k-text-field  class="field-with-btn" :counter="false" :disabled="false" :label="$t('simplestats.info.tester.device.customua')" v-model="customUserAgent" icon="display"/>
+        <k-button @click="testUserAgent" class="floating-btn">Go!</k-button>
+        <k-text-field v-if="this.customDevice" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.device.customdetected')" :value="formattedCustomUA" icon="display"/>
+      </k-form>
+      <k-box v-if="this.customDevice" theme="info" :text="$t('simplestats.info.tester.device.note')" />
+    </k-column>
 
-    <k-headline class="rightColumnAlign">{{ $t('simplestats.info.tester.generator') }}</k-headline>
-    <k-form @submit="generateStats">
-      <k-select-field v-model="generatorMode" :label="$t('simplestats.info.tester.generator.generatorMode')" :options="[
-        { value: 'all',           text: 'Static : all pages' },
-        { value: 'randomsingle',  text: 'Single random page' },
-        { value: 'randommulti',   text: 'Multiple random pages' }
-      ]"/>
-      <k-date-field v-model="generatorFrom" :label="$t('simplestats.info.tester.generator.datefrom')" :time="false" />
-      <k-date-field v-model="generatorTo"   :label="$t('simplestats.info.tester.generator.dateto')"   :time="false" />
-      <k-field :translate="false" :label="$t('simplestats.info.tester.generator.unlockgenerator')">
-        <k-checkbox-input @input="acceptGenerate" :value="unlockGenerator" :style="{padding:'.5em'}" theme="field" :novalidate="true" />
-        <k-button @click="generateStats" class="" :style="{border:'1px solid black', padding: '0 1em', 'borderRadius': '3px'}">Go!</k-button>
-      </k-field>
+    <k-column width="1/2">
+      <k-headline class="rightColumnAlign">{{ $t('simplestats.info.tester.generator') }}</k-headline>
+      <k-form @submit="generateStats">
+        <k-select-field v-model="generatorMode" :label="$t('simplestats.info.tester.generator.generatorMode')" :options="[
+          { value: 'all',           text: 'Static : all pages' },
+          { value: 'randomsingle',  text: 'Single random page' },
+          { value: 'randommulti',   text: 'Multiple random pages' }
+        ]"/>
+        <k-date-field v-model="generatorFrom" :label="$t('simplestats.info.tester.generator.datefrom')" :time="false" />
+        <k-date-field v-model="generatorTo"   :label="$t('simplestats.info.tester.generator.dateto')"   :time="false" />
+        <k-field :translate="false" :label="$t('simplestats.info.tester.generator.unlockgenerator')">
+          <k-checkbox-input @input="acceptGenerate" :value="unlockGenerator" :style="{padding:'.5em'}" theme="field" :novalidate="true" />
+          <k-button @click="generateStats" class="" :style="{border:'1px solid black', padding: '0 1em', 'borderRadius': '3px'}">Go!</k-button>
+        </k-field>
 
-      <k-field :translate="false" label="Result" v-if="generatorResponse && generatorResponse.data">
-        <list-viewer :array-data="generatorResponse.data" data-theme="field" class="k-input" :style="{padding:'1em'}" />
-      </k-field>
-      <k-textarea-field v-model="generatorResponse.error"  v-if="generatorResponse && generatorResponse.error" label="Error!" :buttons="false" :disabled="true" />
+        <k-field :translate="false" label="Result" v-if="generatorResponse && generatorResponse.data">
+          <list-viewer :array-data="generatorResponse.data" data-theme="field" class="k-input" :style="{padding:'1em'}" />
+        </k-field>
+        <k-textarea-field v-model="generatorResponse.error"  v-if="generatorResponse && generatorResponse.error" label="Error!" :buttons="false" :disabled="true" />
+      </k-form>
+    </k-column>
 
-    </k-form>
-  </div>
+    <k-column width="1/2">
+      <k-headline class="rightColumnAlign">{{ $t('simplestats.info.tester.referrer') }}</k-headline>
+      <k-form @submit="testReferrer">
+        <k-text-field class="field-with-btn" :counter="false" :disabled="false" :label="$t('simplestats.info.tester.referrer.field')" v-model="referrerField" icon="globe" />
+        <k-button name="btn" @click="testReferrer" class="floating-btn">Go!</k-button>
+        <!-- <k-text-field :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response')" :value="formattedReferrer" icon="globe"/> -->
+        <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.host')" :value="formattedReferrerHost" icon="globe"/>
+        <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.source')" :value="formattedReferrerSource" icon="globe"/>
+        <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.medium')" :value="formattedReferrerMedium" icon="globe"/>
+        <k-text-field v-if="this.referrerResponse" :counter="false" :disabled="true"  :label="$t('simplestats.info.tester.referrer.response.url')" :value="formattedReferrerUrl" icon="globe"/>
+      </k-form>
+    </k-column>
+
+  </k-grid>
 </template>
 
 <script>
 
-//import format from 'date-fns/format';
 import ListViewer from "./ListViewer.vue";
 
 export default {
@@ -220,7 +226,7 @@ export default {
 </script>
 
 <style lang="scss">
-.configuration {
+.trackingtester {
   .k-field:not(.k-info-field) {
     display: flex;
 

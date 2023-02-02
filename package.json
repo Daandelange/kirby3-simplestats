@@ -8,18 +8,26 @@
   "repository": "https://github.com/Daandelange/kirby3-simplestats",
   "scripts": {
     "dev": "kirbyup src/index.js --watch",
+    "serve": "kirbyup src/index.js --serve",
     "build": "kirbyup src/index.js"
   },
   "posthtml": {
     "recognizeSelfClosing": true
   },
   "devDependencies": {
-    "kirbyup": "^0.18.0"
+    "esbuild-wasm": "^0.17.5",
+    "kirbyup": "^2"
   },
   "dependencies": {
-    "chart.js": "^2.9.4",
-    "chartjs-adapter-moment": "^0.1.2",
-    "vue-chartkick": "^0.6.1",
-    "vue-good-table": "^2.21.11"
+    "chart.js": "^3.9.1",
+    "chartjs-adapter-moment": "^1.0.1",
+    "lodash.merge": "^4.6.2",
+    "moment": "^2.29.4",
+    "noui-vue-fr": "0.0.8",
+    "nouislider": "^15.6.1",
+    "vue-chartjs": "^4.1.2"
+  },
+  "overrides": {
+    "esbuild": "npm:esbuild-wasm@latest"
   }
 }
