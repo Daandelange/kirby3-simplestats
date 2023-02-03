@@ -13,6 +13,9 @@ use Kirby\Toolkit\F;
 use Kirby\Toolkit\Obj;
 use Kirby\Cms\Page;
 use Kirby\Cms\Response;
+use daandelange\SimpleStats\SimpleStatsTrackingMode;
+use daandelange\SimpleStats\Logger;
+use \Throwable; // Note: there's also a Kirby Throwable, this is the PHP one
 
 use Snowplow\RefererParser\Parser as RefererParser;
 use Snowplow\RefererParser\Medium;
@@ -144,15 +147,13 @@ class SimpleStats extends SimpleStatsDb {
 
         // Retrieve user from db
         $userEntry = null;
-        //var_dump($db->query("SELECT `visitedpages`, `osfamily` from `pagevisitors` WHERE `userunique`='${userID}' LIMIT 1")->first());
-        $userResult = $db->query("SELECT `visitedpages`, `osfamily` from `pagevisitors` WHERE `userunique`='${userID}' LIMIT 1");
+        $userResult = $db->query('SELECT `visitedpages`, `osfamily` from `pagevisitors` WHERE `userunique`="'.$userID.'" LIMIT 1');
         if(!$userResult){
             Logger::LogWarning("Could not select existing visitor. Aborting tracking. Error=".$db->lastError()->getMessage());
             return false;
         }
 
         $userEntry = $userResult->first();
-        //var_dump('$userEntry', $userEntry);
 
         // Bot detection / ignore
         $userIsBot = false;
@@ -191,12 +192,9 @@ class SimpleStats extends SimpleStatsDb {
                     $browserengine = $info['engine'];
                 }
 
-                //echo "INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ('${userID}', ${timestamp}, '${osfamily}', '${devicetype}', '${browserengine}', '${visitedpages}')";
-                if( !$db->query("INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ('${userID}', ${timestamp}, '${osfamily}', '${devicetype}', '${browserengine}', '${visitedpages}')") ){
-                    Logger::LogWarning("Could not insert new visitor : ${userID}. Error=".$db->lastError()->getMessage());
+                if( !$db->query('INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ("'.$userID.'", '.$timestamp.', "'.$osfamily.'", "'.$devicetype.'", "'.$browserengine.'", "'.$visitedpages.'")') ){
+                    Logger::LogWarning('Could not insert new visitor : '.$userID.'. Error='.$db->lastError()->getMessage());
                 }
-                //echo $db->lastError();
-                //echo "User created !";
             }
         }
         // Update current user
@@ -219,8 +217,8 @@ class SimpleStats extends SimpleStatsDb {
                     if( !in_array($page_uri, explode(',', $userEntry->visitedpages) )){
                         // Add page visit
                         $newPages = (!empty($userEntry->visitedpages)?$userEntry->visitedpages.',':'').$page_uri;
-                        if( !$db->query("UPDATE `pagevisitors` SET `visitedpages` = '${newPages}' WHERE `userunique`='${userID}'; ") ){
-                            Logger::LogWarning("Failed to update page visitors : ${userID}. Error=".$db->lastError()->getMessage());
+                        if( !$db->query('UPDATE `pagevisitors` SET `visitedpages` = "'.$newPages.'" WHERE `userunique`="'.$userID.'"; ') ){
+                            Logger::LogWarning('Failed to update page visitors : '.$userID.'. Error='.$db->lastError()->getMessage());
                         }
                     }
                 }
@@ -244,14 +242,14 @@ class SimpleStats extends SimpleStatsDb {
 
                 // Retrieve referer from db
                 $refererEntry = null;
-                $refererEntry = $db->query("SELECT `id` from `referers` WHERE `referer`='${refererUrl}' AND `monthyear`=${referrerPeriod} LIMIT 1");
+                $refererEntry = $db->query('SELECT `id` from `referers` WHERE `referer`="'.$refererUrl.'" AND `monthyear`='.$referrerPeriod.' LIMIT 1');
                 // Referer already exists. Increment hits.
                 if( $refererEntry ){
                     if( $refererEntry->isNotEmpty() ){
                         $id = intval( $refererEntry->first()->id );
 
-                        if( !$db->query("UPDATE `referers` SET `hits` = `hits`+1 WHERE `id`='${id}'; ") ){
-                            Logger::LogWarning("Failed to update referrer : ${refererUrl}. Error=".$db->lastError()->getMessage());
+                        if( !$db->query('UPDATE `referers` SET `hits` = `hits`+1 WHERE `id`="'.$id.'"; ') ){
+                            Logger::LogWarning('Failed to update referrer : '.$refererUrl.' Error='.$db->lastError()->getMessage());
                         }
                     }
                     // Insert new referer
@@ -259,14 +257,14 @@ class SimpleStats extends SimpleStatsDb {
                         // known medium hold name instead of domain
                         $domain = (!empty($refererInfo['source']))?$refererInfo['source']:$refererInfo['host'];
                         $medium = $refererInfo['medium'];
-                        //echo "INSERT INTO `referers` (referer, domain, monthyear, hits) VALUES ('${refererUrl}', '${domain}', ${referrerPeriod}, 1)";
-                        if(!$db->query("INSERT INTO `referers` (referer, domain, monthyear, hits, medium) VALUES ('${refererUrl}', '${domain}', ${referrerPeriod}, 1, '${medium}')")){
-                            Logger::LogWarning("Failed to insert new referrer : ${refererUrl}. Error=".$db->lastError()->getMessage());
+
+                        if(!$db->query('INSERT INTO `referers` (referer, domain, monthyear, hits, medium) VALUES ("'.$refererUrl.'", "'.$domain.'", '.$referrerPeriod.', 1, "'.$medium.'")')){
+                            Logger::LogWarning('Failed to insert new referrer : '.$refererUrl.'. Error='.$db->lastError()->getMessage());
                         }
                     }
                 }
                 else {
-                    Logger::LogWarning("Failed to retrieve this month's referrers from db. Referrer : ${refererUrl}. Error=".$db->lastError()->getMessage());
+                    Logger::LogWarning('Failed to retrieve this month\'s referrers from db. Referrer : '.$refererUrl.'. Error='.$db->lastError()->getMessage());
                 }
             }
             // Unable to parse referer ?
@@ -439,12 +437,10 @@ implode($isIpv6?':':'.', $maskMax);
                 }
 
                 // Save OS info
-    /*
-                $data['system']=$clientData->os->name;
-                if( $clientData->isOs('desktop') ){
-                    $data['system']=$clientData->os->name;
-                }
-    */
+                // $data['system']=$clientData->os->name;
+                // if( $clientData->isOs('desktop') ){
+                //     $data['system']=$clientData->os->name;
+                // }
                 if( isset($clientData->os->family) && !empty($clientData->os->family->name) ){
                     $data['system']=$clientData->os->family->name;// .'/'.$clientData->os->name;
                 }
@@ -455,8 +451,6 @@ implode($isIpv6?':':'.', $maskMax);
                     $data['system']='other';
                 }
                 else{
-                    //var_dump($clientData->os);
-                    //echo WhichBrowser\Model\
                     $data['system']='unknown';
                 }
 

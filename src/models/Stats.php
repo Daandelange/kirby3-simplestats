@@ -31,7 +31,7 @@ class Stats extends SimpleStatsDb {
     public static function listDbInfo(): array {
         $dbVersion = '';
         $dbArray = [];
-        $dbvQ = self::database()->query("SELECT `version`, `migrationdate` FROM `simplestats` ORDER BY `migrationdate` DESC LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+        $dbvQ = self::database()->query('SELECT `version`, `migrationdate` FROM `simplestats` ORDER BY `migrationdate` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if( $dbvQ ){
             if( $dbvQ->isNotEmpty() ){
                 $dbVersion = intval($dbvQ->first()->version, 10);
@@ -328,7 +328,6 @@ class Stats extends SimpleStatsDb {
         ];
         // $referersByDomainData = [];
         $referersByDomainLabels=[];
-        //$globalStats = $db->query("SELECT `referer`, `domain`, SUM(`hits`) AS hits, `medium` from `referers`, MIN(`referers`.`monthyear`) AS firstseen, MAX(`monthyear`) AS lastseen GROUP BY `monthyear` ORDER BY `lastseen` DESC LIMIT 0,100");
         $globalStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers`'.$whereQuery.' )'.$whereQuery.' GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($globalStats){
             foreach($globalStats as $referer){
@@ -875,7 +874,7 @@ class Stats extends SimpleStatsDb {
 
                 // Delete entry
                 // Todo: Assumes that saving the data won't fail. Make this deletion happen on succesful sync.
-                if( $visitor->userunique && !self::database()->query("DELETE FROM `pagevisitors` WHERE `userunique`='".$visitor->userunique."'; ") ){
+                if( $visitor->userunique && !self::database()->query('DELETE FROM `pagevisitors` WHERE `userunique`="'.$visitor->userunique.'"; ') ){
                     Logger::LogWarning('DBFAIL. Error on syncing stats. On delete visitor. Error='.self::database()->lastError()->getMessage() );
                 }
             }
@@ -916,7 +915,7 @@ class Stats extends SimpleStatsDb {
 
                                 // Ignore non-existent pages
                                 if( !kirby()->page($uid) ){
-                                    Logger::LogVerbose("Error syncing new visits : Kirby could not find the registered page ('.$uid .'). Has it been deleted ?");
+                                    Logger::LogVerbose('Error syncing new visits : Kirby could not find the registered page ('.$uid .'). Has it been deleted ?');
                                     continue;
                                 }
 
@@ -949,7 +948,7 @@ class Stats extends SimpleStatsDb {
                                 }
 
                                 // Save
-                                if(!self::database()->query("INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear` '.$langKeys .' ) VALUES (''.$uid .'', '.$newHits .', '.$pagePeriod .' '.$langValues .')")){
+                                if(!self::database()->query('INSERT INTO `pagevisits` (`uid`, `hits`, `monthyear` '.$langKeys .' ) VALUES ("'.$uid .'", '.$newHits .', '.$pagePeriod .' '.$langValues .')')){
                                     Logger::LogWarning("Could not INSERT pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -977,7 +976,7 @@ class Stats extends SimpleStatsDb {
                                     }
                                 }
 
-                                if(!self::database()->query("UPDATE `pagevisits` SET `hits`=`hits` + '.$newHits .' '.$langEdits .' WHERE `id`='.$id .'") ){
+                                if(!self::database()->query('UPDATE `pagevisits` SET `hits`=`hits` + '.$newHits .' '.$langEdits .' WHERE `id`='.$id.'') ){
                                     Logger::LogWarning("Could not UPDATE pagevisits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -997,7 +996,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newDevices as $devicesPeriod => $monthlyDevices ){
                     // Query existing db
-                    $existingDevices = self::database()->query("SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = ''.$devicesPeriod .'' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+                    $existingDevices = self::database()->query('SELECT `id`, `device`, `hits` FROM `devices` WHERE `monthyear` = '.$devicesPeriod .' LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingDevices){
                         $existingDevicesA = $existingDevices->toArray();
@@ -1011,14 +1010,14 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ('".$newDeviceInfo['device']."', '.$newHits .', '.$devicesPeriod .')")){
+                                if(!self::database()->query('INSERT INTO `devices` (`device`, `hits`, `monthyear`) VALUES ("'.$newDeviceInfo['device'].'", '.$newHits .', '.$devicesPeriod .')')){
                                     Logger::LogWarning("Could not INSERT new device while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingDevicesA[$key]->id;
-                                if(!self::database()->query("UPDATE `devices` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .';") ){
+                                if(!self::database()->query('UPDATE `devices` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .';') ){
                                     Logger::LogWarning("Could not UPDATE devices hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1037,7 +1036,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newSystems as $systemsPeriod => $monthlySystems ){
                     // Query existing db
-                    $existingSystems = self::database()->query("SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = ''.$systemsPeriod .'' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+                    $existingSystems = self::database()->query('SELECT `id`, `system`, `hits` FROM `systems` WHERE `monthyear` = '.$systemsPeriod .' LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingSystems){
                         $existingSystemsA = $existingSystems->toArray();
@@ -1051,7 +1050,7 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ('".$newSystemInfo['system']."', '.$newHits .', '.$systemsPeriod .')")){
+                                if(!self::database()->query('INSERT INTO `systems` (`system`, `hits`, `monthyear`) VALUES ("'.$newSystemInfo['system'].'", '.$newHits .', '.$systemsPeriod .')')){
                                     //echo 'DBFAIL [insert new system]'."\n";
                                     Logger::LogWarning("Could not INSERT systems while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
@@ -1059,7 +1058,7 @@ class Stats extends SimpleStatsDb {
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingSystemsA[$key]->id;
-                                if(!self::database()->query("UPDATE `systems` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .'") ){
+                                if(!self::database()->query('UPDATE `systems` SET `hits`=`hits` + '.$newHits .' WHERE `id`="'.$id .'"') ){
                                     Logger::LogWarning("Could not UPDATE system hits while syncing. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
@@ -1078,7 +1077,7 @@ class Stats extends SimpleStatsDb {
                 // Loop Periods
                 foreach( $newEngines as $enginesPeriod => $monthlyEngines ){
                     // Query existing db
-                    $existingEngines = self::database()->query("SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = ''.$enginesPeriod .'' LIMIT 0,".SIMPLESTATS_DUMMY_DB_LIMIT);
+                    $existingEngines = self::database()->query('SELECT `id`, `engine`, `hits` FROM `engines` WHERE `monthyear` = '.$enginesPeriod .' LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
 
                     if($existingEngines){
                         $existingEnginesA = $existingEngines->toArray();
@@ -1092,14 +1091,14 @@ class Stats extends SimpleStatsDb {
                             if( $key === false ){
                                 // Todo : verify validity of data ?
                                 // Save
-                                if(!self::database()->query("INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ('".$newEngineInfo['engine']."', '.$newHits .', '.$enginesPeriod .')")){
+                                if(!self::database()->query('INSERT INTO `engines` (`engine`, `hits`, `monthyear`) VALUES ("'.$newEngineInfo['engine'].'", '.$newHits .', '.$enginesPeriod .')')){
                                     Logger::LogWarning("Could not INSERT engines while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
                             }
                             // Update existing entry
                             elseif($newHits>0) {
                                 $id = $existingEnginesA[$key]->id;
-                                if(!self::database()->query("UPDATE `engines` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .';") ){
+                                if(!self::database()->query('UPDATE `engines` SET `hits`=`hits` + '.$newHits .' WHERE `id`='.$id .';') ){
                                     Logger::LogWarning("Could not UPDATE engine hits while syncing stats. Error=".self::database()->lastError()->getMessage());
                                 }
                             }

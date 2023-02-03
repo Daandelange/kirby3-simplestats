@@ -11,6 +11,7 @@ namespace daandelange\SimpleStats;
 // use Kirby\Toolkit\Collection;
 // use Kirby\Toolkit\F;
 // use Kirby\Toolkit\Obj;
+use \Kirby\Cms\User;
 
 // class StatsGeneratorDb extends SimpleStatsDb {}
 // class StatsGeneratorDb extends Stats {}
@@ -51,7 +52,7 @@ class StatsGenerator extends SimpleStatsDb {
             // Todo: Set longer php time-out ?
 
             // Prepare some variables
-            $user = new \Kirby\Cms\User([]); // Dummy user, to ensure the admin doesn't get tracked.
+            $user = new User([]); // Dummy user, to ensure the admin doesn't get tracked.
             $pagekeys = $pagesobject->keys();
             $pagesMaxDepth = max($pagesobject->pluck('depth'));
             $languages = kirby()->languages();
@@ -101,7 +102,6 @@ class StatsGenerator extends SimpleStatsDb {
                             $errorCounter++;
                         }
 
-                        //echo $timeStr.'  -  '.$p->title().' ::'.$lang.'  === '.($tracked?'ok':'fail')."\n";
                     }
                 }
 
