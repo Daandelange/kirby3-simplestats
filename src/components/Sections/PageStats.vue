@@ -1,5 +1,6 @@
 <template>
     <k-grid gutter="medium">
+      <!-- TODO: Add more stats: Text stats (total unique visits total and per lang, most popular pages, etc) - Pie chart of page-by-page popularity - -->
       <k-column>
         <k-headline size="medium">{{ $t('simplestats.visits.visitsovertime', 'Visits over time') }}</k-headline>
         <area-chart

@@ -108,6 +108,7 @@ class StatsGenerator extends SimpleStatsDb {
             $errorCounter = 0;
             $periodsCounter = 0;
             $languagesCounter = [];
+            $executionUniqueNum = hrtime(true);
 
             // Get Time frames
             for( $timeFrame=getTimeFromPeriod(getPeriodFromTime($timefrom)); $timeFrame <= $timeto; $timeFrame=incrementTime($timeFrame) ){
@@ -133,11 +134,12 @@ class StatsGenerator extends SimpleStatsDb {
                     foreach( $pagesobject as $p ){
                         if( $visitmode=='randommulti' ){
                             if( rand(0,100) < (
-                                30 // 30% base chance
-                                +(hrtime(true)%20) // 0-20% loop-specific randomness
-                                +(($timeFrame)%17) // 17% timeframe-specific randomness
-                                +(($p->depth()-1)/$pagesMaxDepth)*40 // 0-20% Page Depth increases chance of skipping
-                            )){ 
+                                20 // 20% base chance
+                                +(hrtime(true)%5) // 5% loop-specific randomness
+                                +(abs(($periodsCounter+$executionUniqueNum)%(50*2)-50))*(25/50) // 25% period-specific variance every 50 periods
+                                +(($p->depth())/$pagesMaxDepth)*40 // 0-40% chance of skipping deeper pages
+                                // leaves 10% chance for any page to be visited
+                            )){
                                 continue;
                             }
                         }
