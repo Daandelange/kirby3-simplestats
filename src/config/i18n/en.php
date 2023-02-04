@@ -74,6 +74,7 @@ return [
     'simplestats.devices.graph.oses'            => 'Operating Systems',
     'simplestats.devices.graph.devicehistory'   => 'Device types over time',
     'simplestats.devices.graph.devicehistory.y' => 'Visits per device type',
+    'simplestats.devices.names.other'           => 'Other',
     'simplestats.devices.names.server'          => 'Server',
     'simplestats.devices.names.desktop'         => 'Desktop',
     'simplestats.devices.names.mobile'          => 'Mobile',
@@ -106,6 +107,9 @@ return [
     'simplestats.referers.referersbydomain'     => 'Referrers by domain',
     'simplestats.referers.referersovertime'     => 'Referrers by medium over time',
     'simplestats.referers.allreferers'          => 'All referrers',
+    'simplestats.referers.mediums.social'       => 'Social',
+    'simplestats.referers.mediums.website'      => 'Individual Website',
+    'simplestats.referers.mediums.search'       => 'Search Engine',
 
     // Info Tab
     'simplestats.info.title'                            => 'Database',

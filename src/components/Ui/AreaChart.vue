@@ -1,4 +1,6 @@
 <template>
+  <div>
+  <k-headline v-if="label.length>0" :size="headerSize">{{ label }}</k-headline>
   <div :class="'ss-chart ss-'+type.toLowerCase()+'-chart'">
 
     <!-- A chart download link -->
@@ -16,6 +18,7 @@
     <!-- Empty and not in timeframe messages -->
     <k-empty v-else-if="!isEmpty" layout="block" class="emptyChart">{{ $t('simplestats.nodatafortimerange', 'There is no data for the selected time range.') }}</k-empty>
     <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet', 'No data yet') }}</k-empty>
+  </div>
   </div>
 </template>
 
@@ -91,6 +94,14 @@ export default {
       default(){
         return [];
       }
+    },
+    label: {
+      type: String,
+      default: '',
+    },
+    headerSize: {
+      type: String,
+      default: 'medium',
     },
     xTitle: {
       type: String,

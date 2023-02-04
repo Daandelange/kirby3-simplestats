@@ -18,6 +18,9 @@ use Kirby\Cms\App;
 // todo : make it exception safe
 // $db->query() can throw errors !
 
+// Some data consistency SQL queries that could be implemented :
+// HIT counter errors : SELECT *, `hits_en`+`hits_fr` AS `lang_hits`, `hits` - `hits_fr` - `hits_en` AS `difference` FROM `pagevisits` WHERE `hits` != `hits_fr` + `hits_en`
+// Duplicate pages within the same timespan : SELECT `uid`, MIN(`monthyear`), MAX(`monthyear`), COUNT(`monthyear`) AS `unique_monthyears`, COUNT( DISTINCT `monthyear`) AS `total_monthyears` FROM `pagevisits` GROUP BY `uid`
 
 // - - - - -
 require_once( __DIR__ .'/SimpleStatsTimeFrameUtility.php');

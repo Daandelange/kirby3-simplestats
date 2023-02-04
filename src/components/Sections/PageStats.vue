@@ -37,7 +37,6 @@
       </k-column>
 
       <k-column width="3/4" v-if="languagesAreEnabled">
-        <k-headline size="medium">{{ $t('simplestats.visits.languagesovertime') }}</k-headline>
         <area-chart
           :chart-data="languagesOverTimeData"
           :chart-labels="chartPeriodLabels"
@@ -51,6 +50,7 @@
           :fill="true"
           :x-time-axis="true"
           :y-visits-axis="true"
+          :label="$t('simplestats.visits.languagesovertime')"
         ></area-chart>
       </k-column>
 

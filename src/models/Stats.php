@@ -197,7 +197,7 @@ class Stats extends SimpleStatsDb {
             'data' => [],
         ];
         $allDevicesLabels = [];
-        $allDevicesResult = self::database()->query('SELECT `device`, `hits` FROM `devices`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `device` ORDER BY `device` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $allDevicesResult = self::database()->query('SELECT `device`, SUM(`hits`) AS `hits` FROM `devices`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `device` ORDER BY `device` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allDevicesResult){
             // parse sql result, line by line
             foreach($allDevicesResult as $device){
@@ -219,7 +219,7 @@ class Stats extends SimpleStatsDb {
         $allSystemsLabels = [];
         if( true === option('daandelange.simplestats.panel.hideBots', false) )
             $hideBotsQueryPart = ' AND `system` != "bot"';
-        $allSystemsResult = self::database()->query('SELECT `system`, `hits` FROM `systems`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `system` ORDER BY `system` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $allSystemsResult = self::database()->query('SELECT `system`, SUM(`hits`) AS `hits` FROM `systems`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `system` ORDER BY `system` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allSystemsResult){
             // parse sql result, line by line
             foreach($allSystemsResult as $system){
@@ -241,7 +241,7 @@ class Stats extends SimpleStatsDb {
         $allEnginesLabels = [];
         if( true === option('daandelange.simplestats.panel.hideBots', false) )
             $hideBotsQueryPart = ' AND `engine` != "bot"';
-        $allEnginesResult = self::database()->query('SELECT `engine`, `hits` FROM `engines`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $allEnginesResult = self::database()->query('SELECT `engine`, SUM(`hits`) AS `hits` FROM `engines`'.$whereQuery.$hideBotsQueryPart.' GROUP BY `engine` ORDER BY `engine` DESC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($allEnginesResult){
             // parse sql result, line by line
             foreach($allEnginesResult as $engine){
@@ -297,12 +297,17 @@ class Stats extends SimpleStatsDb {
         ];
     }
 
-    public static function translateDeviceType( string $key ) : string {
-        if($translation = t('simplestats.devices.names.'.$key)){
+    public static function translateNamespaced( string $namespace, string $key ) : string {
+        if($translation = t($namespace.'.'.$key)){
             return $translation;
         }
-
         return $key;
+    }
+    public static function translateDeviceType( string $key ) : string {
+        return static::translateNamespaced('simplestats.devices.names', $key);
+    }
+    public static function translateMedium( string $key ) : string {
+        return static::translateNamespaced('simplestats.referers.mediums', $key);
     }
 
     public static function refererStats(int $fromPeriod = null, int $toPeriod = null): ?array {
@@ -328,7 +333,7 @@ class Stats extends SimpleStatsDb {
         ];
         // $referersByDomainData = [];
         $referersByDomainLabels=[];
-        $globalStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers`'.$whereQuery.' )'.$whereQuery.' GROUP BY `domain` ORDER BY `lastseen` DESC, `domain` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $globalStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers`'.$whereQuery.' )'.$whereQuery.' GROUP BY `domain` ORDER BY `domain` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($globalStats){
             foreach($globalStats as $referer){
                 $key = Str::slug($referer->domain);//intval($referer->monthyear,10);
@@ -352,14 +357,14 @@ class Stats extends SimpleStatsDb {
             'data' => [],
         ];
         // Todo: this query is almost the same as above, do we need to run it twice ?
-        $mediumStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` '.$whereQuery.') '.$whereQuery.' GROUP BY `medium` ORDER BY `lastseen` DESC, `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $mediumStats = self::database()->query('SELECT `referer`, `domain`, `medium`, SUM(`hits`) AS `hits`, MIN(`monthyear`) AS `firstseen`, MAX(`monthyear`) AS `lastseen`, `totalHits` FROM `referers` JOIN ( SELECT SUM(`hits`) AS `totalHits` FROM `referers` '.$whereQuery.') '.$whereQuery.' GROUP BY `medium` ORDER BY `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($mediumStats){
             foreach($mediumStats as $medium){
                 $key = Str::slug($medium->domain);
                 if(!array_key_exists($key, $referersByMediumData['data'])){
                     $referersByMediumData['data'][$key] = intval($medium->hits,10);
                 }
-                $referersByMediumLabels[$key] = $medium->domain;
+                $referersByMediumLabels[$key] = static::translateMedium($medium->medium);
             }
             // Remove keys
             $referersByMediumData['data'] = array_values($referersByMediumData['data']);
@@ -373,17 +378,16 @@ class Stats extends SimpleStatsDb {
         // Mediums over time
         $referersByMediumOverTimeData=[];
         //dump('SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers`'.$whereQuery.' GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);die();
-        $mediumStatsOverTime = self::database()->query('SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers`'.$whereQuery.' GROUP BY `medium`, `monthyear` ORDER BY `monthyear` ASC, `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $mediumStatsOverTime = self::database()->query('SELECT  `domain`, `medium`, SUM(`hits`) AS `hits`, `monthyear` FROM `referers`'.$whereQuery.' GROUP BY `medium`, `monthyear` ORDER BY `medium` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
         if($mediumStatsOverTime){
 
             foreach($mediumStatsOverTime as $medium){
                 $mediumPeriod = intval($medium->monthyear, 10);
-                $name = $medium->medium;
-                $key = Str::slug($name);
+                $key = Str::slug($medium->medium);
                 // Need to create the first entry ?
                 if(!array_key_exists($key, $referersByMediumOverTimeData)){
                     $referersByMediumOverTimeData[$key]=[
-                        'label' => $name,
+                        'label' => static::translateMedium($medium->medium),
                         'data' => array_fill_keys(array_keys($selectedPeriods), 0),
                     ];
                 }
@@ -734,13 +738,13 @@ class Stats extends SimpleStatsDb {
 
         // Get visitors older then 1 day
         $yesterday = $time - option('daandelange.simplestats.tracking.uniqueSeconds', 24*60*60);
-        $visitors = self::database()->query('SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` < '.$yesterday.' ORDER BY `timeregistered` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+        $visitors = self::database()->query('SELECT `userunique`, `visitedpages`, `osfamily`, `devicetype`, `browserengine`, `timeregistered` FROM `pagevisitors` WHERE `timeregistered` <= '.$yesterday.' ORDER BY `timeregistered` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
 
         // Todo: this code could be refactored to use $timeFrame
         if($visitors){
             // process each one
             foreach($visitors as $visitor){
-                $sincePeriod = getPeriodFromTime(intval($visitor->timeregistered,10));
+                $sincePeriod = getPeriodFromTime(intval($visitor->timeregistered));
 
                 // Compute visited pages
                 if( $visitor->visitedpages && !empty( $visitor->visitedpages ) ){

@@ -1,7 +1,6 @@
 <template>
   <k-grid gutter="medium">
     <k-column width="1/2">
-      <k-headline>{{ $t('simplestats.referers.referersbymedium', 'Referers by medium') }}</k-headline>
       <area-chart v-if="refererMediumData.length > 0"
         type="Pie"
         :chart-data="refererMediumData"
@@ -15,7 +14,6 @@
     </k-column>
 
     <k-column width="1/2">
-      <k-headline>{{ $t('simplestats.referers.referersbydomain', 'Referers by domain') }}</k-headline>
       <area-chart
         type="Pie"
         :chart-data="refererDomainsData"
@@ -37,7 +35,6 @@
     </k-column> -->
 
     <k-column width="1/1">
-      <k-headline>{{ $t('simplestats.referer.referersovertime') }}</k-headline>
       <area-chart
         type="Line"
         :chart-data="referersByMediumOverTimeData"

@@ -163,10 +163,8 @@ return [
             'action'  => function () use ($kirby) {
                 if( $this->user()->hasSimpleStatsPanelAccess() ){
                     $str = @$kirby->request()->query()->data()['referrer']??substr(@$_SERVER['HTTP_REFERRER'], 0, 256);
-                    //var_dump($str, SimpleStats::getRefererInfo($str));exit;//$kirby->request()->query());
-                    //$refererInfo = SimpleStats::getRefererInfo($str);
                     return [
-                        'referrerInfo' => SimpleStats::getRefererInfo($str)??'Invalid referrer !',
+                        'referrerInfo' => SimpleStats::getRefererInfo(['Referer'=>$str])??'Invalid referrer !',
                     ];
                 }
                 else {
@@ -179,10 +177,15 @@ return [
             'method'  => 'GET',
             'action'  => function () use ($kirby) {
                 if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    $str = @$kirby->request()->query()->data()['ua']??'';//??substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
-                    //if(empty($str)) $str='';
-                    //var_dump($str);
-                    $uainfo = SimpleStats::detectSystemFromUA($str);
+                    $str = @$kirby->request()->query()->data()['ua']??'';
+                    
+                    $headers = [];//getallheaders();
+                    //$headers['HTTP_USER_AGENT']=$str;
+                    $headers['User-Agent']=$str;
+                    //unset($headers['x-requested-with']); // $headers['x-requested-with'] = 'xmlhttprequest' interferes and makes all requests mobile devices
+
+                    $uainfo = SimpleStats::detectSystemFromUA($headers);
+
                     if($uainfo && isset($uainfo['device'])) $uainfo['device'] = Stats::translateDeviceType($uainfo['device']);
                     return $uainfo??'Invalid referrer url!';
                 }

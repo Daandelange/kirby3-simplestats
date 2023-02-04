@@ -80,7 +80,7 @@ class SimpleStats extends SimpleStatsDb {
     // Note : the uri should be $page->id(), the Kirby uri is translateable.
     // Additional params are not recommended to use; mainly for testing purposes.
     // Return value : Needs to be unified. Sometimes it returns trackin status (tracked/not tracked), sometimes it indicates errors vs correct tracking behaviour.
-    public static function track( string $page_uri = '', int $time = null, \Kirby\Cms\User $user = null, string $forceLang = null  ): bool {
+    public static function track( string $page_uri = '', int $time = null, \Kirby\Cms\User $user = null, string $forceLang = null, array $httpHeaders=null ): bool {
 
         // Dont allow tracking in disabled mode
         if( SimpleStatsTrackingMode::Disabled === option('daandelange.simplestats.tracking.method', SimpleStatsTrackingMode::OnLoad) ){
@@ -96,14 +96,17 @@ class SimpleStats extends SimpleStatsDb {
         if( empty($page_uri) || in_array($page_uri, option('daandelange.simplestats.tracking.ignore.pages')) === true) {
             return true;
         }
+        // Default headers
+        // if(!$httpHeaders) $httpHeaders = getallheaders();
+        $httpHeaders??= getallheaders();
 
         // Format time
         if(!$time) $time = time();
 
         // tmp : Sync daystats
-        Stats::syncDayStats($time);
+        // Stats::syncDayStats($time);
 
-        // Skip if any tracking feature is disabled
+        // Skip if all tracking feature are disabled
         if(
             false===option('daandelange.simplestats.tracking.enableDevices' , true) &&
             false===option('daandelange.simplestats.tracking.enableVisits'  , true) &&
@@ -142,10 +145,11 @@ class SimpleStats extends SimpleStatsDb {
         // Todo: verify page uri ?
 
         // Get unique visitor id
-        $userID = SimpleStats::getUserUniqueString();
+        $userID = SimpleStats::getUserUniqueString($httpHeaders);
         $db = self::database();
 
         // Retrieve user from db
+        // Todo: add WHEN `monthyear` so new user is created when syncing is disfunctional ? If so, also update UPDATE queries accordingly. Not possible, no unique ID per entre, the user is the unique ID !
         $userEntry = null;
         $userResult = $db->query('SELECT `visitedpages`, `osfamily` from `pagevisitors` WHERE `userunique`="'.$userID.'" LIMIT 1');
         if(!$userResult){
@@ -161,12 +165,11 @@ class SimpleStats extends SimpleStatsDb {
         // New user ?
         if($userEntry===null){
             // Default values
-            $timestamp = $time;
             $osfamily = $devicetype = $browserengine = '';
             $visitedpages = '';
 
             // Get device info
-            $info = SimpleStats::detectSystemFromUA();
+            $info = SimpleStats::detectSystemFromUA($httpHeaders);
             $userIsBot = ($info['system'] == 'bot');
 
             // Ignore bots globally ?
@@ -192,7 +195,7 @@ class SimpleStats extends SimpleStatsDb {
                     $browserengine = $info['engine'];
                 }
 
-                if( !$db->query('INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ("'.$userID.'", '.$timestamp.', "'.$osfamily.'", "'.$devicetype.'", "'.$browserengine.'", "'.$visitedpages.'")') ){
+                if( !$db->query('INSERT INTO `pagevisitors` (userunique, timeregistered, osfamily, devicetype, browserengine, visitedpages) VALUES ("'.$userID.'", '.$time.', "'.$osfamily.'", "'.$devicetype.'", "'.$browserengine.'", "'.$visitedpages.'")') ){
                     Logger::LogWarning('Could not insert new visitor : '.$userID.'. Error='.$db->lastError()->getMessage());
                 }
             }
@@ -233,12 +236,12 @@ class SimpleStats extends SimpleStatsDb {
 
         // Track referer
         if ( option('daandelange.simplestats.tracking.enableReferers') === true ){
-            $refererInfo = SimpleStats::getRefererInfo();
+            $refererInfo = SimpleStats::getRefererInfo($httpHeaders);
 
             //$referer = '';
             if($refererInfo){
                 $refererUrl = $refererInfo['url'];
-                $referrerPeriod = getPeriodFromTime();
+                $referrerPeriod = getPeriodFromTime($time);
 
                 // Retrieve referer from db
                 $refererEntry = null;
@@ -341,13 +344,14 @@ implode($isIpv6?':':'.', $maskMax);
 
 
     // Combines the ip + user_agent to get a unique user string
-    public static function getUserUniqueString(string $ua = ''): string {
+    public static function getUserUniqueString(array $customHeader = null): string {
         // Anonymize IP beforehand (if enabled)
         $ip = static::anonymize($_SERVER['REMOTE_ADDR']); // $kirby->visitor()->ip()
 
+        $customHeader ??= getallheaders();
         // Replace `.:` by `_`
         $ip = preg_replace("/[\.\:]+/", '_', $ip);
-        $ua = preg_replace("/[^a-zA-Z0-9]+/", '', substr(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:'UserAgentNotSet', 0, 256) ); // $kirby->visitor()->ip()->userAgent()
+        $ua = preg_replace("/[^a-zA-Z0-9]+/", '', substr(array_key_exists('User-Agent', $customHeader)?$customHeader['User-Agent']:'UserAgentNotSet', 0, 256) ); // $kirby->visitor()->ip()->userAgent()
         $salt = option('daandelange.simplestats.tracking.salt');
 
         // Compute final string mixing the 3 previous ones
@@ -361,14 +365,11 @@ implode($isIpv6?':':'.', $maskMax);
             if( $i < $ualen ) $final.=$ua[$i];
             if( $i < $saltlen ) $final.=$salt[$i];
         }
-        //echo '----'.($ip.$salt.$ua).'----';
         return hash('sha1', base64_encode($final));
     }
 
     // Returns an array with detected user hardware setup
-    public static function detectSystemFromUA( $ua = null ): array {
-        // Kirby method : $kirby->visitor()->ip()->userAgent()
-        if($ua===null) $ua = substr($_SERVER['HTTP_USER_AGENT'], 0, 256);
+    public static function detectSystemFromUA( array $customHeaders = null ): array {
 
         $data = [
             'engine' => 'undefined',
@@ -376,33 +377,19 @@ implode($isIpv6?':':'.', $maskMax);
             'system' => 'undefined'
         ];
 
-        // Respect DNT requests
-        // Todo: Don't respect DNT bots !
-        if (array_key_exists('HTTP_DNT', $_SERVER) && (1 === (int) $_SERVER['HTTP_DNT'])){
-            // Don't collect private fingerprintable user data
-            //$data['engine']=$data['device']=$data['system']='Anonymous';
-            //return $data;
-        }
+        // Get Headers
+        // Kirby method : $kirby->visitor()->ip()->userAgent()
+        $headers = $customHeaders ?? getallheaders();
 
-        // Todo : Handle opt.out ?
-
-        // Get Headers with replaced ua
-        $headers = getallheaders();
-        if(isset($headers['HTTP_USER_AGENT'])) $headers['HTTP_USER_AGENT']=$ua;
-        $headers['User-Agent']=$ua;
-        unset($headers['x-requested-with']); // $headers['x-requested-with'] = 'xmlhttprequest' interferes and makes all requests mobile devices
-
-        // Parser
-        $clientData = new BrowserParser();//$headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>false,'features'=>false ]);
+        // Parser. Takes getallheaders() as argument
+        $clientData = new BrowserParser();
         $clientData->analyse($headers, [ 'detectBots' => true, 'useragent'=>false, 'engine'=>true,'features'=>false ]); // Note: Useragent must be false for detection to work
-        // Todo: set engine to true above ???
-        //echo $clientData->os->name.' :: '.$clientData->engine->name.' :: '.$clientData->device->type."<br>\n";
 
         // Detected something ?
         if( $clientData->isDetected() ){
 
             // Got a bot ?
-            if( $clientData->isType(DeviceType::BOT)){//device->type == "bot" ){
+            if( $clientData->isType(DeviceType::BOT)){
                 $data['engine']=$data['system']='bot';
                 $data['device']='server';
                 return $data;
@@ -411,7 +398,6 @@ implode($isIpv6?':':'.', $maskMax);
             else {
                 // Save Device info
                 // todo: Save only desktop / tablet / mobile / other
-                // $data['device']=$clientData->device->type;
                 if( $clientData->isType(DeviceType::DESKTOP) ){
                     $data['device']='desktop';
                 }
@@ -427,10 +413,8 @@ implode($isIpv6?':':'.', $maskMax);
                         $data['device']='mobile';
                     }
                     else if( !empty($clientData->device) && !empty($clientData->device->type) ){
-                        //var_dump($clientData->device);
                         $data['device']='other';
                     }
-                    //elseif() // check browser here for fallback ?
                     else {
                         $data['device']='undefined';
                     }
@@ -442,7 +426,7 @@ implode($isIpv6?':':'.', $maskMax);
                 //     $data['system']=$clientData->os->name;
                 // }
                 if( isset($clientData->os->family) && !empty($clientData->os->family->name) ){
-                    $data['system']=$clientData->os->family->name;// .'/'.$clientData->os->name;
+                    $data['system']=$clientData->os->family->name;
                 }
                 elseif( isset($clientData->os->name) && !empty($clientData->os->name) ){
                     $data['system']=$clientData->os->name;
@@ -493,8 +477,12 @@ implode($isIpv6?':':'.', $maskMax);
     }
 
     // Referer retrieval
-    public static function getRefererInfo( string $refHeader = null): ?array {
-        if(empty($refHeader) && isset($_SERVER['HTTP_REFERER'])) $refHeader = substr($_SERVER['HTTP_REFERER'], 0, 256);
+    public static function getRefererInfo( array $customHeader = null): ?array {
+        $customheader ??= getallheaders();
+        if( is_array($customHeader) && array_key_exists('Referer', $customHeader) ) $refHeader = $customHeader['Referer'];
+        // Fallback on $_SERVER, should never happen theoretically
+        else $refHeader = array_key_exists('HTTP_REFERER', $_SERVER ) ? substr($_SERVER['HTTP_REFERER'], 0, 256):'';
+
         $returnData = [
             'url'       => '', // Full url
             'medium'    => '', // ex: social / search / website / other (unknown)
@@ -503,10 +491,9 @@ implode($isIpv6?':':'.', $maskMax);
         ];
 
         if( !empty($refHeader) ){
-                $parser = new RefererParser(/* null, $_SERVER['HTTP_HOST'] */);
+                $parser = new RefererParser();
                 $referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
-                //echo "Got referer! == ".$refHeader."\n";
-                //echo " --- ".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+
                 if( $referer->isValid() ){
                     if ($referer->isKnown()) {
                         $returnData['medium']=$referer->getMedium();
@@ -514,7 +501,6 @@ implode($isIpv6?':':'.', $maskMax);
 
                         $urlParts = parse_url($refHeader);
                         if( $urlParts && isset($urlParts['host'])){
-                            //var_dump($urlParts);
                             // Sanitize yahoo urls specifically ?
                             if( strpos($urlParts['host'], 'yahoo.com')!==false && isset($urlParts['path']) && ($cut=strpos($urlParts['path'], '_ylt')) && $cut !== false) $urlParts['path'] = substr($urlParts['path'], 0, $cut);
                             // Note: protocol and query strings are stripped
@@ -523,7 +509,6 @@ implode($isIpv6?':':'.', $maskMax);
 
                             // Todo: protect url against sql injections via url ?
                         }
-                        //var_dump($returnData);
                         return $returnData;
                     }
                     else {
@@ -534,38 +519,28 @@ implode($isIpv6?':':'.', $maskMax);
                         }
                         // Referer is valid but unknown (other)
                         else {
-                            //echo "Got UNKNOWN referer!";
-                            //echo $referer->getMedium(); // "Search"
-                            //echo ' - ';
-                            //echo $referer->getSource(); // "Google"
-                        $returnData['medium']='website';//$referer->getMedium(); // Note: All unknown referrers are considered websites.
-                        $returnData['source']=''; // other ?
-                        $urlParts = parse_url($refHeader);
-                        if( $urlParts && isset($urlParts['host']) ){
-                            // Note: protocol and query strings are stripped
-                            $returnData['url'] =$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');
-                            $returnData['host']=$urlParts['host'];
+                            $returnData['medium']='website';//$referer->getMedium(); // Note: All unknown referrers are considered websites.
+                            $returnData['source']=''; // other ?
+                            $urlParts = parse_url($refHeader);
+                            if( $urlParts && isset($urlParts['host']) ){
+                                // Note: protocol and query strings are stripped
+                                $returnData['url'] =$urlParts['host'].(isset($urlParts['path'])?$urlParts['path']:'');
+                                $returnData['host']=$urlParts['host'];
 
-                            // Todo: protect url against sql injections via url ?
+                                // Todo: protect url against sql injections via url ?
 
-                            return $returnData;
+                                return $returnData;
+                            }
+                            else {
+                                // No valid URL
+                                return null;
+                            }
                         }
-                        else {
-                            //echo 'Invalid URL!  ....';//var_dump(parse_url($refHeader));
-                            // No valid URL
-                            return null;
-                        }
-
-                        //var_dump($returnData);
-                        }
-                        //var_dump($referer);
-                        //echo $referer->getMedium();
                     }
                 }
                 // Referer is an invalid URL (or empty)
                 else {
                     // IGNORE
-                    //echo "Got INVALID referer !\n";
                     return null;
                 }
         }

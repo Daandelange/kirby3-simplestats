@@ -40,15 +40,13 @@
     </k-column>
 
     <k-column width="1/1">
-      <k-line-field />
-      <k-headline size="large">{{ $t('simplestats.devices.graph.devicehistory') }}</k-headline>
-
       <area-chart
         type="Line"
         :chart-data="devicesOverTimeData"
         :chart-labels="chartPeriodLabels"
         download="Site_DevicesEvolution.png"
         :label="$t('simplestats.devices.graph.devicehistory')"
+        header-size="large"
         :x-title="$t('simplestats.charts.time')"
         :y-title="$t('simplestats.devices.graph.devicehistory.y')"
         :stacked="true"

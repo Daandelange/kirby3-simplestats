@@ -19,6 +19,51 @@ use \Kirby\Cms\User;
 
 class StatsGenerator extends SimpleStatsDb {
 
+    public static  $useragentSamples = [
+        'Mozilla/5.0 (Linux; Android 10; SM-G980F Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/78.0.3904.96 Mobile Safari/537.36',
+        'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+        'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+        'Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)',
+        'Mozilla/5.0 (X11; U; Linux armv7l like Android; en-us) AppleWebKit/531.2+ (KHTML, like Gecko) Version/5.0 Safari/533.2+ Kindle/3.0+',
+        'Mozilla/5.0 (Nintendo Switch; WifiWebAuthApplet) AppleWebKit/601.6 (KHTML, like Gecko) NF/4.0.0.5.10 NintendoBrowser/5.1.0.13343',
+        'Mozilla/5.0 (PlayStation; PlayStation 5/2.26) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Safari/605.1.15',
+        'AppleTV11,1/11.1',
+        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36',
+        'Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9',
+        'Mozilla/5.0 (Linux; Android 11; Lenovo YT-J706X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36',
+        'Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Microsoft; RM-1152) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Mobile Safari/537.36 Edge/15.15254',
+        'Mozilla/5.0 (iPhone9,4; U; CPU iPhone OS 10_0_1 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) Version/10.0 Mobile/14A403 Safari/602.1',
+        'Mozilla/5.0 (Linux; Android 6.0; HTC One X10 Build/MRA58K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/61.0.3163.98 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; Android 7.1.1; G8231 Build/41.2.A.0.219; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/59.0.3071.125 Mobile Safari/537.36',
+        'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1',
+    ];
+    public static $refererSamples = [
+        'https://getkirby.com/',
+        'http://duckduckgo.com/',
+        'http://google.com/',
+        'http://blink.com/',
+        'https://forum.getkirby.com/',
+        'https://bestmagazines.com/',
+        'https://github.com/',
+        'https://www.pouet.net/',
+    ];
+
+    public static function getRandomUserAgent() : string {
+        return static::$useragentSamples[ rand(0,count(static::$useragentSamples)-1) ];
+    }
+    public static function getRandomReferer() : string {
+        return static::$refererSamples[ rand(0,count(static::$refererSamples)-1) ];
+    }
+    public static function getRandomHeaders() : array {
+        $ret = [
+            'Referer'      => static::getRandomReferer(),
+            'User-Agent'   => static::getRandomUserAgent(),
+        ];
+
+        return $ret;
+    }
+
     // Caution, only use on backed-up or empty databases !
     public static function GenerateVisits(int $timefrom, int $timeto, $visitmode='randommulti', \Kirby\Cms\Pages $pagesobject = null) : array {
         // Protect
@@ -48,6 +93,7 @@ class StatsGenerator extends SimpleStatsDb {
 
             // Show pages
             //foreach( $pagesobject as $p ) echo $p->title()."\n";
+            $browserHeaders = static::getRandomHeaders();
 
             // Todo: Set longer php time-out ?
 
@@ -72,26 +118,36 @@ class StatsGenerator extends SimpleStatsDb {
                 if( $visitmode=='randomsingle' ){
                     $randomPage = $pagesobject->get( $pagekeys[rand(0,count($pagekeys)-1)] );
                     $randomLang = $languages ? $languages[rand(0,count($languages)-1)] : null;
-                    $tracked = SimpleStats::track( $randomPage->id(), $timeFrame, $user, $randomLang );
+                    $tracked = SimpleStats::track( $randomPage->id(), $timeFrame, $user, $randomLang, $browserHeaders );
 
                     if($tracked){
                         $visitsCounter++;
-                        if(!isset($languagesCounter[$lang])) $languagesCounter[$lang]=1;
-                        else $languagesCounter[$lang]++;
+                        if(!isset($languagesCounter[$randomLang])) $languagesCounter[$randomLang]=1;
+                        else $languagesCounter[$randomLang]++;
                     }
                     else{
                         $errorCounter++;
                     }
-
-                    //echo $timeStr.'  -  '.$randomPage->title().'  === '.($tracked?'ok':'fail')."\n";
                 }
                 elseif( $visitmode=='all' || $visitmode=='randommulti' ){
                     foreach( $pagesobject as $p ){
                         if( $visitmode=='randommulti' ){
-                            if(rand(0,100)<(20+$p->depth()*(80/$pagesMaxDepth))) continue; // Depth increases chance of skipping
+                            if( rand(0,100) < (
+                                30 // 30% base chance
+                                +(hrtime(true)%20) // 0-20% loop-specific randomness
+                                +(($timeFrame)%17) // 17% timeframe-specific randomness
+                                +(($p->depth()-1)/$pagesMaxDepth)*40 // 0-20% Page Depth increases chance of skipping
+                            )){ 
+                                continue;
+                            }
                         }
-                        $lang = $languages ? $languages[rand(0,count($languages)-1)] : null;
-                        $tracked = SimpleStats::track( $p->id(), $timeFrame, $user, $lang );
+                        
+                        // Randomize context
+                        if((rand(0,99)%7)>2) $browserHeaders = static::getRandomHeaders();
+                        $lang = $languages ? $languages[min(rand(0,count($languages)), count($languages)-1)] : null; // (1st lang has more chance)
+
+                        // Try to track
+                        $tracked = SimpleStats::track( $p->id(), $timeFrame, $user, $lang, $browserHeaders );
 
                         if( $tracked ){
                             $visitsCounter++;
@@ -106,8 +162,7 @@ class StatsGenerator extends SimpleStatsDb {
                 }
 
                 // Sync DB every period
-                Stats::SyncDayStats( $timeFrame );
-
+                Stats::SyncDayStats( $timeFrame + 24*60*60);//incrementTime( $timeFrame ) ); // Directly parse all stats
                 // Remember
                 $periodsCounter++;
             }
