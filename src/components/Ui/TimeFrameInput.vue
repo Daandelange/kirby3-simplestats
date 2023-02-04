@@ -152,7 +152,12 @@ export default {
     },
   },
   mounted(){
-    // Parse initial values --> ensures initial sanitation
+    // Parse initial values
+    const minmax = this.sliderRange;
+    this.dateFrom = this.dateChoices[minmax.min];
+    this.dateTo = this.dateChoices[minmax.max];
+    
+    // Initial sanitation / sync
     this.updateDateFields(this.timeFrame);
   },
   // watch: {
@@ -176,8 +181,8 @@ export default {
     let prevMonthFilter = null;
 
     return {
-      dateFrom: '2022-03-01',
-      dateTo: '2022-05-09',
+      dateFrom: '',
+      dateTo: '',
       sliderDisplayFormat: 'YYYY-MM-DD',
       staticDateFieldProps: { // Todo: is this still used ?
         class: 'ss-header-date',
