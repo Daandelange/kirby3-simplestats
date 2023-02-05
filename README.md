@@ -3,7 +3,7 @@
 Track page views, referrers and devices on your Kirby 3 website.
 This plugin provides a simple solution for **self-hosted**, **minimal** and **non-intrusive** visitor analytics.
 
-![Simplestats Screenshot](k3-simplestats.png)
+![Simplestats Screenshot](k3-SimpleStats.gif)
 
 - It tracks **referrer URLs** to keep track of who links to your website, categorised as either `search`, `social` or `website`.
 - It tracks **device information** (device types, browser engine, OS family; all version-less) for keeping track of how your website is visited.
@@ -40,9 +40,8 @@ You may also have a look at the [open issues](https://github.com/Daandelange/kir
 ## Setup
 
 ### Requirements
- - A recent Kirby installation (currently tested with 3.5+) and support for SQLite3.
- - For a detailed report, check the `Information` tab in the plugin's panel view.
- ![Simplestats Information Tab](k3-simplestats-infotab.png)
+ - A recent Kirby installation (currently tested with 3.9+) and support for SQLite3.
+ - There's an automatic requirements checker in the `Information` tab of the plugin's panel view.
 
 ### Installation
 
@@ -62,10 +61,6 @@ _Note: While `SimpleStats` is still alpha, there is no stable channel for compos
 ****
 
 ### Configuration
-
-*Soon...*
-
-For now, check the comments in `options.php` for directions.
 
 #### Stats blueprint section
 If you wish to display page stats in a section, you may add a `pagestats` panel section to your page's blueprint.
@@ -121,7 +116,8 @@ return [
 ];
 ````
 
-Here's a list with options that have been tested. (the `daandelange.simplestats` part has been stripped)
+Here's a list with options that have been tested. (the `daandelange.simplestats` part has been stripped)  
+You might also find some more detailed information in the comments of `options.php`.
 
 | Option                          | Type                                  | Default         | Description                                                                | Comment                                                                           |
 |---------------------------------|---------------------------------------|-----------------|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------|

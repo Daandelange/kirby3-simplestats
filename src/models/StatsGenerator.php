@@ -42,7 +42,7 @@ class StatsGenerator extends SimpleStatsDb {
         'https://getkirby.com/',
         'http://duckduckgo.com/',
         'http://google.com/',
-        'http://blink.com/',
+        'http://bing.com/',
         'https://forum.getkirby.com/',
         'https://bestmagazines.com/',
         'https://github.com/',
