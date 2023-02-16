@@ -33,7 +33,7 @@ class SimpleStats extends SimpleStatsDb {
         } catch (Throwable $e) {
             // If logging enable, initialize model and add record
             if (option('daandelange.simplestats.log.tracking') === true) {
-                Logger::logTracking('Error tracking page: '.$page.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
+                Logger::logTracking('Error tracking page: '.$page_uri.'. Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
             }
         }
         return false;
