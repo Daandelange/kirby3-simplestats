@@ -490,6 +490,10 @@ implode($isIpv6?':':'.', $maskMax);
             'host'      => '', // domain name (with subdomain)
         ];
 
+        if(!isset(parse_url($refHeader)['query'])) {
+            $refHeader .= '?empty';
+        }
+
         if( !empty($refHeader) ){
                 $parser = new RefererParser();
                 $referer = $parser->parse($refHeader, (isset($_SERVER['HTTPS'])?'https://':'http://').$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);

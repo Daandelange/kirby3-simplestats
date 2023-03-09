@@ -328,12 +328,12 @@
                 "q"
             ]
         }, 
-        "Liveinternet": {
+        "Arcor": {
             "domains": [
-                "liveinternet.ru"
+                "www.arcor.de"
             ], 
             "parameters": [
-                "q"
+                "Keywords"
             ]
         }, 
         "arama": {
@@ -1355,6 +1355,16 @@
                 "text"
             ]
         }, 
+        "Indeed": {
+            "domains": [
+                "de.indeed.com", 
+                "at.indeed.com", 
+                "fr.indeed.com", 
+                "it.indeed.com", 
+                "ch.indeed.com", 
+                "au.indeed.com"
+            ]
+        }, 
         "canoe.ca": {
             "domains": [
                 "web.canoe.ca"
@@ -1418,6 +1428,17 @@
             ], 
             "parameters": [
                 "q"
+            ]
+        }, 
+        "StepStone": {
+            "domains": [
+                "www.stepstone.de", 
+                "www.stepstone.at", 
+                "www.stepstone.be", 
+                "www.stepstone.fr", 
+                "www.stepstone.nl", 
+                "www.stepstone.dk", 
+                "www.stepstone.se"
             ]
         }, 
         "Jungle Spider": {
@@ -2135,12 +2156,12 @@
                 "keyword"
             ]
         }, 
-        "Arcor": {
+        "Lilo": {
             "domains": [
-                "www.arcor.de"
+                "search.lilo.org"
             ], 
             "parameters": [
-                "Keywords"
+                "q"
             ]
         }, 
         "Naver": {
@@ -2498,6 +2519,14 @@
         "Search.ch": {
             "domains": [
                 "www.search.ch"
+            ], 
+            "parameters": [
+                "q"
+            ]
+        }, 
+        "Liveinternet": {
+            "domains": [
+                "liveinternet.ru"
             ], 
             "parameters": [
                 "q"
@@ -2879,6 +2908,23 @@
         "DuckDuckGo": {
             "domains": [
                 "duckduckgo.com"
+            ], 
+            "parameters": [
+                "q"
+            ]
+        }, 
+        "Monster": {
+            "domains": [
+                "www.monster.be", 
+                "www.monster.cz", 
+                "www.monster.de", 
+                "www.monster.fi", 
+                "www.monster.fr", 
+                "www.monster.ie", 
+                "www.monster.it", 
+                "www.monster.lu", 
+                "www.monster.ch", 
+                "www.monster.co.uk"
             ], 
             "parameters": [
                 "q"
@@ -4457,7 +4503,9 @@
         }, 
         "Pinterest": {
             "domains": [
-                "pinterest.com"
+                "pinterest.com", 
+                "pinterest.ca", 
+                "pinterest.com.au"
             ]
         }, 
         "LinkedIn": {

@@ -431,6 +431,8 @@ social:
   Pinterest:
     domains:
       - pinterest.com
+      - pinterest.ca
+      - pinterest.com.au
 
   Plaxo:
     domains:
@@ -2927,6 +2929,15 @@ search:
     domains:
       - inbox.com/search/
 
+  Indeed:
+    domains:
+      - de.indeed.com
+      - at.indeed.com
+      - fr.indeed.com
+      - it.indeed.com
+      - ch.indeed.com
+      - au.indeed.com
+
   InfoSpace:
     parameters:
       - q
@@ -3039,6 +3050,12 @@ search:
       - www.toile.com
       - web.toile.com
 
+  Lilo:
+    parameters:
+      - q
+    domains:
+      - search.lilo.org
+
   Liveinternet:
     parameters:
       - q
@@ -3137,6 +3154,21 @@ search:
     domains:
       - www.mister-wong.com
       - www.mister-wong.de
+
+  Monster:
+    parameters:
+      - q
+    domains:
+      - www.monster.be
+      - www.monster.cz
+      - www.monster.de
+      - www.monster.fi
+      - www.monster.fr
+      - www.monster.ie
+      - www.monster.it
+      - www.monster.lu
+      - www.monster.ch
+      - www.monster.co.uk
 
   Monstercrawler:
     parameters:
@@ -3453,6 +3485,16 @@ search:
       - q
     domains:
       - www.startsiden.no
+
+  StepStone:
+    domains:
+      - www.stepstone.de
+      - www.stepstone.at
+      - www.stepstone.be
+      - www.stepstone.fr
+      - www.stepstone.nl
+      - www.stepstone.dk
+      - www.stepstone.se
 
   suche.info:
     parameters:

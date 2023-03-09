@@ -19,8 +19,8 @@
     ],
     "require": {
         "getkirby/composer-installer": "^1.1",
-        "whichbrowser/parser": "^2.1.2",
-        "snowplow/referer-parser": "^0.2.0"
+        "snowplow/referer-parser": "^0.2.0",
+        "buzz/which-browser-parser": "^2.1"
     },
     "autoload": {
         "psr-4": {
