@@ -173,7 +173,7 @@ export default {
         // set default
         mTab = this.getTabFromLocalStorage();
       }
-      if( false && !mTab || mTab.length<1 && this.initialtab ) mTab = this.initialtab;
+      if(!mTab || mTab.length<1 && this.initialtab ) mTab = this.initialtab;
 
       // Sanitize
       if(!this.tabs.some(aTab=>aTab.name===mTab)){
