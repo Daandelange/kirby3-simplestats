@@ -7,9 +7,9 @@
   "license": "MIT",
   "repository": "https://github.com/Daandelange/kirby3-simplestats",
   "scripts": {
-    "dev": "kirbyup src/index.js --watch",
-    "serve": "kirbyup src/index.js --serve",
-    "build": "kirbyup src/index.js"
+    "dev": "npx -y kirbyup src/index.js --watch",
+    "serve": "npx -y kirbyup src/index.js --serve",
+    "build": "npx -y kirbyup src/index.js"
   },
   "posthtml": {
     "recognizeSelfClosing": true
