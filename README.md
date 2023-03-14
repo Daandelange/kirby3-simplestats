@@ -175,8 +175,9 @@ After updating:
   Returns true if the user is authorized to access the SimpleStats Panel, with or without special admin rights.
 ****
 
-## Integrate to your page
-If you want to use the default "onLoad" Tracking method no further actions are required. Kirby automatically registers this Plugins and sends an event to this plugin. You can configure this Plugin as needed with the options shown above. An example configurations could look like this:
+## Integrating to your page:
+
+If you want to use the default "onLoad" tracking method, no further action is required. Kirby automatically registers this plugin and sends an event to it. You can configure this plugin as needed using the options shown above. An example configuration could look like this:
 
 ````
 'daandelange.simplestats' => [
@@ -186,8 +187,8 @@ If you want to use the default "onLoad" Tracking method no further actions are r
     'panel.dismissDisclaimer' => true,
   ]
 ````
-Note: 
-  The tracking methods is a numeric value - the following values are possible:
+Note:
+  The tracking method is a numeric value - the following values are possible:
   ### Possible Tracking Methods (Config value: `tracking.method`)
     - 0: onLoad
     - 2: onImage
