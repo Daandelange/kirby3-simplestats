@@ -156,7 +156,6 @@ After updating:
 - It's also a good idea to check the log file for any errors.
 
 ****
-
 ## API
 
 ### Singletons
@@ -165,7 +164,7 @@ After updating:
 - `SimpleStats::track($id)`
   Function called to track user data. `$id` is a `$page->id()` to be tracked.
 
-### Page Methods
+### Page Methods 
 - `$page->simpleStatsImage()`
   HTML code for the tracking image, when using OnImage tracking method.
 - `$page->getPageStats()`
@@ -175,6 +174,25 @@ After updating:
 - `$user->hasSimpleStatsPanelAccess($forSpecialAdminAccess=false)`
   Returns true if the user is authorized to access the SimpleStats Panel, with or without special admin rights.
 ****
+
+## Integrate to your page
+If you want to use the default "onLoad" Tracking method no further actions are required. Kirby automatically registers this Plugins and sends an event to this plugin. You can configure this Plugin as needed with the options shown above. An example configurations could look like this:
+
+````
+'daandelange.simplestats' => [
+    'tracking.salt' => '--your-custom-salt--',
+    'tracking.uniqueSeconds' => 604800, //1 Week
+    'tracking.method' => 2,
+    'panel.dismissDisclaimer' => true,
+  ]
+````
+Note: 
+  The tracking methods is a numeric value - the following values are possible:
+    - 0: onLoad
+    - 2: onImage
+    - 3: Disabled
+    - 4: Manual
+
 
 ## Panel Interface
 
