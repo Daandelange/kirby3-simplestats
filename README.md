@@ -188,6 +188,7 @@ If you want to use the default "onLoad" Tracking method no further actions are r
 ````
 Note: 
   The tracking methods is a numeric value - the following values are possible:
+  ### Possible Tracking Methods (Config value: `tracking.method`)
     - 0: onLoad
     - 2: onImage
     - 3: Disabled
