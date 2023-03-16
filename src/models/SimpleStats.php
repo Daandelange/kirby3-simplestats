@@ -490,6 +490,9 @@ implode($isIpv6?':':'.', $maskMax);
             'host'      => '', // domain name (with subdomain)
         ];
 
+        // Change related to PHP 8.2 compatible fork of whichbrowser/parser
+        // https://github.com/Daandelange/kirby3-simplestats/issues/31
+        // https://github.com/snowplow-referer-parser/referer-parser/issues/223
         if(!isset(parse_url($refHeader)['query'])) {
             $refHeader .= '?empty';
         }
