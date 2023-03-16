@@ -104,6 +104,10 @@ All available options are listed and explained in `src/config/options.php`.
 Example :
 ````PHP
 // site/config/config.php
+//if you want to change the Tracking Method you need the following line
+use daandelange\SimpleStats\SimpleStatsTrackingMode;
+// You need to add this /\ if you want to change the tracking method with enums (read below - chapter Integrationg to your page)
+
 require_once(__DIR__ . '/../plugins/simplestats/src/models/SimpleStatsTimeFrameUtility.php');
 return [
   // [...] your options ...
@@ -156,7 +160,6 @@ After updating:
 - It's also a good idea to check the log file for any errors.
 
 ****
-
 ## API
 
 ### Singletons
@@ -165,7 +168,7 @@ After updating:
 - `SimpleStats::track($id)`
   Function called to track user data. `$id` is a `$page->id()` to be tracked.
 
-### Page Methods
+### Page Methods 
 - `$page->simpleStatsImage()`
   HTML code for the tracking image, when using OnImage tracking method.
 - `$page->getPageStats()`
@@ -175,6 +178,32 @@ After updating:
 - `$user->hasSimpleStatsPanelAccess($forSpecialAdminAccess=false)`
   Returns true if the user is authorized to access the SimpleStats Panel, with or without special admin rights.
 ****
+
+## Integrating to your page:
+
+If you want to use the default "onLoad" tracking method, no further action is required. Kirby automatically registers this plugin and sends an event to it. You can configure this plugin as needed using the options shown above. An example configuration could look like this:
+
+!If you want to change the tracking method add the following line on the top of your config.php file!
+````
+use daandelange\SimpleStats\SimpleStatsTrackingMode;
+````
+
+````
+'daandelange.simplestats' => [
+    'tracking.salt' => '--your-custom-salt--',
+    'tracking.uniqueSeconds' => 604800, //1 Week
+    'tracking.method' => SimpleStatsTrackingMode::OnImage,
+    'panel.dismissDisclaimer' => true,
+  ]
+````
+Note:
+  The tracking method is a numeric value - the following values are possible:
+  ### Possible Tracking Methods (Config value: `tracking.method`)
+    - 0: onLoad => SimpleStatsTrackingMode::OnLoad
+    - 2: onImage => SimpleStatsTrackingMode::OnImage
+    - 3: Disabled => SimpleStatsTrackingMode::Disabled
+    - 4: Manual => SimpleStatsTrackingMode::Manual
+
 
 ## Panel Interface
 
