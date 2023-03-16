@@ -13,9 +13,9 @@ This plugin provides a simple solution for **self-hosted**, **minimal** and **no
 
 ### How it works
 - Tracking happens when the page is served by Kirby.
-- A crypted user-unique fingerprint is stored in order to track unique page views.  
-_[The formula](https://github.com/Daandelange/kirby3-simplestats/search?q=getUserUniqueString) is more or less `sha1( base64_encode( mix( anonimize(IP, 0.0.0.x) + trunc(UserAgent) + Salt)) )`._  
-It's stored together with a list of visited pages, the device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.  
+- A crypted user-unique fingerprint is stored in order to track unique page views.
+_[The formula](https://github.com/Daandelange/kirby3-simplestats/search?q=getUserUniqueString) is more or less `sha1( base64_encode( mix( anonimize(IP, 0.0.0.x) + trunc(UserAgent) + Salt)) )`._
+It's stored together with a list of visited pages, the device category (bot/mobile/desktop/tablet/other), the browser's engine (Gecko/Webkit/Blink/Other) and OS Family.
 This data is kept for a very short amount of time to ensure only counting unique hits.
 - After 24H, the collected data is processed and any user identifying data is deleted :
   - The visited pages' hit counts are incremented, globally and per language.
@@ -30,8 +30,8 @@ Please note that the database structure might evolve over time, until a more sta
 
 
 ### Contributing
-I guess a lot of options could be added to suit the plugin for a wider variety of website setups. The panel interface could also be improved and translated.  
-Any contributions (discussions, reports, feedback and pull requests) are welcome, as long as the collected stats stay minimal and reasonably non-intrusive.  
+I guess a lot of options could be added to suit the plugin for a wider variety of website setups. The panel interface could also be improved and translated.
+Any contributions (discussions, reports, feedback and pull requests) are welcome, as long as the collected stats stay minimal and reasonably non-intrusive.
 You may also have a look at the [open issues](https://github.com/Daandelange/kirby3-simplestats/issues/).
 
 ****
@@ -45,17 +45,17 @@ You may also have a look at the [open issues](https://github.com/Daandelange/kir
 
 ### Installation
 
-- **Option 1** : Download  
+- **Option 1** : Download
 Download and copy this repository to `/site/plugins/simplestats`.
 
-- **Option 2** : Git submodule  
+- **Option 2** : Git submodule
 ```
 git submodule add https://github.com/daandelange/kirby3-simplestats.git site/plugins/simplestats
 ```
 Eventually add `--depth 1` to discard the repo commit history. (saves disk space)
 
-- **Option 3** : Composer  
-`composer require daandelange/simplestats:~0.4-beta` (update with `composer update`)  
+- **Option 3** : Composer
+`composer require daandelange/simplestats:~0.4-beta` (update with `composer update`)
 _Note: While `SimpleStats` is still alpha, there is no stable channel for composer, so you need to specify the unstable version._
 
 ****
@@ -77,17 +77,17 @@ sections:
 ````
 
 #### Language setup
-Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.  
-*Warning:* Do not add or remove languages to your Kirby installation without resetting your database file !    
+Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.
+*Warning:* Do not add or remove languages to your Kirby installation without resetting your database file !
 Also, the panel view has not (yet?) been translated.
 
 #### Database Configuration
-The database file is a simple `.sqlite` file that holds all tracking data. You can view it from the dedicated panel area, or by including smaller widget sections in the panel page editor. The popular Sqlite format allows you to easily grab the data and visualise it your way, or import it in other software.  
+The database file is a simple `.sqlite` file that holds all tracking data. You can view it from the dedicated panel area, or by including smaller widget sections in the panel page editor. The popular Sqlite format allows you to easily grab the data and visualise it your way, or import it in other software.
 It's recommended to occasionally backup your stats database file.
 
 > ##### Tracking Resolution and Kirby Languages (Important !)
-> Please note that *the database is tightly bound to the tracking resolution* option (`daandelange.simplestats.tracking.timeFrameUtility`) and *can not* be changed afterwards. Changing the resolution while keeping the same database file results in unefined behaviour.  
-> The same goes for Kirby's Language setup: *if you change your multilanguage settings*, you need to create a new database file (however, manually editing the previous database file, you might be able to preserve your data).  
+> Please note that *the database is tightly bound to the tracking resolution* option (`daandelange.simplestats.tracking.timeFrameUtility`) and *can not* be changed afterwards. Changing the resolution while keeping the same database file results in unefined behaviour.
+> The same goes for Kirby's Language setup: *if you change your multilanguage settings*, you need to create a new database file (however, manually editing the previous database file, you might be able to preserve your data).
 > This [could be automated with update scripts](https://github.com/Daandelange/kirby3-simplestats/issues/14).
 
 > ##### Generating Stats
@@ -98,15 +98,35 @@ Depending on your local laws, you might need to sit down and define how personal
 You might want to inspect the source code to know what's going on in details.
 As the license states, there's no guarantee whatsoever.
 
+#### Integrating to your page
+If you want to use the default `onLoad` tracking method, no further action is required, the plugin automatically hooks to Kirby route events. If you choose any other tracking method, you'll need to integrate the method in your code.
+
+> **Possible Tracking Methods:** (Config value: `tracking.method`)
+>   - `SimpleStatsTrackingMode::OnLoad` : Uses kirby's route hooks to track content when it's served.
+>     *Pros*: Ensures that every request is tracked.
+>     *Cons*: Slows down the page serve time.
+>     *Setup steps*: None.
+>   - `SimpleStatsTrackingMode::OnImage` : Generate a simple image tag within your HTML.
+>     *Pros*: Doesn't slow down page serve time.
+>     *Cons*: You trust the user to load the image.
+>     *Setup steps*: You need to call `$page->simpleStatsImage()` in your template code. You probably want to do this once in `site/snippets/footer.php` for example.
+>   - `SimpleStatsTrackingMode::Disabled` : Disables tracking, no further action is needed. (now much tested yet)
+>     *Setup steps*: None.
+>   - `SimpleStatsTrackingMode::Manual` : Manually call the tracking function.
+>     *Pros*: Very flexible, might solve edge-case-usage.
+>     *Setup steps*: You have to call `SimpleStats::track()` manually. Additionally, you need to populate the http headers argument accrdingly to track referers and device information.
+
+
 #### Options
-Like any Kirby plugin, options can be set in your `site/config/config.php`.  
-All available options are listed and explained in `src/config/options.php`.  
+Like any Kirby plugin, options can be set in your `site/config/config.php`.
+All available options are listed and explained in `src/config/options.php`.
+
 Example :
 ````PHP
 // site/config/config.php
-//if you want to change the Tracking Method you need the following line
-use daandelange\SimpleStats\SimpleStatsTrackingMode;
-// You need to add this /\ if you want to change the tracking method with enums (read below - chapter Integrationg to your page)
+
+// The custom variable types (SimpleStatsTimeFrameUtility, SimplestatsTrackingMode) are namespaced, you can shorten their invocations with the line below:
+// use daandelange\SimpleStats\SimpleStatsTrackingMode;
 
 require_once(__DIR__ . '/../plugins/simplestats/src/models/SimpleStatsTimeFrameUtility.php');
 return [
@@ -117,10 +137,11 @@ return [
   'daandelange.simplestats.tracking.enableReferers' => false, // Disable referer tracking
   'daandelange.simplestats.tracking.timeFrameUtility' => new \daandelange\SimpleStats\SimpleStatsTimeFrameUtilityWeekly(), // Here you can put your custom inherited class from SimpleStatsTimeFrameUtility
   'daandelange.simplestats.tracking.timeFrameUtility' => 'weekly', // Alternative
+  'daandelange.simplestats.tracking.method' => \daandelange\SimpleStats\SimpleStatsTrackingMode::OnImage,
 ];
 ````
 
-Here's a list with options that have been tested. (the `daandelange.simplestats` part has been stripped)  
+Here's a list with options that have been tested. (the `daandelange.simplestats` part has been stripped)
 You might also find some more detailed information in the comments of `options.php`.
 
 | Option                          | Type                                  | Default         | Description                                                                | Comment                                                                           |
@@ -168,7 +189,7 @@ After updating:
 - `SimpleStats::track($id)`
   Function called to track user data. `$id` is a `$page->id()` to be tracked.
 
-### Page Methods 
+### Page Methods
 - `$page->simpleStatsImage()`
   HTML code for the tracking image, when using OnImage tracking method.
 - `$page->getPageStats()`
@@ -178,32 +199,6 @@ After updating:
 - `$user->hasSimpleStatsPanelAccess($forSpecialAdminAccess=false)`
   Returns true if the user is authorized to access the SimpleStats Panel, with or without special admin rights.
 ****
-
-## Integrating to your page:
-
-If you want to use the default "onLoad" tracking method, no further action is required. Kirby automatically registers this plugin and sends an event to it. You can configure this plugin as needed using the options shown above. An example configuration could look like this:
-
-!If you want to change the tracking method add the following line on the top of your config.php file!
-````
-use daandelange\SimpleStats\SimpleStatsTrackingMode;
-````
-
-````
-'daandelange.simplestats' => [
-    'tracking.salt' => '--your-custom-salt--',
-    'tracking.uniqueSeconds' => 604800, //1 Week
-    'tracking.method' => SimpleStatsTrackingMode::OnImage,
-    'panel.dismissDisclaimer' => true,
-  ]
-````
-Note:
-  The tracking method is a numeric value - the following values are possible:
-  ### Possible Tracking Methods (Config value: `tracking.method`)
-    - 0: onLoad => SimpleStatsTrackingMode::OnLoad
-    - 2: onImage => SimpleStatsTrackingMode::OnImage
-    - 3: Disabled => SimpleStatsTrackingMode::Disabled
-    - 4: Manual => SimpleStatsTrackingMode::Manual
-
 
 ## Panel Interface
 
