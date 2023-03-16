@@ -54,8 +54,8 @@ git submodule add https://github.com/daandelange/kirby3-simplestats.git site/plu
 ```
 Eventually add `--depth 1` to discard the repo commit history. (saves disk space)
 
-- **Option 3** : Composer
-`composer require daandelange/simplestats:~0.4-beta` (update with `composer update`)
+- **Option 3** : Composer (*update the command to match the latest version*)
+`composer require daandelange/simplestats:~0.6.2-beta` (update with `composer update`)
 _Note: While `SimpleStats` is still alpha, there is no stable channel for composer, so you need to specify the unstable version._
 
 ****
