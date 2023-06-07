@@ -21,7 +21,7 @@ App::plugin('daandelange/simplestats', [
     'areas' => [
         'simplestats' => function ($kirby) {
 
-            if(!$kirby->user() || !$kirby->user()->hasSimpleStatsPanelAccess()) return null;
+            if(!$kirby->user() || !$kirby->user()->hasSimpleStatsPanelAccess()) return [];
 
             return [
                 // label for the menu and the breadcrumb
