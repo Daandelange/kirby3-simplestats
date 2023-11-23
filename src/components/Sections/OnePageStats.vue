@@ -29,7 +29,7 @@
           :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':(this.sectionSize=='tiny')?'120px':'260px'"
           :stacked="true"
           :library="chartOptions"
-          v-if="languagesOverTime.length > 0"
+          v-if="languagesOverTime && languagesOverTime.length && languagesOverTime.length > 0"
         ></area-chart>
         <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
       </div>
@@ -45,7 +45,7 @@
           :ytitle="$t('simplestats.charts.visits')"
           :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':(this.sectionSize=='tiny')?'120px':'260px'"
           :library="chartOptions"
-          v-if="visitsOverTime.length > 0"
+          v-if="visitsOverTimeData && visitsOverTimeData.length && visitsOverTimeData.length > 0"
         ></area-chart>
         <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
       </div>
