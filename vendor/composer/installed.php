@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'daandelange/simplestats',
-        'pretty_version' => '0.6.1-beta',
-        'version' => '0.6.1.0-beta',
+        'pretty_version' => '0.6.3-beta',
+        'version' => '0.6.3.0-beta',
         'reference' => NULL,
         'type' => 'kirby-plugin',
         'install_path' => __DIR__ . '/../../',
@@ -11,17 +11,17 @@
     ),
     'versions' => array(
         'buzz/which-browser-parser' => array(
-            'pretty_version' => 'v2.1.8',
-            'version' => '2.1.8.0',
-            'reference' => '236e0e1285968e2a3618ff123b5e417c589beb62',
+            'pretty_version' => 'v2.1.9',
+            'version' => '2.1.9.0',
+            'reference' => '38277b57c8ed2f769b5019d2b44fb24974ea55dd',
             'type' => 'library',
             'install_path' => __DIR__ . '/../buzz/which-browser-parser',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
         'daandelange/simplestats' => array(
-            'pretty_version' => '0.6.1-beta',
-            'version' => '0.6.1.0-beta',
+            'pretty_version' => '0.6.3-beta',
+            'version' => '0.6.3.0-beta',
             'reference' => NULL,
             'type' => 'kirby-plugin',
             'install_path' => __DIR__ . '/../../',

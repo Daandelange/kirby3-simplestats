@@ -33,7 +33,6 @@ class ComposerStaticInit8c62b1f5e81f13f848c85488aae00a10
         'WhichBrowser\\' => 
         array (
             0 => __DIR__ . '/..' . '/buzz/which-browser-parser/src',
-            1 => __DIR__ . '/..' . '/buzz/which-browser-parser/tests/src',
         ),
         'Psr\\Cache\\' => 
         array (
