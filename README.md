@@ -80,6 +80,7 @@ sections:
 Multi-language websites are supported. For each page, there's a global counter, with an optional counter for each language.
 *Warning:* Do not add or remove languages to your Kirby installation without resetting your database file !
 Also, the panel view has not (yet?) been translated.
+**Note:** During the alpha phase, I'm working with a multi-language context. While I try to test single language setups from time to time, SimpleStats might break occasionally in these setups.
 
 #### Database Configuration
 The database file is a simple `.sqlite` file that holds all tracking data. You can view it from the dedicated panel area, or by including smaller widget sections in the panel page editor. The popular Sqlite format allows you to easily grab the data and visualise it your way, or import it in other software.
