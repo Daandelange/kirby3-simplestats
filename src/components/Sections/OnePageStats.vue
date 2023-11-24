@@ -21,45 +21,50 @@
       <div v-if="languagesAreEnabled && showTimeline" class="detailcolumn visitsovertime">
         <k-headline size="medium">{{ $t('simplestats.visits.visitsovertime') }}</k-headline>
         <area-chart
-          :data="languagesOverTime"
-          :download="true"
+          :chart-data="languagesOverTime"
+          :chart-labels="chartPeriodLabels"
           download="PageLanguagesOverTime.png"
-          :xtitle="$t('simplestats.charts.time')"
-          :ytitle="$t('simplestats.charts.visits')"
-          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':(this.sectionSize=='tiny')?'120px':'260px'"
+          :x-time-axis="true"
+          :y-visits-axis="true"
+          :height="(this.sectionSize=='small')?240:(this.sectionSize=='large')?280:(this.sectionSize=='tiny')?120:260"
           :stacked="true"
-          :library="chartOptions"
-          v-if="languagesOverTime && languagesOverTime.length && languagesOverTime.length > 0"
+          :chart-options="chartOptions"
+          :auto-colorize="true"
+          :show-legend="languagesAreEnabled"
         ></area-chart>
-        <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
+        <br/>
       </div>
 
       <div v-else-if="showTimeline" class="detailcolumn visitsovertime">
-        <br/>
-        <k-headline size="medium">{{ $t('simplestats.visits.languagesovertime') }}</k-headline>
+        <k-headline size="medium">{{ $t('simplestats.visits.visitsovertime') }}</k-headline>
         <area-chart
-          :data="visitsOverTime"
-          :download="true"
+          type="Bar"
+          :chart-data="visitsOverTimeData"
+          :chart-options="chartOptions"
+          :chart-labels="chartPeriodLabels"
           download="PageVisitsOverTime.png"
-          :xtitle="$t('simplestats.charts.time')"
-          :ytitle="$t('simplestats.charts.visits')"
-          :height="(this.sectionSize=='small')?'240px':(this.sectionSize=='large')?'280px':(this.sectionSize=='tiny')?'120px':'260px'"
-          :library="chartOptions"
-          v-if="visitsOverTimeData && visitsOverTimeData.length && visitsOverTimeData.length > 0"
+          :height="(this.sectionSize=='small')?240:(this.sectionSize=='large')?280:(this.sectionSize=='tiny')?120:260"
+          :x-time-axis="true"
+          :y-visits-axis="true"
+          :fill="true"
+          :auto-colorize="true"
         ></area-chart>
-        <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
+        <br/>
       </div>
 
       <div v-if="languagesAreEnabled && showLanguages" class="detailcolumn globallanguages">
         <k-headline>{{ $t('simplestats.visits.globallanguages') }}</k-headline>
-        <pie-chart
-          :data="languageTotalHits"
-          v-if="languageTotalHits.length > 0"
-          :height="(this.sectionSize=='small')?'185px':(this.sectionSize=='large')?'225px':(this.sectionSize=='tiny')?'80px':'205px'"
-          :library="pieOptions"
-        />
-        <k-empty v-else layout="block" class="emptyChart">{{ $t('simplestats.nodatayet') }}</k-empty>
 
+        <area-chart
+          type="Pie"
+          download="PageGlobalLanguageVisits.png"
+          :chart-data="languageTotalHits"
+          :chart-labels="chartLanguagesLabels"
+          :chart-options="chartOptions"
+          :auto-colorize="true"
+          :height="(this.sectionSize=='small')?185:(this.sectionSize=='large')?225:(this.sectionSize=='tiny')?80:205"
+          :fill="true"
+        />
       </div>
 
 <!--     </k-grid> -->
@@ -68,8 +73,17 @@
 
 <script>
 
+import AreaChart from '../Ui/AreaChart.vue';
+import SectionBase from '../Sections/SimpleStatsSectionBase.vue';
+//import PieChart from '../Ui/';
+
 export default {
   //extends: 'k-pages-section',
+  extends: SectionBase,
+  components: {
+    AreaChart,
+    //PieChart,
+  },
   data() {
     return {
       // PHP props (auto populated)
@@ -85,7 +99,8 @@ export default {
       isLoading: false,
       error: "",
       languagesOverTime: [],
-      visitsOverTime: [],
+      visitsOverTimeData: [],
+      //visitsOverTimeLabels: [],
       languageTotalHits: [],
       //languagesAreEnabled: false,
       trackedSince: '[unknown]',
@@ -93,9 +108,13 @@ export default {
       averageHits: false,
       timespanUnitName: '[unknown]',
       trackingPeriods : false,
+      label: '',
+      chartPeriodLabels: [],
+      chartLanguagesLabels: [],
     }
   },
   props: {
+    sectionName: 'OnePageStats',
 //     size: {
 //       type: String,
 //       default: 'medium',
@@ -126,73 +145,11 @@ export default {
     },
     chartOptions(){
       return {
-        scales: {
-          xAxes: [{
-            display: !(this.sectionSize=='small'||this.sectionSize=='tiny'),
-            type: 'time',
-            time: {
-              unit: 'month',
-              displayFormats: {
-                  month: 'MMM YYYY'
-              }
-            },
-            scaleLabel: {
-              //labelString: '',
-              //display: true,
-            },
-          }],
-          yAxes: [{
-            stacked: true,
-            legend: true,
-            scaleLabel: {
-              //labelString: '',
-              display: !(this.sectionSize=='small'||this.sectionSize=='tiny'),
-            },
-          }],
-        },
-        tooltips: {
-          //enabled: false,
-          position: 'nearest', // places tooltip on points in x-mode
-          //mode: 'dataset',
-          mode: 'x', // Tooltip sends all item on x axis, so we can sum them up
-          callbacks: {
-            footer: this.graphFooter,
-          },
-          //bodyAlign: '',
-          bodyFontSize:   (this.sectionSize=='tiny')?9:(this.sectionSize=='small')?11:12,
-          titleFontSize:  (this.sectionSize=='tiny')?9:(this.sectionSize=='small')?11:12,
-          footerFontSize: (this.sectionSize=='tiny')?9:(this.sectionSize=='small')?11:12,
-        },
-        legend: {
-          display: !(this.sectionSize=='small'||this.sectionSize=='tiny'), // hides labels on small
-//           labels: {
-//             filter: function(legenditem, chartdata){
-//               return true;
-//             }
-//           },
+        animation: {
+          onComplete: this.generateDownloadLink,
         },
       };
     },
-    pieOptions(){
-      return {
-        tooltips: {
-          //enabled: false,
-          //mode: 'dataset',
-          //mode: 'x', // Tooltip sends all item on x axis, so we can sum them up
-          callbacks: {
-            //footer: this.pieFooter,
-            label: this.pieLabel,
-            //footer: this.pieLabel,
-          }
-        },
-        //legend: {
-        //  display: false,
-        //},
-      };
-    },
-  },
-  components: {
-
   },
   created() {
     this.load().then(response => {
@@ -207,7 +164,9 @@ export default {
       // Other
       this.statsdata  = response.statsdata;
       this.languagesOverTime = response.statsdata.languagesOverTime;
-      this.visitsOverTime = response.statsdata.visitsOverTime;
+      this.visitsOverTimeData = response.statsdata.visitsovertimedata;
+      this.chartPeriodLabels = response.statsdata.chartperiodlabels;
+      this.chartLanguagesLabels = response.statsdata.chartlanguageslabels;
       this.languageTotalHits = response.statsdata.languageTotalHits;
       //this.languagesAreEnabled = response.statsdata.languagesAreEnabled;
       this.trackedSince = response.statsdata.firstVisited;

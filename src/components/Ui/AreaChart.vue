@@ -104,12 +104,12 @@ export default {
       default: 'medium',
     },
     xTitle: {
-      type: String,
-      default: '',
+      type: String | null,
+      default: null,
     },
     yTitle: {
-      type: String,
-      default: '',
+      type: String | null,
+      default: null,
     },
     download: {
       type: String | Boolean,

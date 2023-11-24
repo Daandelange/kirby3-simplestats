@@ -89,14 +89,15 @@ class Stats extends SimpleStatsDb {
     }
 
     // Returns the timespan of all mixed tables in the db
-    public static function getDbTimeSpan(string $returnFormat = null) : array {
-        $monthyearTables = ['pagevisits','systems', 'engines', 'referers', 'devices'];
+    public static function getDbTimeSpan(string $returnFormat = null, string $pageUid = null) : array | null {
+        $monthyearTables = $pageUid ? ['pagevisits']:['pagevisits','systems', 'engines', 'referers', 'devices'];
         $queryStr = 'SELECT MIN(`monthyear`) as `start`, MAX(`monthyear`) as `end` FROM ( ';
         foreach($monthyearTables as $i => $my) {
-            $queryStr.= 'SELECT `monthyear` FROM `'.$my.'` '.(($i===(count($monthyearTables)-1))?') ':'UNION ALL ');
+            $queryStr.= 'SELECT `monthyear` FROM `'.$my.'` '.(($pageUid)?' WHERE `uid` = "'.$pageUid.'"':'').(($i===(count($monthyearTables)-1))?') ':'UNION ALL ');
         }
         $queryStr .= ' LIMIT 0, '.SIMPLESTATS_DUMMY_DB_LIMIT;
         $result = self::database()->query($queryStr);
+        
         if($result && $result->get(0, false)){
             $data = $result->get(0)->toArray();
             if(array_key_exists('start', $data) && array_key_exists('end', $data)) {
@@ -179,7 +180,7 @@ class Stats extends SimpleStatsDb {
         // Format period
         $timeSpan = static::constrainPeriodsToDbSpan($fromPeriod, $toPeriod);
 
-         // Array holding all possible periods
+        // Array holding all possible periods
         $selectedPeriods = array_combine(
             static::fillPeriod( $timeSpan['start'], $timeSpan['end'] ),
             static::fillPeriod( $timeSpan['start'], $timeSpan['end'], 'Y-m-d' ),
@@ -469,14 +470,24 @@ class Stats extends SimpleStatsDb {
         ];
     }
 
-    // Constrains 2 dates to the given dates.
-    public static function constrainPeriodsToDbSpan(int $fromPeriod = null, int $toPeriod = null) : array {
-        $maxTimespan = $timeSpan = static::getDbTimeSpan();
+    // Constrains 2 dates to the available dates in the db, if needed for a specific page.
+    public static function constrainPeriodsToDbSpan(int $fromPeriod = null, int $toPeriod = null, string $pageUid=null) : array | null {
+        $maxTimespan = $timeSpan = static::getDbTimeSpan(null, $pageUid);
+        if(!$maxTimespan){
+            return null;
+        }
+        $timeSpan = $maxTimespan;
         if($fromPeriod && $fromPeriod > $maxTimespan['start']){
             $timeSpan['start'] = $fromPeriod;
         }
+        else {
+            $timeSpan['start'] = $maxTimespan['start'];
+        }
         if($toPeriod && $toPeriod < $maxTimespan['end']){
             $timeSpan['end'] = $toPeriod;
+        }
+        else {
+            $timeSpan['end'] = $maxTimespan['end'];
         }
         return $timeSpan;
     }
@@ -710,7 +721,7 @@ class Stats extends SimpleStatsDb {
                     'data'  => array_values($visitsOverTimeData), // ['labels'=>[], 'datasets'=>['label'=>'Total Visits', 'data'=>[]]]
                 ],
             ],
-            'pagevisitsovertimedata'=> array_values($pageVisitsOverTimeData), 
+            'pagevisitsovertimedata'=> array_values($pageVisitsOverTimeData),
 
             'globallanguagesdata'   => [$globalLanguagesData],
             'chartlanguageslabels'   => array_values($chartLanguagesLabels), // Pie chart labels
@@ -1127,9 +1138,9 @@ class Stats extends SimpleStatsDb {
     }
 
     // Get stats details for one page object
-    public static function onePageStats($page){
+    public static function onePageStats($page, int $fromPeriod = null, int $toPeriod = null){
         // Get ID from $page
-        if($page && $page instanceof \Kirby\Cms\Page) $page = $page->exists()?$page->uid():'';
+        if($page && $page instanceof \Kirby\Cms\Page) $page = $page->exists()?$page->uid():''; // todo: provide fallback (virtual pages don't exist?)
 
         // Ensure we got a string
         if( !is_string($page) || empty($page)){
@@ -1141,7 +1152,7 @@ class Stats extends SimpleStatsDb {
             'title'             => '[unknown] (404)',
             'uid'               => $page,
             'languagesOverTime' => [],
-            'visitsOverTime'    => [],
+            //'visitsOverTime'    => [],
             //'totalStats'        => [
             'totalHits'         => false,
             'averageHits'       => false,
@@ -1152,6 +1163,25 @@ class Stats extends SimpleStatsDb {
             'trackingPeriods'   => 0,
             //],
             //'languagesAreEnabled'=>false,
+
+            // Below are from ::pageStats()
+            //'pagestatsdata'         => $pageStatsData,
+            //'pagestatslabels'       => $pageStatsLabels,
+
+            'chartperiodlabels'     => [],//$chartPeriodLabels,
+            'chartlanguageslabels'  => kirby()->languages()->pluck('name'),
+            'visitsovertimedata'    => [
+                [
+                    'label' => 'Total Visits',
+                    'data'  => [],//array_values($visitsOverTimeData), // ['labels'=>[], 'datasets'=>['label'=>'Total Visits', 'data'=>[]]]
+                ],
+            ],
+//            'pagevisitsovertimedata'=> array_values($pageVisitsOverTimeData),
+//
+//            'globallanguagesdata'   => [$globalLanguagesData],
+//            'chartlanguageslabels'   => array_values($chartLanguagesLabels), // Pie chart labels
+//            'languagesovertimedata' => array_values($languagesOverTimeData),
+//            'languagesAreEnabled'   => (option('daandelange.simplestats.tracking.enableVisitLanguages') === true) && kirby()->multilang(),
         ];
 
         // Fetch kirbyPage object to get some more information
@@ -1168,20 +1198,37 @@ class Stats extends SimpleStatsDb {
             }
         }
 
+        // Grab timespan, if provided, or use whole
+        $nowPeriod = getPeriodFromTime();
+        // Format period
+        $timeSpan = static::constrainPeriodsToDbSpan($fromPeriod, $toPeriod, $page);
+        if(!$toPeriod) $timeSpan['end'] = $nowPeriod; // todo: Set to period today so untracked days are shown 0 by default.
+
+        // Array holding all possible periods
+        $selectedPeriods = [];
+        
+        // Global Where query part
+        $whereQuery = '';
+
+        if($timeSpan){
+            $selectedPeriods = array_combine(
+                static::fillPeriod( $timeSpan['start'], $timeSpan['end'] ),
+                static::fillPeriod( $timeSpan['start'], $timeSpan['end'], 'Y-m-d' ),
+            );
+            $whereQuery = ' AND `monthyear` BETWEEN '.$timeSpan['start'].' AND '.$timeSpan['end'];
+        }
+        
+
         // Query page visits over time, with languages
         {
             // Init data
             $ret['totalHits'] = 0;
             $ret['lastPeriodHits']= 0;
-                        $ret['visitsOverTime'][0]=[
-                'name' => 'Total Visits',
-                'data' => [], // holds pairs of [date,value]
-            ];
+
             $ret['firstVisited'] = 0;
             $ret['lastVisited'] = 0;
 
             // Prepare language-dependent data
-            //if(count($kirbyLangs)>0){}
             $langQuery = '';
             foreach($kirbyLangs as $l => $name){
                 // For SQL query
@@ -1189,18 +1236,21 @@ class Stats extends SimpleStatsDb {
 
                 // Create keys for each language
                 $ret['languagesOverTime'][$l]=[
-                    'name' => $name,
-                    'data' => [], // holds pairs of [date,value]
-                ];
-                $ret['languageTotalHits'][$l]=[ // holds pairs of [label,value]
-                    $name, 0
+                    'label' => $name,
+                    'data' => array_fill_keys(array_keys($selectedPeriods), 0),// Populate all periods with empty values
                 ];
             }
 
-            $pageVisitsOverTime = self::database()->query('SELECT `uid`, `monthyear`, `hits` '.$langQuery.' FROM `pagevisits` WHERE `uid` = "'.$page.'" ORDER BY `monthyear` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
+            // Prepare totals hits per language
+            $ret['languageTotalHits'][0]=[
+                'label' => 'Page visits per language',
+                'data'  => array_fill_keys(kirby()->languages()->keys(), 0),
+            ];
+            
+
+            $pageVisitsOverTime = self::database()->query('SELECT `uid`, `monthyear`, `hits` '.$langQuery.' FROM `pagevisits` WHERE `uid` = "'.$page.'"'.$whereQuery.' ORDER BY `monthyear` ASC LIMIT 0,'.SIMPLESTATS_DUMMY_DB_LIMIT);
             if($pageVisitsOverTime){
                 // Loop periods
-                $nowPeriod = getPeriodFromTime();
                 $prevPeriod = null;
                 foreach($pageVisitsOverTime as $period){
                     // Compute total hits
@@ -1213,7 +1263,7 @@ class Stats extends SimpleStatsDb {
 
                     // Get time and date str
                     $periodTime = getTimeFromPeriod(intval($period->monthyear, 10));
-                    $periodDateStr = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $periodTime);
+                    //$periodDateStr = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $periodTime);
 
                     // Remember first and last dates
                     if($ret['firstVisited'] > $periodTime || $ret['firstVisited']==0) {
@@ -1223,47 +1273,26 @@ class Stats extends SimpleStatsDb {
                         $ret['lastVisited'] = $periodTime;
                     }
 
-                    // Add period to visitsOverTime
-                    $ret['visitsOverTime'][0]['data'][]=[$periodDateStr, $period->hits];
-
                     // Inject total per language
                     foreach( $kirbyLangs as $l => $n ){
-                        $ret['languagesOverTime'][$l]['data'][]=[$periodDateStr, $period->$l];
-                        $ret['languageTotalHits'][$l][1]+=$period->$l;
+                        // $ret['languagesOverTime'][$l]['data'][]=[$periodDateStr, $period->$l];
+                        // $ret['languagesOverTime'][$l]['data'][$periodDateStr]=$period->$l;
+                        $ret['languagesOverTime'][$l]['data'][intval($period->monthyear, 10)]+=intval($period->$l, 10);
+                        $ret['languageTotalHits'][0]['data'][$l]+=$period->$l;
                     }
-
-                    // Add missing periods from first date to now (happens when no data at all in a full period)
-                    $curPeriod = intval($period->monthyear, 10);
-                    if($prevPeriod!==null){
-                        $nextPrevPeriod = intval(incrementPeriod($prevPeriod), 10);
-                        if( $curPeriod > $nextPrevPeriod ){ // Is this step too big, holding multiple intermediate periods ?
-                            for($interperiod=$nextPrevPeriod; $interperiod < $curPeriod; $interperiod=incrementPeriod($interperiod) ){
-                                
-                                $periodTime = getTimeFromPeriod(intval($interperiod, 10));
-                                $periodDateStr = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $periodTime);
-                                foreach( $kirbyLangs as $l => $n ){
-                                    if( count(array_filter($ret['languagesOverTime'][$l]['data'], fn($p) => $p[0] == $periodDateStr))===0 ){ // double check if not existing
-                                        $ret['languagesOverTime'][$l]['data'][]=[$periodDateStr, 0];
-                                    }
-                                }
-                            
-                            }
-                        }
-                    }
-                    $prevPeriod = $curPeriod;// remember
                 }
-                
             }
 
+            $ret['chartperiodlabels'] = array_values($selectedPeriods);
+
             // Rename keys to nums so that the charts accept the data
-            foreach( $ret['languagesOverTime'] as $key => $data) {
-                $ret['languagesOverTime'][]=$data;
-                unset($ret['languagesOverTime'][$key]);
-            };
-            foreach( $ret['languageTotalHits'] as $key => $data) {
-                $ret['languageTotalHits'][]=$data;
-                unset($ret['languageTotalHits'][$key]);
-            };
+            $ret['languagesOverTime'] = array_values($ret['languagesOverTime']);
+            
+            // Rm data (period) keys
+            foreach( $ret['languagesOverTime'] as $l => $n ){
+                $ret['languagesOverTime'][$l]['data'] = array_values($ret['languagesOverTime'][$l]['data']);
+            }
+            $ret['languageTotalHits'][0]['data'] = array_values($ret['languageTotalHits'][0]['data']);
 
             // Compute averages
             $ret['trackingPeriods'] = getNumPeriodsFromDates($ret['firstVisited'], time());
@@ -1275,6 +1304,7 @@ class Stats extends SimpleStatsDb {
             if($ret['firstVisited']>0) $ret['firstVisited'] = date(SIMPLESTATS_TIMELINE_DATE_FORMAT, $ret['firstVisited']);
 
         }
+
         return $ret;
     }
 }
