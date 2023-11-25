@@ -101,6 +101,12 @@ class Stats extends SimpleStatsDb {
         if($result && $result->get(0, false)){
             $data = $result->get(0)->toArray();
             if(array_key_exists('start', $data) && array_key_exists('end', $data)) {
+                // No results ? (empty db) --> Use today
+                if(!$data['start'] || !$data['end']){
+                    $data['start'] = $data['end'] = getPeriodFromTime();
+                    return $data;
+                }
+
                 // Parse to int and date
                 foreach($data as &$d){
                     $d = intval($d, 10);
