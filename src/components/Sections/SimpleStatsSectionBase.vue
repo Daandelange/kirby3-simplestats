@@ -3,7 +3,7 @@
 <script>
 
 export default {
-  extends: 'k-pages-section',
+  extends: 'k-pages-section', // Re-use loading mechanisms
   data() {
     return {
       isLoading: true,
@@ -42,6 +42,7 @@ export default {
     },
   },
   methods: {
+    // Getter
     dateQueryString(startwith='?'){
       if(!this.dateFrom || !this.dateTo) return '';
       return ''+startwith+'dateFrom='+this.dateFrom+'&dateTo='+this.dateTo;

@@ -134,7 +134,8 @@ export default {
 */
   computed: {
     languagesAreEnabled(){
-      return this.languagesOverTime && this.languagesOverTime.length > 0;
+      //return this.languagesOverTime && this.languagesOverTime.length > 0;
+      return this.chartLanguagesLabels && this.chartLanguagesLabels.length > 0;
     },
     sectionSize(){
       if(this.size=='small'||this.size=='compact') return 'small';

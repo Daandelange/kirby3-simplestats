@@ -1175,7 +1175,7 @@ class Stats extends SimpleStatsDb {
             //'pagestatslabels'       => $pageStatsLabels,
 
             'chartperiodlabels'     => [],//$chartPeriodLabels,
-            'chartlanguageslabels'  => kirby()->languages()->pluck('name'),
+            'chartlanguageslabels'  => [],
             'visitsovertimedata'    => [
                 [
                     'label' => 'Total Visits',
@@ -1197,12 +1197,18 @@ class Stats extends SimpleStatsDb {
 
         // init languages stuff
         $kirbyLangs = [];
-        if( kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
+        if( option('daandelange.simplestats.tracking.enableVisitLanguages') === true ){
             //$ret['languagesAreEnabled'] = true;
-            foreach( kirby()->languages() as $l ){
-                $kirbyLangs[$l->code()] = $l->name();
+            if(kirby()->multilang()){
+                foreach( kirby()->languages() as $l ){
+                    $kirbyLangs[$l->code()] = $l->name();
+                }
+            }
+            else {
+                $kirbyLangs['en'] = 'Default Language';
             }
         }
+        $ret['chartlanguageslabels'] = array_values($kirbyLangs);
 
         // Grab timespan, if provided, or use whole
         $nowPeriod = getPeriodFromTime();
@@ -1250,7 +1256,7 @@ class Stats extends SimpleStatsDb {
             // Prepare totals hits per language
             $ret['languageTotalHits'][0]=[
                 'label' => 'Page visits per language',
-                'data'  => array_fill_keys(kirby()->languages()->keys(), 0),
+                'data'  => array_fill_keys(array_keys($kirbyLangs), 0),
             ];
             
 

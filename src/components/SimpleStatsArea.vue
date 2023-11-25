@@ -131,7 +131,7 @@ export default {
   },
   watch: {
     initialtab(newValue){
-      console.log('initialTab.watch', newValue);
+      //console.log('initialTab.watch', newValue);
       if(newValue) this.tab = newValue;
     }
   },
