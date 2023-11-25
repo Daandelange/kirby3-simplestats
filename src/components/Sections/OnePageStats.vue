@@ -18,36 +18,19 @@
 
 <!--     <k-grid gutter="large"> -->
 
-      <div v-if="languagesAreEnabled && showTimeline" class="detailcolumn visitsovertime">
+      <div v-if="showTimeline" class="detailcolumn visitsovertime">
         <k-headline size="medium">{{ $t('simplestats.visits.visitsovertime') }}</k-headline>
         <area-chart
-          :chart-data="languagesOverTime"
+          :chart-data="languagesAreEnabled?languagesOverTime:visitsOverTimeData"
           :chart-labels="chartPeriodLabels"
-          download="PageLanguagesOverTime.png"
+          :download="languagesAreEnabled?'PageLanguagesOverTime.png':'PageVisitsOverTime.png'"
           :x-time-axis="true"
           :y-visits-axis="true"
           :height="(this.sectionSize=='small')?240:(this.sectionSize=='large')?280:(this.sectionSize=='tiny')?120:260"
-          :stacked="true"
+          :stacked="languagesAreEnabled"
           :chart-options="chartOptions"
           :auto-colorize="true"
           :show-legend="languagesAreEnabled"
-        ></area-chart>
-        <br/>
-      </div>
-
-      <div v-else-if="showTimeline" class="detailcolumn visitsovertime">
-        <k-headline size="medium">{{ $t('simplestats.visits.visitsovertime') }}</k-headline>
-        <area-chart
-          type="Bar"
-          :chart-data="visitsOverTimeData"
-          :chart-options="chartOptions"
-          :chart-labels="chartPeriodLabels"
-          download="PageVisitsOverTime.png"
-          :height="(this.sectionSize=='small')?240:(this.sectionSize=='large')?280:(this.sectionSize=='tiny')?120:260"
-          :x-time-axis="true"
-          :y-visits-axis="true"
-          :fill="true"
-          :auto-colorize="true"
         ></area-chart>
         <br/>
       </div>
@@ -64,6 +47,7 @@
           :auto-colorize="true"
           :height="(this.sectionSize=='small')?185:(this.sectionSize=='large')?225:(this.sectionSize=='tiny')?80:205"
           :fill="true"
+          :show-legend="languagesAreEnabled"
         />
       </div>
 
