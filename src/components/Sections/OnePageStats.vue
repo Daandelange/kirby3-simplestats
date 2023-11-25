@@ -21,9 +21,9 @@
       <div v-if="showTimeline" class="detailcolumn visitsovertime">
         <k-headline size="medium">{{ $t('simplestats.visits.visitsovertime') }}</k-headline>
         <area-chart
-          :chart-data="languagesAreEnabled?languagesOverTime:visitsOverTimeData"
+          :chart-data="languagesOverTime"
           :chart-labels="chartPeriodLabels"
-          :download="languagesAreEnabled?'PageLanguagesOverTime.png':'PageVisitsOverTime.png'"
+          download="PageVisitsOverTime.png"
           :x-time-axis="true"
           :y-visits-axis="true"
           :height="(this.sectionSize=='small')?240:(this.sectionSize=='large')?280:(this.sectionSize=='tiny')?120:260"
@@ -118,8 +118,7 @@ export default {
 */
   computed: {
     languagesAreEnabled(){
-      //return this.languagesOverTime && this.languagesOverTime.length > 0;
-      return this.chartLanguagesLabels && this.chartLanguagesLabels.length > 0;
+      return this.chartLanguagesLabels && this.chartLanguagesLabels.length > 1;
     },
     sectionSize(){
       if(this.size=='small'||this.size=='compact') return 'small';
