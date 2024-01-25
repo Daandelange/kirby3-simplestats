@@ -253,9 +253,10 @@ return [
             'action'  => function () {
                 if( $this->user()->hasSimpleStatsPanelAccess() ){
                     try {
+                        $versionArray = explode('.', kirby()->version());
                         $reqs = [
                             'php' => kirby()->system()->php(),
-                            'kirby' => (intval(str_replace('.','',substr(kirby()->version(), 0, 3) ), 10) >= 35),
+                            'kirby' => $versionArray[0] === '3' && (int)$versionArray[1] >= 5,
                             'sqlite3' => (class_exists('SQLite3') && in_array('pdo_sqlite', get_loaded_extensions()) && in_array('sqlite3', get_loaded_extensions())),
                         ];
                         // Check requirements
