@@ -2,7 +2,7 @@
   <k-panel-inside class="k-simplestats-view">
     <!-- Disclaimer -->
     <k-simplestats-disclaimer
-      :visible="!isLoading && !dismissDisclaimer"
+      :visible="!dismissDisclaimer"
     />
 
     <!-- Header -->
@@ -81,13 +81,17 @@ export default {
     initialViewPeriods: {
       type: Number,
       default: -1
+    },
+    dismissDisclaimer: {
+      type: Boolean,
+      default: false
     }
   },
 
   data() {
     return {
-      dismissDisclaimer : false,
-      isLoading : true
+      //dismissDisclaimer : false,
+      //isLoading : false
     };
   },
 
