@@ -51,7 +51,7 @@ return [
         };
 
         // API Routes
-        return [
+        $apiRoutes = [
             [
                 'pattern' => 'simplestats/pagestats',
                 'method'  => 'GET',
@@ -107,14 +107,18 @@ return [
                     ];
                 })
             ],
+        ];
 
-            [
+        // Extra "admin" permissions for the "info" tab
+        $user = $kirby->user();
+        if($user && $user->hasSimpleStatsPanelAccess(true)){
+            $apiRoutes[] = [
                 'pattern' => 'simplestats/database/info',
                 'method'  => 'GET',
                 'action'  => $wrapAction(fn(): array => Stats::getDatabaseInfo())
-            ],
+            ];
 
-            [
+            $apiRoutes[] = [
                 'pattern' => 'simplestats/database/requirements',
                 'method'  => 'GET',
                 'action'  => $wrapAction(function (): array {
@@ -135,9 +139,9 @@ return [
                         'dbRequirementsPassed' => $reqs['php'] && $reqs['kirby'] && $reqs['sqlite3'],
                     ];
                 })
-            ],
+            ];
 
-            [
+            $apiRoutes[] = [
                 'pattern' => 'simplestats/database/upgrade',
                 'method'  => 'GET',
                 'action'  => $wrapAction(function (): array {
@@ -147,9 +151,9 @@ return [
                         'message' => ($result ? 'Success! ' : 'Error! ') . I18n::translate('simplestats.info.database.upgrade.result'),
                     ];
                 }, true), // admin only
-            ],
+            ];
 
-            [
+            $apiRoutes[] = [
                 'pattern' => 'simplestats/configinfo',
                 'method'  => 'GET',
                 'action'  => $wrapAction(function (): array {
@@ -182,9 +186,9 @@ return [
                         ]
                     ];
                 })
-            ],
+            ];
 
-            [
+            $apiRoutes[] = [
                 'pattern' => 'simplestats/testers/user-agent',
                 'method'  => 'GET',
                 'action'  => $wrapAction(function () use ($getQueryParam): array {
@@ -202,9 +206,9 @@ return [
 
                     return ['userAgent'  => $userAgent, 'deviceInfo' => $deviceInfo];
                 })
-            ],
+            ];
 
-            [
+            $apiRoutes[] = [
                 'pattern' => 'simplestats/testers/referer',
                 'method'  => 'GET',
                 'action'  => $wrapAction(function () use ($getQueryParam): array {
@@ -217,9 +221,9 @@ return [
 
                     return $refererInfo;
                 })
-            ],
+            ];
 
-            [
+            $apiRoutes[] = [
                 'pattern' => 'simplestats/testers/generatestats',
                 'method'  => 'GET',
                 'action'  => $wrapAction(function () use ($getQueryParam, $parseDateRange): array {
@@ -236,7 +240,9 @@ return [
 
                     return StatsGenerator::GenerateVisits($from, $to, $mode);
                 }, true) // admin only
-            ],
-        ];
+            ];
+        }
+
+        return $apiRoutes;
     }
 ];

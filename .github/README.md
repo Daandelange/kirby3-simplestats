@@ -164,11 +164,30 @@ You might also find some more detailed information in the comments of `options.p
 | **PANEL**                       |                                       |                 |                                                                            |                                                                                   |
 | `panel.dismissDisclaimer`       | Bool                                  | false           | Dismisses the panel disclaimer message.                                    |                                                                                   |
 | `panel.enable`                  | Bool                                  | true            | Enable/Disable viewing stats in the panel.                                 |                                                                                   |
-| `panel.authorizedRoles`         | Array                                 | `['admin']`     | User roles that are allowed to view statistics from the panel.             |                                                                                   |
 | `panel.breadcrumbLabel`         | String                                | `'SimpleStats'` | Breadcrumb shown in the panel.                                             |                                                                                   |
 | `panel.hideBots`                | Bool                                  | false           | To hide bot information from the devices tab.                              |                                                                                   |
 | `panel.defaultTimeSpan`         | Integer                               | -1              | To set the range (in periods) for the default panel view.                  | Use `-1` for viewing the whole available range. Use `4` for 4 weeks or months.    |
 
+#### User permissions
+
+|-----------------------------------|---------|--------------------------------------|
+| Permission                        | Default | Description                          |
+|-----------------------------------|---------|--------------------------------------|
+| daandelange.simplestats.access    | true    | User can view stats from the panel.  |
+| daandelange.simplestats.configure | false   | User can view the "information" tab. |
+|-----------------------------------|---------|--------------------------------------|
+
+Example user role configuration:
+
+```yml
+# site/blueprints/users/admin.yml
+title: Admin
+
+permissions:
+  daandelange.simplestats:
+    access: true
+    configure: true
+```
 
 ### Integrating to your page
 

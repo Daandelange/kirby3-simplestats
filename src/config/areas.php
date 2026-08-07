@@ -17,6 +17,11 @@ return [
             'information'    => 'map',
         ];
 
+        // Advanced admin tab
+        if(!$user->hasSimpleStatsPanelAccess(true)){
+            unset($tabs['information']);
+        }
+
         foreach ($tabs as $name => $icon) {
             $tabs[$name] = [
                 'name'  => $name,
@@ -52,7 +57,7 @@ return [
                             'timeframes'           => $timeFrames,
                             'time-period'          => $timePeriod,
                             'initial-view-periods' => option('daandelange.simplestats.panel.defaultTimeSpan', -1),
-                            'dismiss-disclaimer'    => option('daandelange.simplestats.panel.dismissDisclaimer', false),
+                            'dismiss-disclaimer'   => option('daandelange.simplestats.panel.dismissDisclaimer', false),
                         ],
                     ];
                 }
