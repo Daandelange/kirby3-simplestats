@@ -94,7 +94,7 @@ export default {
         const count = Math.max(siblings.length, 1);
 
         if (depth === 0) hue = (360 / count) * pos;
-        else lightness += (50 / count) * pos;
+        else lightness += ((90-lightness) / count) * pos;
       });
 
       return `hsl(${Math.round(hue)}, ${saturation}%, ${Math.round(lightness)}%)`;
