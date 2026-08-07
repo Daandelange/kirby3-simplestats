@@ -185,5 +185,9 @@
 
   "simplestats.disclaimer.title": "Disclaimer - Collecting Data",
   "simplestats.disclaimer.text": "You are actively collecting stats: you have to know what you are doing, and be responsible.<br>\nYou should know your legal obligations regarding personal data storage of your visitors, and their rights.<br>\nSimpleStats is free to use, and [according to its license] it doesn't come with any guarantees or legal advice whatsoever.<br>\nBy using SimpleStats, you agree to the above statements.",
-  "simplestats.disclaimer.dismiss": "To dismiss this message: refer to the readme."
+  "simplestats.disclaimer.dismiss": "To dismiss this message: refer to the readme.",
+
+  "simplestats.autherror.user": "You are not authorised to view statistics.",
+  "simplestats.autherror.admin": "You are not authorised to perform this action."
+
 }
