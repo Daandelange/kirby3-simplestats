@@ -30,7 +30,7 @@
     <!-- Empty state -->
     <k-empty
       v-else
-      :icon="isLoading?'loader':'cancel-small'"
+      :icon="isLoading?'loader':'chart'"
       layout="cards"
       :text="emptyText"
       :style="{ height: emptyHeight }"
