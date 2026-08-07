@@ -34,6 +34,8 @@ Chart.register(
   ArcElement
 );
 
+import { usePanel } from "kirbyuse";
+
 export default {
   props: {
     autoColorize: Boolean,
@@ -78,7 +80,9 @@ export default {
 
   methods: {
     generateDatasetColor(dataset, uidTree, index) {
-      let hue = 0, lightness = 40, saturation = this.autoGreyize ? 0 : 30;
+      const panel = usePanel();
+      const isDark = (panel.theme.current=="dark");
+      let hue = 0, lightness = isDark ? 40 : 60, saturation = this.autoGreyize ? 0 : 30;
       const parts = dataset.ss_uid?.split('/') || [index];
 
       parts.forEach((_, depth) => {
@@ -99,8 +103,12 @@ export default {
     generatePieColors(labels) {
       const count = Math.max(labels.length, 1);
 
+      const panel = usePanel();
+      const isDark = (panel.theme.current=="dark");
+      const lightness = isDark ? 40 : 60;
+
       return labels.map((_, i) => this.autoColorize
-        ? `hsl(${Math.round((360 / count) * i)}, 30%, 40%)`
+        ? `hsl(${Math.round((360 / count) * i)}, 30%, ${lightness}%)`
         : `hsl(0, 0%, ${40 + (40 / count) * i}%)`
       );
     },
