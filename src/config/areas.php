@@ -13,7 +13,7 @@ return [
         $tabs = [
             'pagevisits'     => 'layers',
             'visitordevices' => 'users',
-            'referers'       => 'chart',
+            'referers'       => 'globe',
             'information'    => 'map',
         ];
 
