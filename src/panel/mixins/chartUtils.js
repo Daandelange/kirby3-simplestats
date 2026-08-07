@@ -35,6 +35,7 @@ Chart.register(
 );
 
 import { usePanel } from "kirbyuse";
+import { useLibrary } from "kirbyuse";
 
 export default {
   props: {
@@ -191,6 +192,16 @@ export default {
           title: {
             display: false,
             text: this.xTitle ?? this.$t('simplestats.chart.time')
+          }
+        };
+        options.plugins.tooltip = {
+          callbacks: {
+            // Sets the tooltip title
+            title: function(context){
+              let date = new Date(context[0].parsed.x);
+              const library = useLibrary();
+              return library.dayjs(date).format('ddd D MMM YYYY');
+            }
           }
         };
       }

@@ -169,7 +169,7 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
         //return getTimeFromPeriod(getPeriodFromTime($time)+$steps));
     }
     public function getPanelPeriodFormat() : string{
-        return 'yyyy-W (MMM)'; // 2021-51 (Dec)
+        return 'D MMM YYYY'; // 2021-51 (Dec)
     }
 }
 
@@ -202,6 +202,6 @@ class SimpleStatsTimeFrameUtilityDaily extends SimpleStatsTimeFrameUtility {
         return strtotime(($steps<0?'-':'+').$steps.' day', $time);
     }
     public function getPanelPeriodFormat() : string{
-        return 'yyyy-z (MMM)'; // 2021-363 (Dec)
+        return 'D MMM YYYY'; // 2021-363 (Dec)
     }
 }

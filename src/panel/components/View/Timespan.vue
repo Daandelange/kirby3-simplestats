@@ -41,6 +41,8 @@
 </template>
 
 <script>
+import { useLibrary } from "kirbyuse";
+
 export default {
   props: {
     dateChoices: {
@@ -50,6 +52,10 @@ export default {
     timePeriod: {
       type: String,
       default: 'Monthly'
+    },
+    timeFormat: {
+      type: String,
+      default: 'MMM YYYY'
     },
     initialViewPeriods: {
       type: Number,
@@ -88,8 +94,9 @@ export default {
   methods: {
     formatDateLabel(date) {
       if (!date) return 'Select date';
-      const format = this.timePeriod === 'Monthly' ? 'MMM YYYY' : 'MMM YYYY'; // use timeFrameUtility?
-      return this.$library.dayjs(date).format(format);
+      const format = this.timeFormat;//this.timePeriod === 'Monthly' ? 'MMM YYYY' : 'MMM YYYY'; // use timeFrameUtility?
+      const library = useLibrary();
+      return library.dayjs(date).format(format);
     },
 
     mapOptions(from, to, type) {

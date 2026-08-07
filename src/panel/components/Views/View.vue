@@ -14,6 +14,7 @@
           ref="timespan"
           :dateChoices="timeframes"
           :time-period="timePeriod"
+          :time-format="timeFormat"
           :initial-view-periods="initialViewPeriods"
         />
       </template>
@@ -73,6 +74,10 @@ export default {
     timePeriod: {
       type: String,
       default: "Monthly"
+    },
+    timeFormat: {
+      type: String,
+      default: "MMM YYYY"
     },
     timeframes: {
       type: Array,
