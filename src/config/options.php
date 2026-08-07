@@ -47,7 +47,7 @@ return [
         // -----------------------------
         'database'         => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
         'timeFrameUtility' => new SimpleStatsTimeFrameUtilityMonthly(),
-        // Options: 'weekly', 'monthly', or any SimpleStatsTimeFrameUtility instance
+        // Options: 'daily', weekly', 'monthly', or any SimpleStatsTimeFrameUtility instance
         // WARNING: Changing this requires creating a new database
 
         // -----------------------------

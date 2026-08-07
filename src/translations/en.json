@@ -123,6 +123,9 @@
   "simplestats.info.testers.referer.field.medium": "Type",
   "simplestats.info.testers.referer.field.url": "Detected url",
   "simplestats.info.testers.referer.error": "Invalid referer!",
+  "simplestats.info.testers.tfutility.label": "TimeframeUtility Tester",
+  "simplestats.info.testers.tfutility.button": "Test Range",
+  "simplestats.info.testers.tfutility.date.error": "Invalid date range!",
   "simplestats.info.testers.generator.label": "Stats Generator",
   "simplestats.info.testers.generator.mode": "Generator mode",
   "simplestats.info.testers.generator.mode.all": "Static: all pages",
@@ -150,6 +153,9 @@
   "simplestats.chart.nodatatimeframe": "There is no data for the selected time range.",
 
 
+  "simplestats.timeframe.daily.name": "Daily",
+  "simplestats.timeframe.daily.singular": "day",
+  "simplestats.timeframe.daily.plural": "days",
   "simplestats.timeframe.week.name": "Weekly",
   "simplestats.timeframe.week.singular": "week",
   "simplestats.timeframe.week.plural": "weeks",

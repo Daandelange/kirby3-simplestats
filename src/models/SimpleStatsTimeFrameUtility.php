@@ -84,6 +84,9 @@ function getTimeFrameUtility() : SimpleStatsTimeFrameUtility {
             elseif( $utilityOption == 'weekly' ){
                 return $utility = new SimpleStatsTimeFrameUtilityWeekly();
             }
+            elseif( $utilityOption == 'daily' ){
+                return $utility = new SimpleStatsTimeFrameUtilityDaily();
+            }
             // Unrecognized string
             else {
                 $utilityOption = null;
@@ -166,7 +169,39 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
         //return getTimeFromPeriod(getPeriodFromTime($time)+$steps));
     }
     public function getPanelPeriodFormat() : string{
-        //return 'dd MMM yyyy'; // 26 Dec 2021
-        return 'yyyy-w (MMM)'; // 2021-51 (Dec)
+        return 'yyyy-W (MMM)'; // 2021-51 (Dec)
+    }
+}
+
+// Daily timespan handler
+class SimpleStatsTimeFrameUtilityDaily extends SimpleStatsTimeFrameUtility {
+    public function getPeriodName(bool $plural=false) : string {
+        return $plural?t('simplestats.timeframe.day.plural', 'days'):t('simplestats.timeframe.day.singular', 'day');
+    }
+    public function getPeriodAdjective() : string {
+        return t('simplestats.timeframe.day.name','Daily');
+    }
+    public function getTimeFromPeriod(int $period) : int {
+        $periodStr = ''.$period;
+        $year = substr($periodStr, 0,4);
+        $days = substr($periodStr, 4, strlen($periodStr)-4);
+        
+        $time = false;
+        if($days >=0 && $year >= 1000){
+            $time = strtotime($year.'-01-01 +'.$days.'days');
+            return $time?$time:0;
+        }
+        return 0; // dangerous !
+    }
+
+    public function getPeriodFromTime( int $time = -1 ) : int {
+        if($time < 0) $time = time();
+        return intval(date('Yz', $time ), 10);
+    }
+    public function incrementTime($time, $steps=1) : int {
+        return strtotime(($steps<0?'-':'+').$steps.' day', $time);
+    }
+    public function getPanelPeriodFormat() : string{
+        return 'yyyy-z (MMM)'; // 2021-363 (Dec)
     }
 }

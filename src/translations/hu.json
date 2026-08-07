@@ -123,6 +123,9 @@
   "simplestats.info.testers.referer.field.medium": "Típus",
   "simplestats.info.testers.referer.field.url": "Azonosított URL",
   "simplestats.info.testers.referer.error": "Invalid referer!",
+  "simplestats.info.testers.tfutility.label": "TimeframeUtility Tester",
+  "simplestats.info.testers.tfutility.button": "Test Range",
+  "simplestats.info.testers.tfutility.date.error": "Invalid date range!",
   "simplestats.info.testers.generator.label": "Statisztika generátor",
   "simplestats.info.testers.generator.mode": "Generátor módja",
   "simplestats.info.testers.generator.mode.all": "Static: all pages",
@@ -149,7 +152,9 @@
   "simplestats.chart.devicehistory": "Látogatások eszközönként",
   "simplestats.chart.nodatatimeframe": "Nincs adat a kiválasztott időtartományban.",
 
-
+  "simplestats.timeframe.daily.name": "Napi”",
+  "simplestats.timeframe.daily.singular": "nap”",
+  "simplestats.timeframe.daily.plural": "napok",
   "simplestats.timeframe.week.name": "Heti",
   "simplestats.timeframe.week.singular": "hét",
   "simplestats.timeframe.week.plural": "hét",

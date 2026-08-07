@@ -236,6 +236,21 @@ return [
 
                     return StatsGenerator::GenerateVisits($from, $to, $mode);
                 }, true) // admin only
+            ],
+
+            [
+                'pattern' => 'simplestats/testers/timeframeutility',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function () use ($getQueryParam, $parseDateRange): array {
+                    $from = $parseDateRange($getQueryParam('from'));
+                    $to   = $parseDateRange($getQueryParam('to'));
+
+                    if (!$from || !$to) {
+                        return ['error' => I18n::translate('simplestats.info.testers.generator.date.error')];
+                    }
+
+                    return StatsGenerator::TestTimeframeUtility($from, $to);
+                }, true) // admin only
             ]
         ];
     }

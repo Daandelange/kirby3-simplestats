@@ -149,6 +149,43 @@
             <k-code v-if="generatorResponse?.data" language="json">{{ generatorResponse.data }}</k-code>
           </template>
         </k-section>
+
+        <k-section :label="$t('simplestats.info.testers.tfutility.label')">
+          <div class="k-table">
+            <table>
+              <tbody>
+                <tr>
+                  <th data-mobile="true">{{ $t('simplestats.info.testers.generator.date.from') }}</th>
+                  <td data-mobile="true" class="k-table-cell">
+                    <k-date-input v-model="tfutilityFrom" />
+                  </td>
+                </tr>
+                <tr>
+                  <th data-mobile="true">{{ $t('simplestats.info.testers.generator.date.to') }}</th>
+                  <td data-mobile="true" class="k-table-cell">
+                    <k-date-input v-model="tfutilityTo" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <br />
+          <k-bar>
+            <k-button
+              variant="filled"
+              :icon="isTesting ? 'loader' : null"
+              :text="$t('simplestats.info.testers.tfutility.button')"
+              @click="testTimeframeUtility"
+            />
+          </k-bar>
+
+          <template v-if="tfutilityResponse?.error || tfutilityResponse?.data">
+            <br />
+            <k-box v-if="tfutilityResponse?.error" theme="negative" :text="tfutilityResponse.error" />
+            <k-code v-if="tfutilityResponse?.data" language="json">{{ tfutilityResponse.data }}</k-code>
+          </template>
+        </k-section>
       </k-column>
     </k-grid>
   </div>
@@ -159,7 +196,11 @@ export default {
   data() {
     const to   = new Date();
     const from = new Date();
-    from.setDate(to.getDate() - 30);
+    const tfFrom = new Date();
+    const tfTo = new Date();
+    from.setDate(to.getDate() - 30);    // today - 1m
+    tfFrom.setDate(to.getDate() - 365); // today - 1y
+    tfTo.setDate(to.getDate() + 365*5); // today + 5y
 
     return {
       currentDevice: null,
@@ -176,7 +217,12 @@ export default {
       generatorFrom: from.toISOString(),
       generatorTo: to.toISOString(),
       generatorConsent: false,
-      generatorResponse: null
+      generatorResponse: null,
+
+      isTesting: false,
+      tfutilityFrom: tfFrom.toISOString(),
+      tfutilityTo: tfTo.toISOString(),
+      tfutilityResponse: null
     };
   },
 
@@ -262,6 +308,21 @@ export default {
         );
       } finally {
         this.isGenerating = false;
+      }
+    },
+    async testTimeframeUtility() {
+      if (this.isTesting) return;
+      this.isTesting = true;
+
+      const fromTimestamp = Math.floor(new Date(this.tfutilityFrom).getTime() / 1000);
+      const toTimestamp = Math.floor(new Date(this.tfutilityTo).getTime() / 1000);
+
+      try {
+        this.tfutilityResponse = await this.$api.get(
+          `simplestats/testers/timeframeutility?from=${fromTimestamp}&to=${toTimestamp}`
+        );
+      } finally {
+        this.isTesting = false;
       }
     }
   }
