@@ -121,12 +121,6 @@ return [
         // false: Show disclaimer to remind users about privacy/logging
 
         // -----------------------------
-        // Access Control
-        // -----------------------------
-        'authorizedRoles' => ['admin'],
-        // Only users with these roles (by ID) can view panel statistics
-
-        // -----------------------------
         // Panel Display Options
         // -----------------------------
         'breadcrumbLabel' => 'SimpleStats',
