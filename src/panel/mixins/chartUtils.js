@@ -82,7 +82,7 @@ export default {
   methods: {
     generateDatasetColor(dataset, uidTree, index) {
       const panel = usePanel();
-      const isDark = (panel.theme.current=="dark");
+      const isDark = (panel.theme?.current=="dark"); // Note: k4 has no panel.theme !
       let hue = 0, lightness = isDark ? 40 : 60, saturation = this.autoGreyize ? 0 : 30;
       const parts = dataset.ss_uid?.split('/') || [index];
 
@@ -105,7 +105,7 @@ export default {
       const count = Math.max(labels.length, 1);
 
       const panel = usePanel();
-      const isDark = (panel.theme.current=="dark");
+      const isDark = (panel.theme?.current=="dark"); // Note: k4 has no panel.theme !
       const lightness = isDark ? 40 : 60;
 
       return labels.map((_, i) => this.autoColorize
