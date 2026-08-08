@@ -214,6 +214,9 @@ export default {
           title: {
             display: true,
             text: this.yTitle ?? this.$t('simplestats.chart.visits')
+          },
+          ticks: {
+            stepSize: 1,
           }
         };
       }

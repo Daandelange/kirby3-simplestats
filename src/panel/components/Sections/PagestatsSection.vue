@@ -34,7 +34,7 @@
       <k-column v-if="showTimeline && !isLoading" width="1/1">
         <k-simplestats-chart
           type="Line"
-          download="PageVisitsOverTime.png"
+          :download="niceDownloadName('PageVisitsOverTime')"
           :label="$t('simplestats.visits.visitsovertime')"
           :chart-data="languagesOverTime"
           :chart-labels="chartPeriodLabels"
@@ -57,7 +57,7 @@
           :fill="true"
           :show-legend="languagesAreEnabled"
           :height="chartHeight('languages')"
-          download="PageGlobalLanguageVisits.png"
+          :download="niceDownloadName('GlobalLanguageVisits')"
           :label="$t('simplestats.visits.globallanguages')"
         />
       </k-column>
@@ -83,7 +83,8 @@ export default {
       totalHits: 0,
       averageHits: 0,
       timespanUnitName: '[unknown]',
-      trackingPeriods: 0
+      trackingPeriods: 0,
+      uid: null,
     };
   },
 
@@ -118,6 +119,7 @@ export default {
         showTimeline: response.showTimeline,
         showLanguages: response.showLanguages,
         size: response.size,
+        uid: response.uid,
 
         statsdata: stats,
         languagesOverTime: stats.languagesOverTime,
@@ -142,6 +144,15 @@ export default {
       };
 
       return heights[type][this.normalizedSize] ?? heights[type].medium;
+    },
+    niceDownloadName(statsName){
+      if(this.uid?.length){
+        let uid = String(this.uid);
+        uid.replace('/', '_');
+        return "Page_" + uid + "_" + statsName + ".png";
+      }
+
+      return "Site_" + statsName + ".png";
     }
   }
 };

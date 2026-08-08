@@ -104,6 +104,7 @@ return [
                         'showTimeline'  => true,
                         'showLanguages' => true,
                         'size'          => 'huge',
+                        'uid'           => $page->id()
                     ];
                 })
             ],
