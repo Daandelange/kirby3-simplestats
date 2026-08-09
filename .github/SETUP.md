@@ -13,7 +13,7 @@ Here are some instructions for getting started with SimpleStats.
 > [!NOTE]
 > **Retro-compatibility :**
 > - Kirby 3 : Use [0.6.6-beta](https://github.com/Daandelange/kirby-simplestats/tree/0.6.6-beta).
-> - Kirby 4 : Use latest version (unsupported) or [0.7.7-beta](https://github.com/Daandelange/kirby-simplestats/tree/0.7.7-beta).
+> - Kirby 4 : Use latest version (*unsupported*) or [0.7.7-beta](https://github.com/Daandelange/kirby-simplestats/tree/0.7.7-beta).
 
 
 ****
