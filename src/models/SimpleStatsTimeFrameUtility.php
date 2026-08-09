@@ -40,7 +40,7 @@ abstract class SimpleStatsTimeFrameUtility {
     // For displaying period-names in tables mostly (first seen, last seen, ...)
     // Date format is in date-fns format : https://date-fns.org/v2.17.0/docs/parse
     public function getPanelPeriodFormat() : string {
-        return 'dd MMM yyyy'; // 26 Dec 2021
+        return 'D MMM YYYY'; // 26 Dec 2021
     }
 
     // Parse version date
@@ -134,7 +134,7 @@ class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
         return mktime(0,0,0,$month,1,$year);
     }
     public function getPanelPeriodFormat() : string{
-        return 'MMM yyyy'; // Oct 2021
+        return 'MMM YYYY'; // Oct 2021
     }
 }
 

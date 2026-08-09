@@ -120,6 +120,7 @@ export default {
 
 .k-simplestats-view #chart-default-color-getter {
   display: none;
+  color: var(--color-text-dimmed); /* user overrideable chart color */
 }
 
 @container (max-width: 30rem) {
