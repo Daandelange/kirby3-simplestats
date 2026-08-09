@@ -37,7 +37,7 @@ For installation, configuration, integration, usage, and development see [SETUP.
 
 #### Powered by
 
-- [Chart.js](https://www.chartjs.org) for displaying interactive charts. [[*MIT*](https://github.com/chartjs/Chart.js/blob/master/LICENSE.md) *]
+- [Chart.js](https://www.chartjs.org) for displaying interactive charts. [[*MIT*](https://github.com/chartjs/Chart.js/blob/master/LICENSE.md)]
 - Package managers and packers : PNPM, Parcel, Composer, Yarn.
 - [Kirby CMS](https://getkirby.com) : Providing the plugin interface [[*licensed software*](https://getkirby.com/license)]
 - [WhichBrowser/Parser-PHP](https://github.com/WhichBrowser/Parser-PHP) : an accurate and performant php user-agent parser.  [*MIT*]
