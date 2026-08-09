@@ -1,6 +1,16 @@
 <?php
 
-return [
-     'en'    => require 'i18n/en.php',
-     'hu'    => require 'i18n/hu.php',
-];
+use Kirby\Filesystem\Dir;
+use Kirby\Filesystem\F;
+
+$translations = [];
+$root = dirname(__DIR__) . '/translations';
+
+foreach (Dir::files($root) as $file) {
+	$locale = basename($file, '.json');
+	if ($content = F::read($root . '/' . $file)) {
+		$translations[$locale] = json_decode($content, true);
+	}
+}
+
+return $translations;

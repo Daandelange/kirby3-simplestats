@@ -1,40 +1,18 @@
 {
-  "name": "SimpleStats",
-  "version": "0.7.7-beta",
-  "description": "Very minimal visitor analytics for your kirby website.",
-  "main": "index.js",
-  "author": "Daan de Lange",
+  "name": "kirby-simplestats",
   "license": "MIT",
-  "repository": "https://github.com/Daandelange/kirby-simplestats",
+  "type": "module",
   "scripts": {
-    "dev": "kirbyup src/index.js --watch",
-    "serve": "kirbyup src/index.js --serve",
-    "build": "kirbyup src/index.js"
-  },
-  "posthtml": {
-    "recognizeSelfClosing": true
+    "dev": "kirbyup serve src/panel/index.js",
+    "build": "kirbyup src/panel/index.js"
   },
   "devDependencies": {
-    "esbuild-wasm": "^0.17.19",
-    "kirbyup": "^2.2.1",
-    "kirbyuse": "^1.0.0",
-    "less": "^4.4.2"
+    "kirbyup": "^3.4.1",
+    "kirbyuse": "^1.3.1"
   },
   "dependencies": {
     "chart.js": "^3.9.1",
-    "chartjs-adapter-moment": "^1.0.1",
-    "lodash.merge": "^4.6.2",
-    "moment": "^2.30.1",
-    "noui-vue-fr": "0.0.8",
-    "nouislider": "^15.8.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
     "vue-chartjs": "^4.1.2"
-  },
-  "overrides": {
-    "esbuild": "npm:esbuild-wasm@latest"
-  },
-  "pnpm": {
-    "overrides": {
-      "esbuild": "npm:esbuild-wasm@latest"
-    }
   }
 }

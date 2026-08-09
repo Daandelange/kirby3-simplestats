@@ -2,75 +2,154 @@
 
 namespace daandelange\SimpleStats;
 
-// README :
-// - RGPD stuff : you remain responsible. Depending on how you configure SimpleStats, behaviour changes and so do you obligations. Know what you are doing.
-// - Logs : Be aware that some user data can get logged. Better turn logging off in production, or be sure to read and erase them.
-// - Maybe : Add .htaccess rules for .sqlite and .log/.txt files, prevent direct access.
-// - With simplestats as analytics engine, you are hosting sensitive user data. Read getkirby.com/guides/secure for optimal privacy recomendations.
+/*
+|--------------------------------------------------------------------------
+| SimpleStats Configuration
+|--------------------------------------------------------------------------
+| This file configures the SimpleStats analytics engine for Kirby CMS.
+|
+| README:
+| - RGPD compliance: You remain responsible for user privacy. Changing options can affect your obligations.
+| - Logs: Some user data may be logged. Consider disabling logging in production or regularly clearing logs.
+| - Security: Consider .htaccess rules for .sqlite and .log/.txt files to prevent direct access.
+| - Hosting sensitive data: Follow getkirby.com/guides/secure for privacy best practices.
+*/
 
-define('SIMPLESTATS_DUMMY_DB_LIMIT', 1000000); // Use great number if you have a big DB. Tip while db upgrading : use an incredibly huge number.
+define('SIMPLESTATS_DUMMY_DB_LIMIT', 1000000);
+// Use a large number for big databases. Tip: while upgrading DB, use a huge number for safety.
 
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logging Options
+    |--------------------------------------------------------------------------
+    | Controls how errors, warnings, and verbose info are logged.
+    */
     'log' => [
-        'tracking'  => true, // Enable tracking errors.
-        'warnings'  => true, // Functional warnings. Mostly db related.
-        'verbose'   => true, // For testing / dev, logs almost anything else.
-        'file'      => SimpleStatsDb::getLogsPath('simplestats_errors.txt'),
+        'tracking' => true,  // Track errors
+        'warnings' => true,  // Functional warnings (mostly DB-related)
+        'verbose'  => true,  // Dev/testing: logs almost anything else
+        'file'     => SimpleStatsDb::getLogsPath('simplestats_errors.txt'),
     ],
 
-    // Tracking options
+    /*
+    |--------------------------------------------------------------------------
+    | Tracking Options
+    |--------------------------------------------------------------------------
+    | Controls what data is collected, how it is anonymized, and how hits are counted.
+    | WARNING: Changing some options may require a new database file.
+    */
     'tracking' => [
-        'database'              => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
-        'timeFrameUtility'      => new SimpleStatsTimeFrameUtilityMonthly(), // 'weekly' or 'monthly' or any instance of SimpleStatsTimeFrameUtility. Do not change without creating a new db file !!
-        'enableReferers'        => true, // Enables tracking of referers. Gives an insigt of who links your website.
-        'enableDevices'         => true, // Enables tracking of minimal hardware configurations (device information)
-        'enableVisits'          => true, // Enables tracking of page visits
-        'enableVisitLanguages'  => true, // In multilanguage setups, separately count language hits with page counts
-        'salt'                  => 'CHANGEME', // Salt used to obfuscate unique user string.
-        'uniqueSeconds'         => 1*24*60*60, // Anonimised user data is deleted after this delay to become void
-        'imageStyle'            => 'position: absolute; right: 0; pointer-events: none; height: 1px; width: 1px; opacity: 0;', // The style applied to the tracking image. Only for tracking.method=OnImage on $page->simpleStatsImage();
-        'anonimizeIpBits'       => 1, // how many bits to strip from the end of the IP ? (for IP anonimization)
 
-        // Tracking blacklist
+        // -----------------------------
+        // Database & Time Frame
+        // -----------------------------
+        'database'         => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
+        'timeFrameUtility' => new SimpleStatsTimeFrameUtilityMonthly(),
+        // Options: 'daily', weekly', 'monthly', or any SimpleStatsTimeFrameUtility instance
+        // WARNING: Changing this requires creating a new database
+
+        // -----------------------------
+        // What to Track
+        // -----------------------------
+        'enableReferers'       => true,       // Track referring sites (who links your pages)
+        'enableDevices'        => true,       // Track minimal hardware/device info
+        'enableVisits'         => true,       // Track page visits
+        'enableVisitLanguages' => true,       // Track hits per language in multi-language setups
+
+        // -----------------------------
+        // Anonymization & Privacy
+        // -----------------------------
+        'salt'          => 'CHANGEME',        // Obfuscates unique user strings
+        'uniqueSeconds' => 1 * 24 * 60 * 60,  // Time before anonymized user data becomes void
+        'anonimizeIpBits'=> 1,                // Strip last n bits from IP address for privacy
+
+        // -----------------------------
+        // Tracking Image Styling (for OnImage method)
+        // -----------------------------
+        'imageStyle' => 'position: absolute; right: 0; pointer-events: none; height: 1px; width: 1px; opacity: 0;',
+
+        // -----------------------------
+        // Blacklist / Ignore Rules
+        // -----------------------------
         'ignore' => [
-            'roles'         => ['admin'],//kirby()->roles()->toArray( function($v){return $v->id();} ), // By default, don't track connected users. --- Cannot call kirby() here
-            'pages'         => [], // Array of plain text page ids.
-            'templates'     => ['error'], // Array of plain template names not to track (use lowercase) (checked against intendedTemplate and template)
-            'localhost'     => false, // Beta.#18 To ignore tracking (and any syncing?) from localhost. The database remains viewable trough the panel.
-            'bots'          => false, // Beta.#21 Globally disable tracking bots (when they are detected as so).
-            'botVisits'     => true, // Beta.#21 Enable if you'd like bots to increment page visit counters.
-            'botReferers'   => true, // Beta.#21 Enable if you'd like to record referrers send by bots.
-            //'botDevices'    => false, // Beta.#21 Enable if you'd like bot device information to be saved. Note: no option as bot device info is needed by the 2 options above. Could become an option to hide bots from panel stats.
+            'roles'       => ['admin'],       // Do not track users with these roles
+            'pages'       => [],              // Page IDs to ignore
+            'templates'   => ['error'],       // Template names to ignore (lowercase)
+            'localhost'   => false,           // Ignore localhost hits
+            'bots'        => false,           // Globally ignore bots
+            'botVisits'   => true,            // Count bot page visits
+            'botReferers' => true,            // Record referrers from bots
+            // 'botDevices' => false,         // Optionally hide bot device info
         ],
 
-        // Dont change onLoad yet !!! (keep to true)
-        //'onLoad'   => true, // Tracks when the page is served by the router (increases load time). If false, you need to add an image to all trackable templates (not yet available), you'll get better load performance, and "naturaly" exclude most bots.
-        // Set to false to track from an image, which can naturally prevent calls from most robots, and speed up page loads. (recommended: set to false)
-        // Track hits on page serve or using an image ?
-        'method' => SimpleStatsTrackingMode::OnLoad, // Important: SimpleStatsTrackingMode
+        // -----------------------------
+        // Tracking Method
+        // -----------------------------
+        'method' => SimpleStatsTrackingMode::OnLoad,
+        /*
+        Options:
+            - OnLoad: Track when page is served by router
+                + Pros: All visits tracked immediately
+                + Cons: Slower, includes bots
+            - OnImage: Track via invisible image
+                + Pros: Faster, excludes most bots
+                + Cons: Must include image in templates
+        */
+        // 'onLoad' => true, // Optional: keep true for now. Alternative: false for OnImage tracking
     ],
 
-    // Enable/Disable the admin panel and API
+    /*
+    |--------------------------------------------------------------------------
+    | Panel / API Options
+    |--------------------------------------------------------------------------
+    | Controls access to the SimpleStats admin panel and API,
+    | what users can see, and how initial views behave.
+    */
     'panel' => [
-        'enable'            => true, // Only disables the API (for now...) = makes the panel unusable.
+
+        // -----------------------------
+        // Panel Activation
+        // -----------------------------
+        'enable' => true,
+        // true: Panel and API are accessible
+        // false: Panel unusable, API disabled
+
         'dismissDisclaimer' => false,
-        'authorizedRoles'   => ['admin'], // Role (ids) that are allowed to view page statistics.
-        'breadcrumbLabel'   => 'SimpleStats',
-        'hideBots'          => false,           // To hide bots in the devices tab.
-        'defaultTimeSpan'   => -1, // number of periods (weeks/months) for the initial view. -1 for using the full database span.
-    ]
+        // true: Hide the disclaimer message in the panel
+        // false: Show disclaimer to remind users about privacy/logging
 
+        // -----------------------------
+        // Panel Display Options
+        // -----------------------------
+        'breadcrumbLabel' => 'SimpleStats',
+        // Label that appears in the panel breadcrumb navigation
 
-    // IDEAS 4 LATER
-    // Respect DNT
-    // pagecountermode : hits, uniquehitsUA, uniquehitsSession (not yet)
-    // 'trackUniqueHitsOnly'   => true, // set to false for hitcounter behaviour
-    // Todo: option to exclude bots from hitcounter (still tracking the device)
-    // Todo : Sync daily stats by crontask or afterLoad ? (increases page load speed)
-    // Todo: Add refferer tracking via pingback ? Webmentions ?
+        'hideBots' => false,
+        // true: Exclude bot traffic from the Devices tab
+        // false: Show bots like regular devices
 
-    // (Settings ideas from k2-stats)
-    // stats.days - Keep daily stats for how many days ?
-    // stats.date.format
+        // -----------------------------
+        // Initial Time Span
+        // -----------------------------
+        'defaultTimeSpan' => -1,
+        // Number of periods (weeks/months) shown initially
+        // -1: Full database span
+        // Positive integer: Shows that many periods from the latest
+    ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | TODO / Ideas for Later
+    |--------------------------------------------------------------------------
+    | Future improvements and optional features:
+    | - Respect DNT headers
+    | - pageCounterMode: hits, uniqueHitsUA, uniqueHitsSession
+    | - Option to track only unique hits
+    | - Exclude bots from hit counter (still track device info)
+    | - Sync daily stats via cron or afterLoad
+    | - Track referrers via pingback / webmentions
+    | - K2-stats style options: stats.days, stats.date.format
+    */
 ];

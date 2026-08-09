@@ -1,66 +1,31 @@
 {
     "name": "daandelange/simplestats",
-    "description": "Very minimal visitor analytics for your kirby website.",
-    "homepage": "https://github.com/Daandelange/kirby-simplestats",
+    "description": "Simple visitor analytics for your Kirby website.",
     "type": "kirby-plugin",
-    "version": "0.7.7-beta",
+    "version": "1.0.0",
     "license": "MIT",
+    "homepage": "https://github.com/Daandelange/kirby-simplestats#readme",
     "authors": [
         {
             "name": "Daan de Lange",
-            "role": "Developer"
-        }
-    ],
-    "keywords": [
-        "kirby3",
-        "kirby5",
-        "kirby-plugin",
-        "simplestats",
-        "analytics"
-    ],
-    "require": {
-        "getkirby/composer-installer": "^1.1",
-        "whichbrowser/parser": "^2.1",
-        "freelancehunt/php-referer-parser": "^1.1.0"
-    },
-    "repositories": [
-        {
-            "type": "package",
-            "package": {
-                "name": "snowplow/php-referer-parser",
-                "version": "dev-master",
-                "autoload": {
-                    "psr-0": {
-                        "Snowplow\\RefererParser": "src/"
-                    }
-                },
-                "target-dir": "/",
-                "source": {
-                    "url": "https://github.com/snowplow-referer-parser/php-referer-parser.git",
-                    "type": "git",
-                    "reference": "develop"
-                }
-            }
+            "role": "Creator, Maintainer",
+            "homepage" : "https://daandelange.com/"
         },
         {
-            "type": "vcs",
-            "url": "https://github.com/freelancehunt/php-referer-parser.git"
+            "name": "Bogdan Condorachi",
+            "role": "Maintainer"
         }
     ],
+    "require": {
+        "php": ">=8.2.0",
+        "whichbrowser/parser": "^2.1",
+        "simplestats/referer-parser": "^1.1",
+        "getkirby/composer-installer": "^1.1"
+    },
     "autoload": {
         "psr-4": {
             "daandelange\\SimpleStats\\": "src/models/"
         }
-    },
-    "scripts": {
-        "post-update-cmd": [
-            "curl -s https://s3-eu-west-1.amazonaws.com/snowplow-hosted-assets/third-party/referer-parser/referers-latest.yaml --output `composer config vendor-dir --absolute`/freelancehunt/php-referer-parser/data/referers.yml",
-            "curl -s https://s3-eu-west-1.amazonaws.com/snowplow-hosted-assets/third-party/referer-parser/referers-latest.json --output `composer config vendor-dir --absolute`/freelancehunt/php-referer-parser/data/referers.json"
-        ],
-        "pre-update-cmd": [
-            "if [ -f vendor/freelancehunt/php-referer-parser/data/referers.yml  ]; then rm vendor/freelancehunt/php-referer-parser/data/referers.yml; fi;",
-            "if [ -f vendor/freelancehunt/php-referer-parser/data/referers.json ]; then rm vendor/freelancehunt/php-referer-parser/data/referers.json; fi;"
-        ]
     },
     "config": {
         "optimize-autoloader": true,

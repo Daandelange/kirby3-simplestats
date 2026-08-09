@@ -1,8 +1,8 @@
 <?php return array(
     'root' => array(
         'name' => 'daandelange/simplestats',
-        'pretty_version' => '0.7.5-beta',
-        'version' => '0.7.5.0-beta',
+        'pretty_version' => '1.0.0-alpha.10',
+        'version' => '1.0.0.0-alpha10',
         'reference' => null,
         'type' => 'kirby-plugin',
         'install_path' => __DIR__ . '/../../',
@@ -11,20 +11,11 @@
     ),
     'versions' => array(
         'daandelange/simplestats' => array(
-            'pretty_version' => '0.7.5-beta',
-            'version' => '0.7.5.0-beta',
+            'pretty_version' => '1.0.0-alpha.10',
+            'version' => '1.0.0.0-alpha10',
             'reference' => null,
             'type' => 'kirby-plugin',
             'install_path' => __DIR__ . '/../../',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'freelancehunt/php-referer-parser' => array(
-            'pretty_version' => '1.1.0',
-            'version' => '1.1.0.0',
-            'reference' => '801b1667f2a8b975f2ae25f10b5883eefc679b4a',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../freelancehunt/php-referer-parser',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -45,6 +36,21 @@
             'install_path' => __DIR__ . '/../psr/cache',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'simplestats/referer-parser' => array(
+            'pretty_version' => 'v1.1.3',
+            'version' => '1.1.3.0',
+            'reference' => '4891a4ebf2458743bab22da3bd57ea94c0c3b709',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../simplestats/referer-parser',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'snowplow/referer-parser' => array(
+            'dev_requirement' => false,
+            'replaced' => array(
+                0 => '*',
+            ),
         ),
         'whichbrowser/parser' => array(
             'pretty_version' => 'v2.1.8',

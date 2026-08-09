@@ -17,6 +17,9 @@ use \Kirby\Cms\User;
 // class StatsGeneratorDb extends Stats {}
 // class StatsGeneratorDb extends StatsGeneratorDb {}
 
+// Todo :
+// - Bring translations to error messages in here
+
 class StatsGenerator extends SimpleStatsDb {
 
     public static  $useragentSamples = [
@@ -187,5 +190,60 @@ class StatsGenerator extends SimpleStatsDb {
         else {
             throw new \Kirby\Exception\PermissionException('You are not authorised to administrate statistics !');
         }
+    }
+
+    public static function TestTimeframeUtility(int $timefrom, int $timeto, ?\Kirby\Cms\Pages $pagesobject = null) : array {
+        // Protect
+        if( kirby()->user()->hasSimpleStatsPanelAccess(true) ){
+
+            // Verify Time is chronological, positive
+            if($timefrom <= 0 || $timeto <= 0 || $timefrom >= $timeto){
+                return ['status'=>false, 'error'=>'Time range error! (must be chronological). From='.date('d-m-Y',$timefrom).', To='.date('d-m-Y',$timeto)];
+            }
+
+            $periodsCounter = 0;
+            $errorsCounter = 0;
+            $prevPeriod = -1;
+            $errorStr = '';
+
+            // Get Time frames & loop them
+            for( $timeFrame=getTimeFromPeriod(getPeriodFromTime($timefrom)); $timeFrame <= $timeto; $timeFrame=incrementTime($timeFrame) ){
+                // Prepare data
+                $timeStr = date('Y-m-d', $timeFrame);
+                $period = getPeriodFromTime($timeFrame);
+                $checkTime = getTimeFromPeriod($period);
+
+                // Period doesn't incremment ? --> error !
+                if($prevPeriod==$period){
+                    $errorsCounter++;
+                    $errorStr .= $periodsCounter.'#'.$period.' ('.$timeStr.') -> Period didn\'t incremment ! ';//."\n";
+                }
+                elseif($checkTime!=$timeFrame){
+                    $errorsCounter++;
+                    $errorStr .= $periodsCounter.'#'.$period.' ('.$timeStr.') -> $checkTime != $timeFrame !'.' // ['.$checkTime.' ≠ '.$timeFrame.'] ['.date('Y-m-d',$checkTime).' ≠ '.date('Y-m-d',$timeFrame).']. ';//."\n";
+                }
+
+                // Remember
+                $periodsCounter++;
+                $prevPeriod = $period;
+            }
+
+            return [
+                'status'    => true,
+                'message'   => 'Visited '.$periodsCounter.' periods.',
+                'data'      => [
+                    'success'           => $errorsCounter==0, // todo !
+                    'message'           => 'testMessage !',
+                    'timePeriodCount'   => $periodsCounter,
+                    'errors'            => $errorsCounter,
+                    'errorDetails'      => $errorStr,
+                    'fromRange'         => date('d-m-Y', $timefrom),
+                    'toRange'           => date('d-m-Y', $timeto),
+                ],
+            ];
+        }
+        
+        throw new \Kirby\Exception\PermissionException('You are not authorised to administrate statistics !');
+        return [];
     }
 }

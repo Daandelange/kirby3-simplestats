@@ -4,345 +4,255 @@ namespace daandelange\SimpleStats;
 
 use Kirby\Exception\PermissionException;
 use Kirby\Exception\Exception;
+use Kirby\Toolkit\I18n;
 use Throwable;
-use I18n;
 
 return [
+    'routes' => function ($kirby): array {
 
-    // Routes for the stats api in the panel
-    'routes' => function($kirby){ return [
-        [
-            'pattern' => 'simplestats/listvisitors',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    return Stats::listvisitors();
+        // Wrapper: normal panel access + logging
+        $wrapAction = function (callable $callback, bool $requireAdmin = false): callable {
+            return function (...$args) use ($callback, $requireAdmin): mixed {
+                if (!$this->user()->hasSimpleStatsPanelAccess($requireAdmin)) {
+                    throw new PermissionException(
+                        $requireAdmin
+                            ? I18n::translate('simplestats.autherror.admin')
+                            : I18n::translate('simplestats.autherror.user')
+                    );
                 }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
+
+                try {
+                    return $callback(...$args);
+                    //return call_user_func_array($callback, $args); // php 7 alternative if needed ?
+                } catch (Throwable $e) {
+                    Logger::logTracking('Error: ' . $e->getMessage() . ' (file: ' . $e->getFile() . '#L' . $e->getLine() . ')');
+                    throw $e;
                 }
+            };
+        };
+
+        // Helper: safely get query parameter
+        $getQueryParam = function (string $key, mixed $default = null) use ($kirby): mixed {
+            $query = $kirby->request()->query();
+            $data  = is_callable([$query, 'data']) ? $query->data() : [];
+            return $data[$key] ?? $default;
+        };
+
+        // Helper: parse date strings or timestamps
+        $parseDateRange = function (string|int $value): int {
+            if (is_int($value)) return $value;
+            if (strpos($value, '-') === 2) {
+                $day = (int) substr($value, 0, 2);
+                $month = (int) substr($value, 3, 2);
+                $year = (int) substr($value, 6, 4);
+                return mktime(0, 0, 0, $month, $day, $year);
             }
-        ],
-        [
-            'pattern' => 'simplestats/devicestats',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    $timeFrame = Stats::getTimeSpanFromUrl();
-                    return Stats::deviceStats($timeFrame[0], $timeFrame[1]);
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-            },
-        ],
-        [
-            'pattern' => 'simplestats/refererstats',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    $timeFrame = Stats::getTimeSpanFromUrl();
-                    return Stats::refererStats($timeFrame[0], $timeFrame[1]);
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-            },
-        ],
-        [
-            'pattern' => 'simplestats/pagestats',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    $timeFrame = Stats::getTimeSpanFromUrl();
-                    return Stats::pageStats($timeFrame[0], $timeFrame[1]);
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-            },
-        ],
-        [
-            'pattern' => 'simplestats/listdbinfo',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    try {
-                        $stats = Stats::listDbInfo();
-                        return $stats;//Stats::listDbInfo();
-                    } catch (Throwable $e) {
-                        Logger::logTracking('Could not fetch db info and requirements... Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
-                        throw new Exception($e->getMessage());
-                    }
+            return (int) $value;
+        };
 
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-                //return null;//['message'=>'Test'];
-            },
-        ],
-        [
-            'pattern' => 'simplestats/configinfo',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    // Precompute some data
-                    $salt = option('daandelange.simplestats.tracking.salt', '');
-                    $logLevels = [];
-                    if( option('daandelange.simplestats.log.tracking',false) ) $logLevels[] = I18n::translate('simplestats.info.config.log.level.tracking', 'Tracking');
-                    if( option('daandelange.simplestats.log.warnings',false) ) $logLevels[] = I18n::translate('simplestats.info.config.log.level.warnings', 'Warnings');
-                    if( option('daandelange.simplestats.log.verbose' ,false) ) $logLevels[] = I18n::translate('simplestats.info.config.log.level.verbose', 'Verbose');
+        // API Routes
+        return [
+            [
+                'pattern' => 'simplestats/pagestats',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function (): array {
+                    [$from, $to] = Stats::getTimeSpanFromUrl();
+                    return Stats::pageStats($from, $to);
+                })
+            ],
 
-//                     $dbFile = option('daandelange.simplestats.tracking.database');
-//                     $dbSize = '?? Kb';
-//                     if($dbFile){
-//                         try {
-//                             if( file_exists($dbFile) && $fileSize = filesize($dbFile) ){
-//                                 $dbSize = $fileSize.' Kb';
-//                             }
-//                         } catch (Exception $e){
-//                             // ignore
-//                         }
-//                         // Use short path for display
-//                         $dbFile = str_replace( kirby()->root(),'', $dbFile);
-//                     }
+            [
+                'pattern' => 'simplestats/devicestats',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function (): array {
+                    [$from, $to] = Stats::getTimeSpanFromUrl();
+                    return Stats::deviceStats($from, $to);
+                })
+            ],
+
+            [
+                'pattern' => 'simplestats/refererstats',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function (): array {
+                    [$from, $to] = Stats::getTimeSpanFromUrl();
+                    return Stats::refererStats($from, $to);
+                })
+            ],
+
+            [
+                'pattern' => 'simplestats/visitors',
+                'method'  => 'GET',
+                'action'  => $wrapAction(fn(): array => Stats::getVisitors())
+            ],
+
+            [
+                'pattern' => 'simplestats/onepagestats/(:all)',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function ($any): array {
+                    [$from, $to] = Stats::getTimeSpanFromUrl();
+
+                    $page = page($any);
+                    if(!$page) throw new Exception("The page doesn't exist !");
 
                     return [
-                        'saltIsSet'             => ( is_string($salt) && !empty($salt) && $salt!=='CHANGEME'),
-                        'trackingPeriodName'    => getTimeFrameUtility()->getPeriodAdjective(),
-                        'uniqueSeconds'         => option('daandelange.simplestats.tracking.uniqueSeconds', -1),
-                        //'databaseLocation'      => $dbFile ?? '[undefined]',
-                        //'databaseSize'          => $dbSize,
-                        'enableReferers'        => option('daandelange.simplestats.tracking.enableReferers', false),
-                        'enableDevices'         => option('daandelange.simplestats.tracking.enableDevices', false),
-                        'enableVisits'          => option('daandelange.simplestats.tracking.enableVisits', false),
-                        'enableVisitLanguages'  => kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages', false),
-                        'ignoredRoles'          => option('daandelange.simplestats.tracking.ignore.roles',[]),
-                        'ignoredPages'          => option('daandelange.simplestats.tracking.ignore.pages',[]),
-                        'ignoredTemplates'      => option('daandelange.simplestats.tracking.ignore.templates',[]),
-                        'logFile'               => str_replace( realpath(kirby()->root('config'). DIRECTORY_SEPARATOR . '..'), '.', option('daandelange.simplestats.log.file',[]) ),
-                        'logLevels'             => $logLevels,
-                        'trackingSince'         => 'todo', // todo
+                        'statsdata' => Stats::onePageStats($any, $from, $to),
+
+                        // To replicate the section response, for compatibility
+                        'label'         => t('simplestats.info.config.tracking.visits', "Page visits"),
+                        'showFullInfo'  => true,
+                        'showTotals'    => true,
+                        'showTimeline'  => true,
+                        'showLanguages' => true,
+                        'size'          => 'huge',
+                        'uid'           => $page->id()
                     ];
-//                     try {
-//                         $stats = Stats::listDbInfo();
-//                     } catch (Throwable $e) {
-//                         Logger::logTracking('Could not fetch db info and requirements... Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
-//                         throw new Exception($e->getMessage());
-//                     }
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-                //return null;//['message'=>'Test'];
-            },
-        ],
-        [
-            'pattern' => 'simplestats/trackingtester',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    $device = SimpleStats::detectSystemFromUA();
-                    // Translate device
-                    if(isset($device['device'])) $device['device'] = Stats::translateDeviceType($device['device']);
+                })
+            ],
+
+            [
+                'pattern' => 'simplestats/database/info',
+                'method'  => 'GET',
+                'action'  => $wrapAction(fn(): array => Stats::getDatabaseInfo(), true) // admin only
+            ],
+
+            [
+                'pattern' => 'simplestats/database/requirements',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function (): array {
+                    $versionArray = explode('.', kirby()->version());
+                    $reqs = [
+                        'php'    => kirby()->system()->php(),
+                        'kirby' => ((int)$versionArray[0] === 4) || ((int)$versionArray[0] === 5),
+                        'sqlite3'=> class_exists('SQLite3') && in_array('pdo_sqlite', get_loaded_extensions()) && in_array('sqlite3', get_loaded_extensions()),
+                    ];
+
+                    $dbRequirements = "PHP=" . ($reqs['php'] ? 'OK' : 'ERROR') . ', ';
+                    $dbRequirements .= "SQLite3=" . ($reqs['sqlite3'] ? 'OK' : 'ERROR') . ', ';
+                    $dbRequirements .= "Kirby=" . ($reqs['kirby'] ? 'OK' : 'ERROR') . ' --- --- --- ';
+                    $dbRequirements .= 'PHP Extensions=' . implode(', ', get_loaded_extensions());
+
                     return [
-                        //'referrer' => SimpleStats::getRefererInfo(),
-                        'currentUserAgent'  => substr($_SERVER['HTTP_USER_AGENT'], 0, 256),
-                        'currentDeviceInfo' => $device,
+                        'dbRequirements'       => $dbRequirements,
+                        'dbRequirementsPassed' => $reqs['php'] && $reqs['kirby'] && $reqs['sqlite3'],
                     ];
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-            }
-        ],
-        [
-            'pattern' => 'simplestats/trackingtester/referrer',
-            'method'  => 'GET',
-            'action'  => function () use ($kirby) {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    $str = @$kirby->request()->query()->data()['referrer']??substr(@$_SERVER['HTTP_REFERRER'], 0, 256);
-                    return [
-                        'referrerInfo' => SimpleStats::getRefererInfo(['Referer'=>$str])??'Invalid referrer !',
-                    ];
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-            }
-        ],
-        [
-            'pattern' => 'simplestats/trackingtester/ua',
-            'method'  => 'GET',
-            'action'  => function () use ($kirby) {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    $str = @$kirby->request()->query()->data()['ua']??'';
-                    
-                    $headers = [];//getallheaders();
-                    //$headers['HTTP_USER_AGENT']=$str;
-                    $headers['User-Agent']=$str;
-                    //unset($headers['x-requested-with']); // $headers['x-requested-with'] = 'xmlhttprequest' interferes and makes all requests mobile devices
+                }, true) // admin only
+            ],
 
-                    $uainfo = SimpleStats::detectSystemFromUA($headers);
-
-                    if($uainfo && isset($uainfo['device'])) $uainfo['device'] = Stats::translateDeviceType($uainfo['device']);
-                    return $uainfo??'Invalid referrer url!';
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-            }
-        ],
-        [
-            'pattern' => 'simplestats/trackingtester/generatestats',
-            'method'  => 'GET',
-            'action'  => function () use ($kirby) {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-
-                    // Get time range info
-                    $from = @$kirby->request()->query()->data()['from'];
-                    $to = @$kirby->request()->query()->data()['to'];
-                    if($from && $to){
-                        // Parse range as date ? dd-mm-yyyy
-                        if( strpos($from, '-')===2 && strpos($to, '-')===2 ){
-                            $day=intval(substr($from, 0,2), 10);
-                            $month=intval(substr($from, 3,2), 10);
-                            $year=intval(substr($from, 6,4), 10);
-                            $from = mktime(0,0,0,$month,$day,$year);
-                            $day=intval(substr($to, 0,2), 10);
-                            $month=intval(substr($to, 3,2), 10);
-                            $year=intval(substr($to, 6,4), 10);
-                            $to = mktime(0,0,0,$month,$day,$year);
-                        }
-                        // Parse as timestamp
-                        else {
-                            $from = intval($from, 10);
-                            $to = intval($to, 10);
-                        }
-
-                        // Parse mode
-                        $mode = @$kirby->request()->query()->data()['mode']??null;
-
-                        // Confirm ?
-                        $proceed = @$kirby->request()->query()->data()['proceed']??'';
-                        if($proceed !== 'yes'){
-                            return ['status'=>false, 'error'=>'Please confirm that the date ranges from '.date('d-M-Y', $from).' to '.date('d-M-Y', $to).'. (check that box!)'];//, adding &proceed=yes to the query param.'];
-                        }
-
-                        // go !
-                        return StatsGenerator::GenerateVisits($from, $to, $mode);
-
-                        //$uainfo = SimpleStats::detectSystemFromUA($str);
-                        //    if($uainfo && isset($uainfo['device'])) $uainfo['device'] = Stats::translateDeviceType($uainfo['device']);
-                        //    return $uainfo??'Invalid referrer url!';
-
-                        //return ['status'=>false,'message'=>'ok ?'];
-                    }
-
-                    return ['status'=>false,'error'=>'No range !'];
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-            }
-        ],
-        [
-            'pattern' => 'simplestats/checkrequirements',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
-                    try {
-                        $versionArray = explode('.', kirby()->version());
-                        $reqs = [
-                            'php' => kirby()->system()->php(),
-                            'kirby' => (
-                                ((int)$versionArray[0] === 3 && (int)$versionArray[1] >= 5) || // K3.5+
-                                ((int)$versionArray[0] === 5 && (int)$versionArray[1] >= 0) // K5.0+
-                            ), 
-                            'sqlite3' => (class_exists('SQLite3') && in_array('pdo_sqlite', get_loaded_extensions()) && in_array('sqlite3', get_loaded_extensions())),
-                        ];
-                        // Check requirements
-
-                        $dbRequirements = "PHP=".($reqs['php']?'OK':'ERROR').', ';
-                        $dbRequirements .= "SQLite3=".($reqs['sqlite3']?'OK':'ERROR').', ';
-                        $dbRequirements .= "Kirby=".($reqs['kirby']?'OK':'ERROR').' --- --- --- ';
-                        // Tmp: display lots of data, try to detect errors
-                        $dbRequirements .= 'PHP Extensions='.implode(', ', get_loaded_extensions());
-//                         $dbRequirements .= " --- PHP=".($reqs['php']?'OK':'ERROR');
-//                         $dbRequirements .= " --- SQLite3=".($reqs['sqlite3']?'OK':'ERROR');
-//                         try{
-//                             $sql = new \SQLite3('');
-//                             $sql->close();
-//                             $dbRequirements .= " --- SQLite3.try=OK";
-//                         } catch(Throwable $e){
-//                             $dbRequirements .= " --- SQLite3.try=ERROR ".$e->getMessage();
-//                         }
-//                         try{
-//                             $db=new \Kirby\Database\Database(['type'=>'sqlite','database'=>'']);
-//                             $dbRequirements .= " --- CreateDB()=".(($db)?'OK':'FAIL');
-//                         } catch(Throwable $e){
-//                             $dbRequirements .= " --- CreateDB()=ERROR:".$e->getMessage();
-//                         }
-//                         $dbRequirements .= " --- pdo_sqlite=".( in_array('pdo_sqlite', get_loaded_extensions())?'OK':'ERROR');
-//                         $dbRequirements .= " --- sqlite3=".( in_array('sqlite3', get_loaded_extensions())?'OK':'ERROR');
-
-                        return [
-                            'dbRequirements'       => $dbRequirements,
-                            'dbRequirementsPassed' => ($reqs['php'] && $reqs['kirby'] && $reqs['sqlite3']),
-                        ];
-                    } catch (Throwable $e) {
-                        Logger::logTracking('Could not fetch requirements... Error='.$e->getMessage().'(file: '.$e->getFile().'#L'.$e->getLine().')');
-                        throw new Exception($e->getMessage());
-                    }
-
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view statistics.');
-                }
-                //return null;//['message'=>'Test'];
-            },
-        ],
-        [
-            'pattern' => 'simplestats/dbupgrade',
-            'method'  => 'GET',
-            'action'  => function () {
-                // Only allow admins explicitly for upgrading the db
-                if( $this->user()->hasSimpleStatsPanelAccess(true) ){
+            [
+                'pattern' => 'simplestats/database/upgrade',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function (): array {
                     $result = Stats::checkUpgradeDatabase(false);
                     return [
-                        'status'    => $result,
-                        'message'   => ($result?'Success !':'Error!').' Check your logs file for more details.',
+                        'status'  => $result,
+                        'message' => ($result ? 'Success! ' : 'Error! ') . I18n::translate('simplestats.info.database.upgrade.result'),
                     ];
-                }
-                else {
-                    throw new PermissionException('You are not authorised to upgrade the db file.');
-                }
-            },
-        ],
-        [
-            'pattern' => 'simplestats/mainview',
-            'method'  => 'GET',
-            'action'  => function () {
-                if( $this->user()->hasSimpleStatsPanelAccess() ){
+                }, true), // admin only
+            ],
+
+            [
+                'pattern' => 'simplestats/configinfo',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function (): array {
+                    $salt = option('daandelange.simplestats.tracking.salt', '');
+
                     return [
-                        'dismissDisclaimer' => option('daandelange.simplestats.panel.dismissDisclaimer', false),
+                        'period' => getTimeFrameUtility()->getPeriodAdjective(),
+                        'since'  => 'todo', // todo
+                        'unique' => option('daandelange.simplestats.tracking.uniqueSeconds', -1),
+                        'salted' => is_string($salt) && !empty($salt) && $salt !== 'CHANGEME',
 
-                        'translations' => [ // Checkme: is this still needed in K5 ?
-                            'tabs' => [
-                                'pagevisits'        => t('simplestats.tabs.pagevisits',     'Page Visits'),
-                                'visitordevices'    => t('simplestats.tabs.visitordevices', 'Visitor Devices'),
-                                'referers'          => t('simplestats.tabs.referers',       'Referers'),
-                                'information'       => t('simplestats.tabs.information',    'Information'),
-                            ],
+                        'features' => [
+                            'referers'  => option('daandelange.simplestats.tracking.enableReferers', false),
+                            'devices'   => option('daandelange.simplestats.tracking.enableDevices', false),
+                            'visits'    => option('daandelange.simplestats.tracking.enableVisits', false),
+                            'languages' => kirby()->multilang() && option('daandelange.simplestats.tracking.enableVisitLanguages', false),
                         ],
-                    ];
-                }
-                else {
-                    throw new PermissionException('You are not authorised to view stats.');
-                }
-            },
-        ],
-    ];},
 
+                        'ignored' => [
+                            'roles'     => option('daandelange.simplestats.tracking.ignore.roles', []),
+                            'pages'     => option('daandelange.simplestats.tracking.ignore.pages', []),
+                            'templates' => option('daandelange.simplestats.tracking.ignore.templates', []),
+                        ],
+
+                        'logFile' => option('daandelange.simplestats.log.file', []),
+                        'logLevels' => [
+                            'tracking' => option('daandelange.simplestats.log.tracking', false),
+                            'warnings' => option('daandelange.simplestats.log.warnings', false),
+                            'verbose'  => option('daandelange.simplestats.log.verbose', false),
+                        ]
+                    ];
+                }, true) // admin only
+            ],
+
+            [
+                'pattern' => 'simplestats/testers/user-agent',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function () use ($getQueryParam): array {
+                    $userAgent  = $getQueryParam('ua', $_SERVER['HTTP_USER_AGENT']);
+                    $deviceInfo = SimpleStats::getDeviceInfo(['User-Agent' => $userAgent]);
+
+                    if ($deviceInfo) {
+                        $deviceKeys = ['engine', 'device', 'system'];
+                        foreach ($deviceKeys as $key) {
+                            if (isset($deviceInfo[$key])) {
+                                $deviceInfo[$key] = Stats::translateDeviceKey($deviceInfo[$key]);
+                            }
+                        }
+                    }
+
+                    return ['userAgent'  => $userAgent, 'deviceInfo' => $deviceInfo];
+                }, true) // admin only
+            ],
+
+            [
+                'pattern' => 'simplestats/testers/referer',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function () use ($getQueryParam): array {
+                    $referer     = $getQueryParam('url', $_SERVER['HTTP_REFERER']);
+                    $refererInfo = SimpleStats::getRefererInfo(['Referer' => $referer]);
+
+                    if (!$refererInfo) {
+                        return ['error' => I18n::translate('simplestats.info.testers.referer.error')];
+                    }
+
+                    return $refererInfo;
+                }, true) // admin only
+            ],
+
+            [
+                'pattern' => 'simplestats/testers/generatestats',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function () use ($getQueryParam, $parseDateRange): array {
+                    $mode = $getQueryParam('mode');
+                    $from = $parseDateRange($getQueryParam('from'));
+                    $to   = $parseDateRange($getQueryParam('to'));
+
+                    if (!$mode) {
+                        return ['error' => I18n::translate('simplestats.info.testers.generator.mode.error')];
+                    }
+                    if (!$from || !$to) {
+                        return ['error' => I18n::translate('simplestats.info.testers.generator.date.error')];
+                    }
+
+                    return StatsGenerator::GenerateVisits($from, $to, $mode);
+                }, true) // admin only
+            ],
+
+            [
+                'pattern' => 'simplestats/testers/timeframeutility',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function () use ($getQueryParam, $parseDateRange): array {
+                    $from = $parseDateRange($getQueryParam('from'));
+                    $to   = $parseDateRange($getQueryParam('to'));
+
+                    if (!$from || !$to) {
+                        return ['error' => I18n::translate('simplestats.info.testers.generator.date.error')];
+                    }
+
+                    return StatsGenerator::TestTimeframeUtility($from, $to);
+                }, true) // admin only
+            ]
+        ];
+    }
 ];

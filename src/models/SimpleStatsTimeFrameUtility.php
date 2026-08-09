@@ -40,7 +40,7 @@ abstract class SimpleStatsTimeFrameUtility {
     // For displaying period-names in tables mostly (first seen, last seen, ...)
     // Date format is in date-fns format : https://date-fns.org/v2.17.0/docs/parse
     public function getPanelPeriodFormat() : string {
-        return 'dd MMM yyyy'; // 26 Dec 2021
+        return 'D MMM YYYY'; // 26 Dec 2021
     }
 
     // Parse version date
@@ -83,6 +83,9 @@ function getTimeFrameUtility() : SimpleStatsTimeFrameUtility {
             }
             elseif( $utilityOption == 'weekly' ){
                 return $utility = new SimpleStatsTimeFrameUtilityWeekly();
+            }
+            elseif( $utilityOption == 'daily' ){
+                return $utility = new SimpleStatsTimeFrameUtilityDaily();
             }
             // Unrecognized string
             else {
@@ -131,7 +134,7 @@ class SimpleStatsTimeFrameUtilityMonthly extends SimpleStatsTimeFrameUtility {
         return mktime(0,0,0,$month,1,$year);
     }
     public function getPanelPeriodFormat() : string{
-        return 'MMM yyyy'; // Oct 2021
+        return 'MMM YYYY'; // Oct 2021
     }
 }
 
@@ -166,7 +169,39 @@ class SimpleStatsTimeFrameUtilityWeekly extends SimpleStatsTimeFrameUtility {
         //return getTimeFromPeriod(getPeriodFromTime($time)+$steps));
     }
     public function getPanelPeriodFormat() : string{
-        //return 'dd MMM yyyy'; // 26 Dec 2021
-        return 'yyyy-w (MMM)'; // 2021-51 (Dec)
+        return 'D MMM YYYY'; // 2021-51 (Dec)
+    }
+}
+
+// Daily timespan handler
+class SimpleStatsTimeFrameUtilityDaily extends SimpleStatsTimeFrameUtility {
+    public function getPeriodName(bool $plural=false) : string {
+        return $plural?t('simplestats.timeframe.day.plural', 'days'):t('simplestats.timeframe.day.singular', 'day');
+    }
+    public function getPeriodAdjective() : string {
+        return t('simplestats.timeframe.day.name','Daily');
+    }
+    public function getTimeFromPeriod(int $period) : int {
+        $periodStr = ''.$period;
+        $year = substr($periodStr, 0,4);
+        $days = substr($periodStr, 4, strlen($periodStr)-4);
+        
+        $time = false;
+        if($days >=0 && $year >= 1000){
+            $time = strtotime($year.'-01-01 +'.$days.'days');
+            return $time?$time:0;
+        }
+        return 0; // dangerous !
+    }
+
+    public function getPeriodFromTime( int $time = -1 ) : int {
+        if($time < 0) $time = time();
+        return intval(date('Yz', $time ), 10);
+    }
+    public function incrementTime($time, $steps=1) : int {
+        return strtotime(($steps<0?'-':'+').$steps.' day', $time);
+    }
+    public function getPanelPeriodFormat() : string{
+        return 'D MMM YYYY'; // 2021-363 (Dec)
     }
 }

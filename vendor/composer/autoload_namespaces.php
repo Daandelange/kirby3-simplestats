@@ -6,5 +6,4 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Snowplow\\' => array($vendorDir . '/freelancehunt/php-referer-parser/src'),
 );
