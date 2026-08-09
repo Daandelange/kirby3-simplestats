@@ -23,17 +23,19 @@ return [
         }
 
         // User role must be authorized
-        $authorizedRoles = option('daandelange.simplestats.panel.authorizedRoles', ['admin']);
-        if (!in_array($user->role()->id(), $authorizedRoles)) {
-            return false;
-        }
+        // $authorizedRoles = option('daandelange.simplestats.panel.authorizedRoles', ['admin']);
+        // if (!in_array($user->role()->id(), $authorizedRoles)) {
+        //     return false;
+        // }
 
-        // If special admin access is required, user must be admin
-        if ($requireAdmin && !$user->isAdmin()) {
-            return false;
-        }
+        // // If special admin access is required, user must be admin
+        // if ($requireAdmin && !$user->isAdmin()) {
+        //     return false;
+        // }
+        // return true;
 
-        return true;
-    }
+        // New : use Kirby permissions
+        return $user->role()->permissions()->for('daandelange.simplestats', $requireAdmin?'configure':'access');
+    }   
 
 ];

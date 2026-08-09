@@ -576,8 +576,8 @@ class Stats extends SimpleStatsDb {
             'average'       => ['label'=>t('simplestats.table.column.average'),      'type'=>'number',     'sortable'=>true,  'search'=>false, 'mobile'=>true,  'width'=>'5%'],
             'hits'          => ['label'=>t('simplestats.table.column.hits'),         'type'=>'number',     'sortable'=>true,  'search'=>false, 'mobile'=>true,  'width'=>'5%'],
             'hitspercent'   => ['label'=>t('simplestats.table.column.popularity'),   'type'=>'percentage', 'sortable'=>true,  'search'=>false, 'mobile'=>true,  'width'=>'10%', 'align'=>'left'],
-            'firstvisited'  => ['label'=>t('simplestats.table.column.firstvisited'), 'type'=>'date',       'sortable'=>true,  'search'=>false, 'mobile'=>false, 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()], // todo: Date display should be customized to custom timespans
-            'lastvisited'   => ['label'=>t('simplestats.table.column.lastvisited'),  'type'=>'date',       'sortable'=>true,  'search'=>false, 'mobile'=>false, 'width'=>'10%', 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()],
+            'firstvisited'  => ['label'=>t('simplestats.table.column.firstvisited'), 'type'=>'date',       'sortable'=>true,  'search'=>false, 'mobile'=>false, 'width'=>'10%'],//, 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()],
+            'lastvisited'   => ['label'=>t('simplestats.table.column.lastvisited'),  'type'=>'date',       'sortable'=>true,  'search'=>false, 'mobile'=>false, 'width'=>'10%'],//, 'dateInputFormat'=>'yyyy-MM-dd', 'dateOutputFormat'=>getPanelPeriodFormat()],
 
         ];
         // Add language columns

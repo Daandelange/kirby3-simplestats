@@ -47,7 +47,7 @@ return [
         // -----------------------------
         'database'         => SimpleStatsDb::getLogsPath('simplestats.sqlite'),
         'timeFrameUtility' => new SimpleStatsTimeFrameUtilityMonthly(),
-        // Options: 'weekly', 'monthly', or any SimpleStatsTimeFrameUtility instance
+        // Options: 'daily', weekly', 'monthly', or any SimpleStatsTimeFrameUtility instance
         // WARNING: Changing this requires creating a new database
 
         // -----------------------------
@@ -119,12 +119,6 @@ return [
         'dismissDisclaimer' => false,
         // true: Hide the disclaimer message in the panel
         // false: Show disclaimer to remind users about privacy/logging
-
-        // -----------------------------
-        // Access Control
-        // -----------------------------
-        'authorizedRoles' => ['admin'],
-        // Only users with these roles (by ID) can view panel statistics
 
         // -----------------------------
         // Panel Display Options

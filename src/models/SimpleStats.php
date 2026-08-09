@@ -334,7 +334,7 @@ class SimpleStats extends SimpleStatsDb {
             $maskMax = array_map(function($k, $v) use($ipBits, $bitsToAnonymize, $isIpv6) {
                 return ($k >= $ipBits-$bitsToAnonymize )?(($isIpv6?'0000':'0')):($isIpv6?'ffff':'255');
             }, array_keys($maskMax), $maskMax);
-implode($isIpv6?':':'.', $maskMax);
+            implode($isIpv6?':':'.', $maskMax);
 
             return inet_ntop($addressPacked & (string)inet_pton(implode($isIpv6?':':'.', $maskMax)));
         }

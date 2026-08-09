@@ -1,16 +1,16 @@
 <template>
-  <k-grid variant="columns">
-    <!-- Loading message -->
-    <k-column v-if="isLoading" width="1/1">
-      <k-empty>
-        <k-icon type="loader"/>
-        <span>Fetching data...</span>
-      </k-empty>
-    </k-column>
+  <k-section :label="label">
+    <k-grid variant="columns">
+      <!-- Loading message -->
+      <k-column v-if="isLoading" width="1/1">
+        <k-empty>
+          <k-icon type="loader"/>
+          <span>Fetching data...</span>
+        </k-empty>
+      </k-column>
 
-    <!-- Total Visits -->
-    <k-column v-if="showTotals && !isLoading" width="1/1">
-      <k-section :label="label">
+      <!-- Total Visits -->
+      <k-column v-if="showTotals && !isLoading" width="1/1">
         <div class="k-stats">
           <k-stat
             :label="$t('simplestats.visits.visitsovertime')"
@@ -28,41 +28,41 @@
             link="simplestats"
           />
         </div>
-      </k-section>
-    </k-column>
+      </k-column>
 
-    <!-- Visits Over Time -->
-    <k-column v-if="showTimeline && !isLoading" width="1/1">
-      <k-simplestats-chart
-        type="Line"
-        download="PageVisitsOverTime.png"
-        :label="$t('simplestats.visits.visitsovertime')"
-        :chart-data="languagesOverTime"
-        :chart-labels="chartPeriodLabels"
-        :stacked="languagesAreEnabled"
-        :auto-colorize="true"
-        :x-time-axis="true"
-        :y-visits-axis="true"
-        :height="chartHeight('timeline')"
-      />
-    </k-column>
+      <!-- Visits Over Time -->
+      <k-column v-if="showTimeline && !isLoading" width="1/1">
+        <k-simplestats-chart
+          type="Line"
+          :download="niceDownloadName('PageVisitsOverTime')"
+          :label="$t('simplestats.visits.visitsovertime')"
+          :chart-data="languagesOverTime"
+          :chart-labels="chartPeriodLabels"
+          :stacked="languagesAreEnabled"
+          :auto-colorize="true"
+          :x-time-axis="true"
+          :y-visits-axis="true"
+          :height="chartHeight('timeline')"
+        />
+      </k-column>
 
-    <!-- Visits Per Language -->
-    <k-column v-if="languagesAreEnabled && showLanguages && !isLoading" width="1/1">
-      <k-simplestats-chart
-        type="Pie"
-        :chart-data="languageTotalHits"
-        :chart-labels="chartLanguagesLabels"
-        :chart-options="chartOptions"
-        :auto-colorize="true"
-        :fill="true"
-        :show-legend="languagesAreEnabled"
-        :height="chartHeight('languages')"
-        download="PageGlobalLanguageVisits.png"
-        :label="$t('simplestats.visits.globallanguages')"
-      />
-    </k-column>
-  </k-grid>
+      <!-- Visits Per Language -->
+      <k-column v-if="languagesAreEnabled && showLanguages && !isLoading" width="1/1">
+        <k-simplestats-chart
+          type="Pie"
+          :chart-data="languageTotalHits"
+          :chart-labels="chartLanguagesLabels"
+          :chart-options="chartOptions"
+          :auto-colorize="true"
+          :fill="true"
+          :show-legend="languagesAreEnabled"
+          :height="chartHeight('languages')"
+          :download="niceDownloadName('GlobalLanguageVisits')"
+          :label="$t('simplestats.visits.globallanguages')"
+        />
+      </k-column>
+    </k-grid>
+  </k-section>
 </template>
 
 <script>
@@ -83,7 +83,8 @@ export default {
       totalHits: 0,
       averageHits: 0,
       timespanUnitName: '[unknown]',
-      trackingPeriods: 0
+      trackingPeriods: 0,
+      uid: null,
     };
   },
 
@@ -118,6 +119,7 @@ export default {
         showTimeline: response.showTimeline,
         showLanguages: response.showLanguages,
         size: response.size,
+        uid: response.uid,
 
         statsdata: stats,
         languagesOverTime: stats.languagesOverTime,
@@ -142,6 +144,15 @@ export default {
       };
 
       return heights[type][this.normalizedSize] ?? heights[type].medium;
+    },
+    niceDownloadName(statsName){
+      if(this.uid?.length){
+        let uid = String(this.uid);
+        uid.replace('/', '_');
+        return "Page_" + uid + "_" + statsName + ".png";
+      }
+
+      return "Site_" + statsName + ".png";
     }
   }
 };

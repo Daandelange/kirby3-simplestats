@@ -29,7 +29,7 @@
         <k-section :label="$t('simplestats.info.database.rqmts.label')">
           <k-box
             v-if="requirements.passed"
-            theme="info"
+            theme="text"
             :text="$t('simplestats.info.database.rqmts.note.positive')"
           />
 
@@ -67,7 +67,7 @@
             <k-box v-else :html="true" :theme="upgrade.resultTheme" :text="upgrade.resultMessage" />
           </template>
 
-          <k-box v-else theme="info" :text="$t('simplestats.info.database.upgrade.note.positive')" />
+          <k-box v-else theme="text" :text="$t('simplestats.info.database.upgrade.note.positive')" />
         </k-section>
       </k-column>
     </k-grid>

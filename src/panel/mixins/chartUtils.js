@@ -34,6 +34,9 @@ Chart.register(
   ArcElement
 );
 
+import { usePanel } from "kirbyuse";
+import { useLibrary } from "kirbyuse";
+
 export default {
   props: {
     autoColorize: Boolean,
@@ -78,7 +81,9 @@ export default {
 
   methods: {
     generateDatasetColor(dataset, uidTree, index) {
-      let hue = 0, lightness = 40, saturation = this.autoGreyize ? 0 : 30;
+      const panel = usePanel();
+      const isDark = (panel.theme?.current=="dark"); // Note: k4 has no panel.theme !
+      let hue = 0, lightness = isDark ? 40 : 60, saturation = this.autoGreyize ? 0 : 30;
       const parts = dataset.ss_uid?.split('/') || [index];
 
       parts.forEach((_, depth) => {
@@ -90,7 +95,7 @@ export default {
         const count = Math.max(siblings.length, 1);
 
         if (depth === 0) hue = (360 / count) * pos;
-        else lightness += (50 / count) * pos;
+        else lightness += ((90-lightness) / count) * pos;
       });
 
       return `hsl(${Math.round(hue)}, ${saturation}%, ${Math.round(lightness)}%)`;
@@ -99,8 +104,12 @@ export default {
     generatePieColors(labels) {
       const count = Math.max(labels.length, 1);
 
+      const panel = usePanel();
+      const isDark = (panel.theme?.current=="dark"); // Note: k4 has no panel.theme !
+      const lightness = isDark ? 40 : 60;
+
       return labels.map((_, i) => this.autoColorize
-        ? `hsl(${Math.round((360 / count) * i)}, 30%, 40%)`
+        ? `hsl(${Math.round((360 / count) * i)}, 30%, ${lightness}%)`
         : `hsl(0, 0%, ${40 + (40 / count) * i}%)`
       );
     },
@@ -185,6 +194,16 @@ export default {
             text: this.xTitle ?? this.$t('simplestats.chart.time')
           }
         };
+        options.plugins.tooltip = {
+          callbacks: {
+            // Sets the tooltip title
+            title: function(context){
+              let date = new Date(context[0].parsed.x);
+              const library = useLibrary();
+              return library.dayjs(date).format('ddd D MMM YYYY');
+            }
+          }
+        };
       }
 
       if (this.yVisitsAxis) {
@@ -195,6 +214,9 @@ export default {
           title: {
             display: true,
             text: this.yTitle ?? this.$t('simplestats.chart.visits')
+          },
+          ticks: {
+            stepSize: 1,
           }
         };
       }

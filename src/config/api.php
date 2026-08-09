@@ -16,8 +16,8 @@ return [
                 if (!$this->user()->hasSimpleStatsPanelAccess($requireAdmin)) {
                     throw new PermissionException(
                         $requireAdmin
-                            ? 'You are not authorised to perform this action.'
-                            : 'You are not authorised to view statistics.'
+                            ? I18n::translate('simplestats.autherror.admin')
+                            : I18n::translate('simplestats.autherror.user')
                     );
                 }
 
@@ -104,6 +104,7 @@ return [
                         'showTimeline'  => true,
                         'showLanguages' => true,
                         'size'          => 'huge',
+                        'uid'           => $page->id()
                     ];
                 })
             ],
@@ -111,7 +112,7 @@ return [
             [
                 'pattern' => 'simplestats/database/info',
                 'method'  => 'GET',
-                'action'  => $wrapAction(fn(): array => Stats::getDatabaseInfo())
+                'action'  => $wrapAction(fn(): array => Stats::getDatabaseInfo(), true) // admin only
             ],
 
             [
@@ -134,7 +135,7 @@ return [
                         'dbRequirements'       => $dbRequirements,
                         'dbRequirementsPassed' => $reqs['php'] && $reqs['kirby'] && $reqs['sqlite3'],
                     ];
-                })
+                }, true) // admin only
             ],
 
             [
@@ -181,7 +182,7 @@ return [
                             'verbose'  => option('daandelange.simplestats.log.verbose', false),
                         ]
                     ];
-                })
+                }, true) // admin only
             ],
 
             [
@@ -201,7 +202,7 @@ return [
                     }
 
                     return ['userAgent'  => $userAgent, 'deviceInfo' => $deviceInfo];
-                })
+                }, true) // admin only
             ],
 
             [
@@ -216,7 +217,7 @@ return [
                     }
 
                     return $refererInfo;
-                })
+                }, true) // admin only
             ],
 
             [
@@ -237,6 +238,21 @@ return [
                     return StatsGenerator::GenerateVisits($from, $to, $mode);
                 }, true) // admin only
             ],
+
+            [
+                'pattern' => 'simplestats/testers/timeframeutility',
+                'method'  => 'GET',
+                'action'  => $wrapAction(function () use ($getQueryParam, $parseDateRange): array {
+                    $from = $parseDateRange($getQueryParam('from'));
+                    $to   = $parseDateRange($getQueryParam('to'));
+
+                    if (!$from || !$to) {
+                        return ['error' => I18n::translate('simplestats.info.testers.generator.date.error')];
+                    }
+
+                    return StatsGenerator::TestTimeframeUtility($from, $to);
+                }, true) // admin only
+            ]
         ];
     }
 ];

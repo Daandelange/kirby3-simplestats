@@ -2,7 +2,7 @@
   <k-panel-inside class="k-simplestats-view">
     <!-- Disclaimer -->
     <k-simplestats-disclaimer
-      :visible="!isLoading && !dismissDisclaimer"
+      :visible="!dismissDisclaimer"
     />
 
     <!-- Header -->
@@ -14,6 +14,7 @@
           ref="timespan"
           :dateChoices="timeframes"
           :time-period="timePeriod"
+          :time-format="timeFormat"
           :initial-view-periods="initialViewPeriods"
         />
       </template>
@@ -74,6 +75,10 @@ export default {
       type: String,
       default: "Monthly"
     },
+    timeFormat: {
+      type: String,
+      default: "MMM YYYY"
+    },
     timeframes: {
       type: Array,
       default: []
@@ -81,13 +86,17 @@ export default {
     initialViewPeriods: {
       type: Number,
       default: -1
+    },
+    dismissDisclaimer: {
+      type: Boolean,
+      default: false
     }
   },
 
   data() {
     return {
-      dismissDisclaimer : false,
-      isLoading : true
+      //dismissDisclaimer : false,
+      //isLoading : false
     };
   },
 
@@ -111,6 +120,7 @@ export default {
 
 .k-simplestats-view #chart-default-color-getter {
   display: none;
+  color: var(--color-text-dimmed); /* user overrideable chart color */
 }
 
 @container (max-width: 30rem) {

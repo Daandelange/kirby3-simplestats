@@ -58,7 +58,6 @@ export default {
         },
         on: {
           submit: closeFn,
-
         },
         scopedSlots: {
           default: defaultSlot,

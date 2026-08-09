@@ -13,9 +13,14 @@ return [
         $tabs = [
             'pagevisits'     => 'layers',
             'visitordevices' => 'users',
-            'referers'       => 'chart',
+            'referers'       => 'globe',
             'information'    => 'map',
         ];
+
+        // Advanced admin tab
+        if(!$user->hasSimpleStatsPanelAccess(true)){
+            unset($tabs['information']);
+        }
 
         foreach ($tabs as $name => $icon) {
             $tabs[$name] = [
@@ -39,6 +44,7 @@ return [
                     $timeSpan   = Stats::getDbTimeSpan();
                     $timeFrames = Stats::fillPeriod($timeSpan['start'], $timeSpan['end'], 'Y-m-d');
                     $timePeriod = getTimeFrameUtility()->getPeriodAdjective();
+                    $timeFormat = getTimeFrameUtility()->getPanelPeriodFormat();
 
                     return [
                         'component' => 'k-simplestats-view',
@@ -51,7 +57,9 @@ return [
                             'tabs'                 => array_values($tabs),
                             'timeframes'           => $timeFrames,
                             'time-period'          => $timePeriod,
+                            'time-format'          => $timeFormat,
                             'initial-view-periods' => option('daandelange.simplestats.panel.defaultTimeSpan', -1),
+                            'dismiss-disclaimer'   => option('daandelange.simplestats.panel.dismissDisclaimer', false),
                         ],
                     ];
                 }
